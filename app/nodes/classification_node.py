@@ -12,7 +12,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from app.nodes.file_discovery_node import FileDiscoveryOutput, FileMetadata
+from app.nodes.file_discovery_node import (
+    FileDiscoveryOutput,
+    FileMetadata,
+    FolderScopePolicy,
+)
 
 # ---------------------------------------------------------------------------
 # Category enum
@@ -146,6 +150,13 @@ class ClassificationOutput(BaseModel):
     classified_files: list[ClassifiedFile] = Field(
         default_factory=list,
         description="List of classification results for every file in the inventory.",
+    )
+    file_inventory: list[FileMetadata] = Field(
+        default_factory=list,
+        description="List of metadata objects for every discovered file (propagated downstream).",
+    )
+    folder_scope_policy: FolderScopePolicy = Field(
+        description="The folder scope policy used for discovery, propagated downstream.",
     )
     reasoning: str = Field(
         description="High-level summary of the classification run.",
@@ -310,5 +321,7 @@ def classification_node(node_input: FileDiscoveryOutput) -> ClassificationOutput
 
     return ClassificationOutput(
         classified_files=classified,
+        file_inventory=node_input.file_inventory,
+        folder_scope_policy=node_input.folder_scope_policy,
         reasoning=reasoning,
     )

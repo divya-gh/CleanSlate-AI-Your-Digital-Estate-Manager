@@ -58,6 +58,9 @@ class FileDiscoveryOutput(BaseModel):
         default_factory=list,
         description="List of metadata objects for every discovered file.",
     )
+    folder_scope_policy: FolderScopePolicy = Field(
+        description="The folder scope policy used for discovery, propagated downstream.",
+    )
     reasoning: str = Field(
         description="Human-readable explanation of what the node did and why.",
     )
@@ -177,5 +180,6 @@ def file_discovery_node(node_input: FileDiscoveryInput) -> FileDiscoveryOutput:
 
     return FileDiscoveryOutput(
         file_inventory=inventory,
+        folder_scope_policy=policy,
         reasoning=reasoning,
     )

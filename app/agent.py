@@ -30,6 +30,7 @@ from app.nodes.file_discovery_node import (
     file_discovery_node,
 )
 from app.nodes.classification_node import classification_node
+from app.nodes.duplicate_detection_node import duplicate_detection_node
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -111,6 +112,7 @@ root_agent = Workflow(
         (finalize_request, folder_scope_node),
         (folder_scope_node, file_discovery_node),
         (file_discovery_node, classification_node),
+        (classification_node, duplicate_detection_node),
     ],
     input_schema=UserRequest,
     rerun_on_resume=True,
