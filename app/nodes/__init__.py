@@ -35,6 +35,11 @@ from app.nodes.summary_node import (
     SummaryOutput,
     summary_node,
 )
+from app.nodes.weekly_organizer_node import (
+    WeeklyOrganizerInput,
+    WeeklySummary,
+    weekly_organizer_node,
+)
 
 __all__ = [
     "ActionPlan",
@@ -51,6 +56,8 @@ __all__ = [
     "SensitiveDetectionOutput",
     "SensitiveFileEntry",
     "SummaryOutput",
+    "WeeklyOrganizerInput",
+    "WeeklySummary",
     "duplicate_detection_node",
     "execution_node",
     "hitl_approval_node",
@@ -58,4 +65,5 @@ __all__ = [
     "rollback_node",
     "sensitive_detection_node",
     "summary_node",
+    "weekly_organizer_node",
 ]

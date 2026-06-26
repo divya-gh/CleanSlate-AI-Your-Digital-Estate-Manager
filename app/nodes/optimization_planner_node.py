@@ -12,6 +12,8 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassifiedFile
@@ -149,9 +151,11 @@ _SYSTEM_COMPONENTS = {
 
 def _is_system_folder(path: str) -> bool:
     """Check if the path falls inside common system or package manager folders."""
-    parts = Path(path).parts
+    parts = [p.lower() for p in Path(path).parts]
     for part in parts:
-        if part.lower() in _SYSTEM_COMPONENTS:
+        if part in _SYSTEM_COMPONENTS:
+            if part == "appdata" and "temp" in parts:
+                continue
             return True
     return False
 
@@ -163,7 +167,7 @@ def _is_system_folder(path: str) -> bool:
 
 def optimization_planner_node(
     node_input: SensitiveDetectionOutput,
-) -> OptimizationPlannerOutput:
+) -> Event:
     """OptimizationPlannerNode — generates recommended cleanup action plan."""
     inventory = node_input.file_inventory
     policy = node_input.folder_scope_policy
@@ -201,6 +205,41 @@ def optimization_planner_node(
         # Category and extension
         cf = classified_lookup.get(path_str)
         category = cf.category if cf else "misc"
+
+        # Safe Mode Handling
+        if policy.safe_mode:
+            # Sensitive files must never be archived or compressed, never moved outside allowed_paths.
+            if is_sensitive:
+                if is_allowed and not is_system:
+                    actions.append(
+                        CleanupAction(
+                            path=path_str,
+                            action_type="move",
+                            reasoning="Sensitive file moved to Authenticated",
+                            estimated_space_recovered=0,
+                            safe_to_delete=False,
+                            confidence=1.0,
+                        )
+                    )
+                continue
+
+            # Non-primary duplicate files -> WeeklyReview
+            if path_str in paths_to_delete:
+                if is_allowed and not is_system:
+                    actions.append(
+                        CleanupAction(
+                            path=path_str,
+                            action_type="move",
+                            reasoning="Duplicate file moved to WeeklyReview",
+                            estimated_space_recovered=0,
+                            safe_to_delete=False,
+                            confidence=0.90,
+                        )
+                    )
+                continue
+
+            # Everything else is skipped in safe mode
+            continue
 
         # Determine safety constraints for deleting
         is_safe_to_delete = is_allowed and (not is_sensitive) and (not is_system)
@@ -304,7 +343,7 @@ def optimization_planner_node(
         actions=actions,
         reasoning=reasoning_comments,
         estimated_recovery=total_recovered,
-        dry_run=True,
+        dry_run=policy.dry_run if policy.safe_mode else True,
     )
 
     high_level_reasoning = (
@@ -312,7 +351,7 @@ def optimization_planner_node(
         f"total recovery of {total_recovered} bytes. Plan is currently a dry-run."
     )
 
-    return OptimizationPlannerOutput(
+    output_payload = OptimizationPlannerOutput(
         action_plan=action_plan,
         reasoning=high_level_reasoning,
         classified_files=node_input.classified_files,
@@ -321,3 +360,8 @@ def optimization_planner_node(
         folder_scope_policy=policy,
         sensitive_files=node_input.sensitive_files,
     )
+
+    if policy.safe_mode:
+        return Event(output=output_payload, actions=EventActions(route="safe_execute"))
+    else:
+        return Event(output=output_payload, actions=EventActions())

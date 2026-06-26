@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from app.nodes.file_discovery_node import FolderScopePolicy
 from app.nodes.hitl_approval_node import HITLApprovalOutput
+from app.nodes.optimization_planner_node import OptimizationPlannerOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
 # ---------------------------------------------------------------------------
@@ -172,12 +173,20 @@ def _find_matching_allowed_path(path: str, policy: FolderScopePolicy) -> str | N
 # ---------------------------------------------------------------------------
 
 
-def execution_node(node_input: HITLApprovalOutput) -> Event:
+def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -> Event:
     """ExecutionNode — safely executes each approved action."""
-    approved_actions = node_input.approved_actions
+    if isinstance(node_input, HITLApprovalOutput):
+        approved_actions = node_input.approved_actions
+        rollback_enabled_flag = node_input.rollback_enabled
+        dry_run = node_input.dry_run
+    else:
+        # OptimizationPlannerOutput (Weekly Safe Mode)
+        approved_actions = node_input.action_plan.actions
+        rollback_enabled_flag = False
+        dry_run = node_input.action_plan.dry_run
+
     policy = node_input.folder_scope_policy
     sensitive_files = node_input.sensitive_files
-    dry_run = node_input.dry_run
 
     log: list[ExecutionLogEntry] = []
     success_count = 0
@@ -206,7 +215,11 @@ def execution_node(node_input: HITLApprovalOutput) -> Event:
             calc_rollback_supported = True
         elif action_type == "move":
             is_sensitive = _is_sensitive_file(path, sensitive_files)
-            dest_dir = parent_dir / ("Authenticated" if is_sensitive else "Organized")
+            dest_dir = parent_dir / (
+                "Authenticated"
+                if is_sensitive
+                else ("WeeklyReview" if policy.safe_mode else "Organized")
+            )
             calc_backup_path = None
             calc_new_path = str(dest_dir / p.name)
             calc_rollback_supported = True
@@ -300,6 +313,44 @@ def execution_node(node_input: HITLApprovalOutput) -> Event:
             failure_count += 1
             continue
 
+        # Guard 5: safe_mode double-guard against deletes and compressions
+        if policy.safe_mode and action_type in ("delete", "compress"):
+            log.append(
+                ExecutionLogEntry(
+                    path=path,
+                    action_type=action_type,
+                    status="failure",
+                    timestamp=now,
+                    reasoning="Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
+                    dry_run=dry_run,
+                    original_path=path,
+                    new_path=None,
+                    backup_path=None,
+                    rollback_supported=False,
+                )
+            )
+            failure_count += 1
+            continue
+
+        # Guard 6: Prevent overwrite guard for target destinations
+        if calc_new_path and not dry_run and os.path.exists(calc_new_path):
+            log.append(
+                ExecutionLogEntry(
+                    path=path,
+                    action_type=action_type,
+                    status="failure",
+                    timestamp=now,
+                    reasoning=f"Runtime Safety Check: Overwrite prevention. Target path '{os.path.basename(calc_new_path)}' is occupied.",
+                    dry_run=dry_run,
+                    original_path=path,
+                    new_path=calc_new_path,
+                    backup_path=calc_backup_path,
+                    rollback_supported=calc_rollback_supported,
+                )
+            )
+            failure_count += 1
+            continue
+
         # File presence check (for dry-run=False)
         if not dry_run and not os.path.exists(path):
             log.append(
@@ -368,7 +419,9 @@ def execution_node(node_input: HITLApprovalOutput) -> Event:
                     dest_dir = parent_dir / "Authenticated"
                 else:
                     parent_dir = p.parent
-                    dest_dir = parent_dir / "Organized"
+                    dest_dir = parent_dir / (
+                        "WeeklyReview" if policy.safe_mode else "Organized"
+                    )
 
                 os.makedirs(dest_dir, exist_ok=True)
                 dest_path = dest_dir / p.name
@@ -461,7 +514,6 @@ def execution_node(node_input: HITLApprovalOutput) -> Event:
         f"Dry run mode: {dry_run}."
     )
 
-    rollback_enabled_flag = node_input.rollback_enabled
     rollback_should_trigger = rollback_enabled_flag and (actual_failures_count > 0)
 
     output_payload = ExecutionOutput(

@@ -27,6 +27,30 @@ class FolderScopePolicy(BaseModel):
         default_factory=list,
         description="List of absolute directory paths the node MUST NOT scan.",
     )
+    safe_mode: bool = Field(
+        default=False,
+        description="Whether weekly organizer safe mode is active.",
+    )
+    dry_run: bool = Field(
+        default=False,
+        description="Whether weekly organizer is in dry-run mode.",
+    )
+    allow_deletes: bool = Field(
+        default=True,
+        description="Whether deletions are allowed in this flow.",
+    )
+    allow_compress: bool = Field(
+        default=True,
+        description="Whether compression is allowed in this flow.",
+    )
+    allow_archives: bool = Field(
+        default=True,
+        description="Whether archiving is allowed in this flow.",
+    )
+    allow_moves: bool = Field(
+        default=True,
+        description="Whether moving files is allowed in this flow.",
+    )
 
 
 class FileDiscoveryInput(BaseModel):

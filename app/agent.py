@@ -37,6 +37,11 @@ from app.nodes.hitl_approval_node import hitl_approval_node
 from app.nodes.execution_node import execution_node
 from app.nodes.summary_node import summary_node
 from app.nodes.rollback_node import rollback_node
+from app.nodes.weekly_organizer_node import (
+    weekly_organizer_node,
+    WeeklyOrganizerInput,
+    WeeklySummary,
+)
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -160,8 +165,27 @@ root_agent = Workflow(
         (execution_node, summary_node),
         (execution_node, {"rollback": rollback_node}),
         (rollback_node, summary_node),
+        # In safe mode, optimization_planner_node skips HITL and executes directly
+        (optimization_planner_node, {"safe_execute": execution_node}),
     ],
     input_schema=UserRequest,
+    rerun_on_resume=True,
+)
+
+# — Weekly Organizer Workflow (Isolated from the main cleanup pipeline) —
+weekly_organizer_agent = Workflow(
+    name="weekly_organizer_workflow",
+    edges=[
+        (START, weekly_organizer_node),
+        (weekly_organizer_node, {"run": file_discovery_node}),
+        (file_discovery_node, classification_node),
+        (classification_node, duplicate_detection_node),
+        (duplicate_detection_node, sensitive_detection_node),
+        (sensitive_detection_node, optimization_planner_node),
+        (optimization_planner_node, {"safe_execute": execution_node}),
+        (execution_node, summary_node),
+    ],
+    input_schema=WeeklyOrganizerInput,
     rerun_on_resume=True,
 )
 

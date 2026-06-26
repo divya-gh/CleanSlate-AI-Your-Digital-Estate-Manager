@@ -192,7 +192,7 @@ def test_optimization_planner() -> None:
     )
 
     # Execute Node
-    output = optimization_planner_node(node_input)
+    output = optimization_planner_node(node_input).output
 
     # Assertions
     plan = output.action_plan
