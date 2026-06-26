@@ -1,8 +1,11 @@
-from app.nodes.optimization_planner_node import optimization_planner_node
 from app.nodes.classification_node import ClassifiedFile, FileCategory
-from app.nodes.duplicate_detection_node import DuplicateGroup, DuplicateFileEntry
+from app.nodes.duplicate_detection_node import DuplicateFileEntry, DuplicateGroup
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
-from app.nodes.sensitive_detection_node import SensitiveDetectionOutput, SensitiveFileEntry
+from app.nodes.optimization_planner_node import optimization_planner_node
+from app.nodes.sensitive_detection_node import (
+    SensitiveDetectionOutput,
+    SensitiveFileEntry,
+)
 
 
 def test_optimization_planner() -> None:
@@ -57,12 +60,42 @@ def test_optimization_planner() -> None:
 
     # Classifications
     classified = [
-        ClassifiedFile(path=file_dup1.path, category=FileCategory.MISC, confidence=0.9, reasoning=""),
-        ClassifiedFile(path=file_dup2.path, category=FileCategory.MISC, confidence=0.9, reasoning=""),
-        ClassifiedFile(path=file_sensitive.path, category=FileCategory.TAX, confidence=0.9, reasoning=""),
-        ClassifiedFile(path=file_sensitive_dup.path, category=FileCategory.TAX, confidence=0.9, reasoning=""),
-        ClassifiedFile(path=file_compress.path, category=FileCategory.MISC, confidence=0.9, reasoning=""),
-        ClassifiedFile(path=file_blocked.path, category=FileCategory.MISC, confidence=0.9, reasoning=""),
+        ClassifiedFile(
+            path=file_dup1.path,
+            category=FileCategory.MISC,
+            confidence=0.9,
+            reasoning="",
+        ),
+        ClassifiedFile(
+            path=file_dup2.path,
+            category=FileCategory.MISC,
+            confidence=0.9,
+            reasoning="",
+        ),
+        ClassifiedFile(
+            path=file_sensitive.path,
+            category=FileCategory.TAX,
+            confidence=0.9,
+            reasoning="",
+        ),
+        ClassifiedFile(
+            path=file_sensitive_dup.path,
+            category=FileCategory.TAX,
+            confidence=0.9,
+            reasoning="",
+        ),
+        ClassifiedFile(
+            path=file_compress.path,
+            category=FileCategory.MISC,
+            confidence=0.9,
+            reasoning="",
+        ),
+        ClassifiedFile(
+            path=file_blocked.path,
+            category=FileCategory.MISC,
+            confidence=0.9,
+            reasoning="",
+        ),
     ]
 
     # Duplicate Groups
@@ -70,16 +103,27 @@ def test_optimization_planner() -> None:
         DuplicateGroup(
             group_id="group_1",
             files=[
-                DuplicateFileEntry(path=file_dup1.path, size=1000, hash="h1", similarity_score=1.0),
-                DuplicateFileEntry(path=file_dup2.path, size=1000, hash="h1", similarity_score=1.0),
+                DuplicateFileEntry(
+                    path=file_dup1.path, size=1000, hash="h1", similarity_score=1.0
+                ),
+                DuplicateFileEntry(
+                    path=file_dup2.path, size=1000, hash="h1", similarity_score=1.0
+                ),
             ],
             reasoning="Exact hash match",
         ),
         DuplicateGroup(
             group_id="group_2",
             files=[
-                DuplicateFileEntry(path=file_sensitive.path, size=2000, hash="h2", similarity_score=1.0),
-                DuplicateFileEntry(path=file_sensitive_dup.path, size=2000, hash="h2", similarity_score=1.0),
+                DuplicateFileEntry(
+                    path=file_sensitive.path, size=2000, hash="h2", similarity_score=1.0
+                ),
+                DuplicateFileEntry(
+                    path=file_sensitive_dup.path,
+                    size=2000,
+                    hash="h2",
+                    similarity_score=1.0,
+                ),
             ],
             reasoning="Exact hash match",
         ),
@@ -87,19 +131,62 @@ def test_optimization_planner() -> None:
 
     # Sensitivity Check Results
     sensitive_results = [
-        SensitiveFileEntry(path=file_dup1.path, sensitive=False, sensitivity_type="none", confidence=1.0, reasoning=""),
-        SensitiveFileEntry(path=file_dup2.path, sensitive=False, sensitivity_type="none", confidence=1.0, reasoning=""),
-        SensitiveFileEntry(path=file_sensitive.path, sensitive=True, sensitivity_type="tax", confidence=0.95, reasoning=""),
-        SensitiveFileEntry(path=file_sensitive_dup.path, sensitive=True, sensitivity_type="tax", confidence=0.95, reasoning=""),
-        SensitiveFileEntry(path=file_compress.path, sensitive=False, sensitivity_type="none", confidence=1.0, reasoning=""),
-        SensitiveFileEntry(path=file_blocked.path, sensitive=False, sensitivity_type="none", confidence=1.0, reasoning=""),
+        SensitiveFileEntry(
+            path=file_dup1.path,
+            sensitive=False,
+            sensitivity_type="none",
+            confidence=1.0,
+            reasoning="",
+        ),
+        SensitiveFileEntry(
+            path=file_dup2.path,
+            sensitive=False,
+            sensitivity_type="none",
+            confidence=1.0,
+            reasoning="",
+        ),
+        SensitiveFileEntry(
+            path=file_sensitive.path,
+            sensitive=True,
+            sensitivity_type="tax",
+            confidence=0.95,
+            reasoning="",
+        ),
+        SensitiveFileEntry(
+            path=file_sensitive_dup.path,
+            sensitive=True,
+            sensitivity_type="tax",
+            confidence=0.95,
+            reasoning="",
+        ),
+        SensitiveFileEntry(
+            path=file_compress.path,
+            sensitive=False,
+            sensitivity_type="none",
+            confidence=1.0,
+            reasoning="",
+        ),
+        SensitiveFileEntry(
+            path=file_blocked.path,
+            sensitive=False,
+            sensitivity_type="none",
+            confidence=1.0,
+            reasoning="",
+        ),
     ]
 
     node_input = SensitiveDetectionOutput(
         sensitive_files=sensitive_results,
         classified_files=classified,
         duplicate_groups=dup_groups,
-        file_inventory=[file_dup1, file_dup2, file_sensitive, file_sensitive_dup, file_compress, file_blocked],
+        file_inventory=[
+            file_dup1,
+            file_dup2,
+            file_sensitive,
+            file_sensitive_dup,
+            file_compress,
+            file_blocked,
+        ],
         folder_scope_policy=policy,
         reasoning="",
     )
