@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from app.nodes.classification_node import ClassificationOutput
+from app.nodes.classification_node import ClassificationOutput, ClassifiedFile
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 
 # ---------------------------------------------------------------------------
@@ -50,6 +50,17 @@ class DuplicateDetectionOutput(BaseModel):
     duplicate_groups: list[DuplicateGroup] = Field(
         default_factory=list,
         description="List of duplicate groups identified.",
+    )
+    classified_files: list[ClassifiedFile] = Field(
+        default_factory=list,
+        description="List of classification results for every file (propagated downstream).",
+    )
+    file_inventory: list[FileMetadata] = Field(
+        default_factory=list,
+        description="List of metadata objects for every discovered file (propagated downstream).",
+    )
+    folder_scope_policy: FolderScopePolicy = Field(
+        description="The folder scope policy used for discovery, propagated downstream.",
     )
     reasoning: str = Field(
         description="High-level summary of the duplicate detection run.",
@@ -259,5 +270,8 @@ def duplicate_detection_node(
 
     return DuplicateDetectionOutput(
         duplicate_groups=groups,
+        classified_files=node_input.classified_files,
+        file_inventory=inventory,
+        folder_scope_policy=policy,
         reasoning=reasoning,
     )

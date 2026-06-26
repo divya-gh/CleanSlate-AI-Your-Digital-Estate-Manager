@@ -1,6 +1,9 @@
-import os
+from app.nodes.classification_node import (
+    ClassificationOutput,
+    ClassifiedFile,
+    FileCategory,
+)
 from app.nodes.duplicate_detection_node import duplicate_detection_node
-from app.nodes.classification_node import ClassificationOutput, ClassifiedFile, FileCategory
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 
 
@@ -19,9 +22,13 @@ def test_duplicate_detection_exact_and_near(tmp_path) -> None:
     file5 = allowed_dir / "duplicate_copy2.log"  # exact duplicate of file4
     file_blocked = blocked_dir / "duplicate_copy3.log"  # exact duplicate but blocked
 
-    file1.write_text("This is version one of the report for the capstone project. It contains some text.")
+    file1.write_text(
+        "This is version one of the report for the capstone project. It contains some text."
+    )
     # file2 has slightly different size and name, same extension, same parent folder
-    file2.write_text("This is version two of the report for the capstone project. It contains more text.")
+    file2.write_text(
+        "This is version two of the report for the capstone project. It contains more text."
+    )
     file3.write_text("Entirely different content and type.")
     file4.write_text("EXACT_HASH_CONTENT")
     file5.write_text("EXACT_HASH_CONTENT")
@@ -77,12 +84,27 @@ def test_duplicate_detection_exact_and_near(tmp_path) -> None:
     )
 
     classified = [
-        ClassifiedFile(path=meta1.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
-        ClassifiedFile(path=meta2.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
-        ClassifiedFile(path=meta3.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
-        ClassifiedFile(path=meta4.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
-        ClassifiedFile(path=meta5.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
-        ClassifiedFile(path=meta_blocked.path, category=FileCategory.MISC, confidence=0.8, reasoning=""),
+        ClassifiedFile(
+            path=meta1.path, category=FileCategory.MISC, confidence=0.8, reasoning=""
+        ),
+        ClassifiedFile(
+            path=meta2.path, category=FileCategory.MISC, confidence=0.8, reasoning=""
+        ),
+        ClassifiedFile(
+            path=meta3.path, category=FileCategory.MISC, confidence=0.8, reasoning=""
+        ),
+        ClassifiedFile(
+            path=meta4.path, category=FileCategory.MISC, confidence=0.8, reasoning=""
+        ),
+        ClassifiedFile(
+            path=meta5.path, category=FileCategory.MISC, confidence=0.8, reasoning=""
+        ),
+        ClassifiedFile(
+            path=meta_blocked.path,
+            category=FileCategory.MISC,
+            confidence=0.8,
+            reasoning="",
+        ),
     ]
 
     node_input = ClassificationOutput(
@@ -117,4 +139,8 @@ def test_duplicate_detection_exact_and_near(tmp_path) -> None:
     near_paths = {entry.path for entry in near_groups[0].files}
     assert str(file1) in near_paths
     assert str(file2) in near_paths
-    assert all(0.8 <= entry.similarity_score < 1.0 for entry in near_groups[0].files if entry.path != str(file1))
+    assert all(
+        0.8 <= entry.similarity_score < 1.0
+        for entry in near_groups[0].files
+        if entry.path != str(file1)
+    )
