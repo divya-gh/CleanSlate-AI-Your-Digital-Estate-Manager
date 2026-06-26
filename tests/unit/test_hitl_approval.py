@@ -1,9 +1,15 @@
 from unittest.mock import MagicMock
+
 import pytest
-from google.adk.events.request_input import RequestInput
 from google.adk.events.event import Event
-from app.nodes.hitl_approval_node import hitl_approval_node, HITLApprovalOutput
-from app.nodes.optimization_planner_node import CleanupAction, ActionPlan, OptimizationPlannerOutput
+from google.adk.events.request_input import RequestInput
+
+from app.nodes.hitl_approval_node import HITLApprovalOutput, hitl_approval_node
+from app.nodes.optimization_planner_node import (
+    ActionPlan,
+    CleanupAction,
+    OptimizationPlannerOutput,
+)
 
 
 @pytest.mark.asyncio
@@ -27,7 +33,12 @@ async def test_hitl_approval_yields_request() -> None:
             confidence=0.95,
         ),
     ]
-    plan = ActionPlan(actions=actions, reasoning=["Test reasoning"], estimated_recovery=3000, dry_run=True)
+    plan = ActionPlan(
+        actions=actions,
+        reasoning=["Test reasoning"],
+        estimated_recovery=3000,
+        dry_run=True,
+    )
     node_input = OptimizationPlannerOutput(action_plan=plan, reasoning="Planner done")
 
     # Mock context
@@ -35,7 +46,7 @@ async def test_hitl_approval_yields_request() -> None:
     ctx.resume_inputs = None
 
     generator = hitl_approval_node(ctx, node_input)
-    
+
     # First yield should be a RequestInput
     first_yield = await generator.__anext__()
     assert isinstance(first_yield, RequestInput)
@@ -64,7 +75,12 @@ async def test_hitl_approval_approved() -> None:
             confidence=0.95,
         ),
     ]
-    plan = ActionPlan(actions=actions, reasoning=["Test reasoning"], estimated_recovery=3000, dry_run=True)
+    plan = ActionPlan(
+        actions=actions,
+        reasoning=["Test reasoning"],
+        estimated_recovery=3000,
+        dry_run=True,
+    )
     node_input = OptimizationPlannerOutput(action_plan=plan, reasoning="Planner done")
 
     # Mock context
@@ -72,14 +88,14 @@ async def test_hitl_approval_approved() -> None:
     ctx.resume_inputs = {"hitl_approved": "yes"}
 
     generator = hitl_approval_node(ctx, node_input)
-    
+
     # Should yield an Event with the output
     event_yield = await generator.__anext__()
     assert isinstance(event_yield, Event)
-    
+
     output: HITLApprovalOutput = event_yield.output
     assert isinstance(output, HITLApprovalOutput)
-    
+
     # Verify safety: unsafe.txt should have been filtered out
     assert len(output.approved_actions) == 1
     assert output.approved_actions[0].path == "/allowed/dup1.txt"
@@ -98,7 +114,12 @@ async def test_hitl_approval_rejected() -> None:
             confidence=0.95,
         ),
     ]
-    plan = ActionPlan(actions=actions, reasoning=["Test reasoning"], estimated_recovery=1000, dry_run=True)
+    plan = ActionPlan(
+        actions=actions,
+        reasoning=["Test reasoning"],
+        estimated_recovery=1000,
+        dry_run=True,
+    )
     node_input = OptimizationPlannerOutput(action_plan=plan, reasoning="Planner done")
 
     # Mock context
@@ -107,7 +128,7 @@ async def test_hitl_approval_rejected() -> None:
 
     generator = hitl_approval_node(ctx, node_input)
     event_yield = await generator.__anext__()
-    
+
     output: HITLApprovalOutput = event_yield.output
     assert len(output.approved_actions) == 0
     assert "User approved the plan: False" in output.reasoning

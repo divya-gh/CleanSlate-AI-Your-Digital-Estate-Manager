@@ -14,8 +14,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.nodes.file_discovery_node import FolderScopePolicy
-from app.nodes.sensitive_detection_node import SensitiveDetectionOutput
+from app.nodes.classification_node import ClassifiedFile
+from app.nodes.duplicate_detection_node import DuplicateGroup
+from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
+from app.nodes.sensitive_detection_node import (
+    SensitiveDetectionOutput,
+    SensitiveFileEntry,
+)
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -71,6 +76,26 @@ class OptimizationPlannerOutput(BaseModel):
     action_plan: ActionPlan = Field(description="The generated action plan.")
     reasoning: str = Field(
         description="High-level reasoning summary of the planner node."
+    )
+    classified_files: list[ClassifiedFile] = Field(
+        default_factory=list,
+        description="List of classification results for every file (propagated downstream).",
+    )
+    duplicate_groups: list[DuplicateGroup] = Field(
+        default_factory=list,
+        description="List of duplicate groups identified (propagated downstream).",
+    )
+    file_inventory: list[FileMetadata] = Field(
+        default_factory=list,
+        description="List of metadata objects for every discovered file (propagated downstream).",
+    )
+    folder_scope_policy: FolderScopePolicy = Field(
+        default_factory=lambda: FolderScopePolicy(allowed_paths=[]),
+        description="The folder scope policy used for discovery, propagated downstream.",
+    )
+    sensitive_files: list[SensitiveFileEntry] = Field(
+        default_factory=list,
+        description="List of sensitive file entries (propagated downstream).",
     )
 
 
@@ -290,4 +315,9 @@ def optimization_planner_node(
     return OptimizationPlannerOutput(
         action_plan=action_plan,
         reasoning=high_level_reasoning,
+        classified_files=node_input.classified_files,
+        duplicate_groups=node_input.duplicate_groups,
+        file_inventory=inventory,
+        folder_scope_policy=policy,
+        sensitive_files=node_input.sensitive_files,
     )

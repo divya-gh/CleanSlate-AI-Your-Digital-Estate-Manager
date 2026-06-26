@@ -34,6 +34,8 @@ from app.nodes.duplicate_detection_node import duplicate_detection_node
 from app.nodes.sensitive_detection_node import sensitive_detection_node
 from app.nodes.optimization_planner_node import optimization_planner_node
 from app.nodes.hitl_approval_node import hitl_approval_node
+from app.nodes.execution_node import execution_node
+from app.nodes.summary_node import summary_node
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -42,8 +44,38 @@ os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 
+from pydantic import BaseModel, model_validator
+from typing import Any
+
+
 class UserRequest(BaseModel):
     request_text: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _validate_content(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "parts" in data:
+                parts = data["parts"]
+                text = ""
+                if isinstance(parts, list):
+                    for part in parts:
+                        if isinstance(part, dict) and "text" in part:
+                            text += part["text"]
+                        elif hasattr(part, "text") and part.text:
+                            text += part.text
+                return {"request_text": text}
+            if "request_text" in data:
+                return data
+        if hasattr(data, "parts") and data.parts:
+            text = ""
+            for part in data.parts:
+                if hasattr(part, "text") and part.text:
+                    text += part.text
+            return {"request_text": text}
+        if isinstance(data, str):
+            return {"request_text": data}
+        return data
 
 
 def process_request(node_input: UserRequest) -> str:
@@ -119,6 +151,9 @@ root_agent = Workflow(
         (duplicate_detection_node, sensitive_detection_node),
         (sensitive_detection_node, optimization_planner_node),
         (optimization_planner_node, hitl_approval_node),
+        (hitl_approval_node, {"approved": execution_node}),
+        (execution_node, summary_node),
+        # (rollback_node, summary_node),  # Prepared wiring for when RollbackNode is implemented
     ],
     input_schema=UserRequest,
     rerun_on_resume=True,

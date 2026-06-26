@@ -46,19 +46,24 @@ async def test_agent_stream_query(agent_app: AgentEngineApp) -> None:
     assert len(events) > 0, "Expected at least one chunk in response"
 
     # Check for valid content in the response
-    has_text_content = False
+    has_valid_content = False
     for event in events:
         validated_event = Event.model_validate(event)
         content = validated_event.content
         if (
             content is not None
             and content.parts
-            and any(part.text for part in content.parts)
+            and (
+                any(part.text for part in content.parts)
+                or any(part.function_call for part in content.parts)
+            )
         ):
-            has_text_content = True
+            has_valid_content = True
             break
 
-    assert has_text_content, "Expected at least one event with text content"
+    assert has_valid_content, (
+        "Expected at least one event with text content or function call"
+    )
 
 
 def test_agent_feedback(agent_app: AgentEngineApp) -> None:

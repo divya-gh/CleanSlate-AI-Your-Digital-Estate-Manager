@@ -9,10 +9,15 @@ from __future__ import annotations
 
 from google.adk.agents.context import Context
 from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from google.adk.events.request_input import RequestInput
 from pydantic import BaseModel, Field
 
+from app.nodes.classification_node import ClassifiedFile
+from app.nodes.duplicate_detection_node import DuplicateGroup
+from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 from app.nodes.optimization_planner_node import CleanupAction, OptimizationPlannerOutput
+from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -25,6 +30,33 @@ class HITLApprovalOutput(BaseModel):
     approved_actions: list[CleanupAction] = Field(
         default_factory=list,
         description="List of actions that the user explicitly approved and are safe to run.",
+    )
+    classified_files: list[ClassifiedFile] = Field(
+        default_factory=list,
+        description="List of classification results (propagated downstream).",
+    )
+    duplicate_groups: list[DuplicateGroup] = Field(
+        default_factory=list,
+        description="List of duplicate groups (propagated downstream).",
+    )
+    file_inventory: list[FileMetadata] = Field(
+        default_factory=list,
+        description="List of metadata objects for every discovered file (propagated downstream).",
+    )
+    folder_scope_policy: FolderScopePolicy = Field(
+        description="The folder scope policy used for discovery, propagated downstream.",
+    )
+    sensitive_files: list[SensitiveFileEntry] = Field(
+        default_factory=list,
+        description="List of sensitive file entries (propagated downstream).",
+    )
+    dry_run: bool = Field(
+        default=True,
+        description="Dry run status propagated from the planner.",
+    )
+    rollback_enabled: bool = Field(
+        default=True,
+        description="Whether rollback is enabled, propagated downstream.",
     )
     reasoning: str = Field(
         description="High-level reasoning comments summarizing the HITL outcome."
@@ -93,12 +125,22 @@ async def hitl_approval_node(
                 continue
             approved.append(action)
 
+    route = "approved" if approved else "rejected"
+
     yield Event(
         output=HITLApprovalOutput(
             approved_actions=approved,
+            classified_files=node_input.classified_files,
+            duplicate_groups=node_input.duplicate_groups,
+            file_inventory=node_input.file_inventory,
+            folder_scope_policy=node_input.folder_scope_policy,
+            sensitive_files=node_input.sensitive_files,
+            dry_run=plan.dry_run,
+            rollback_enabled=True,
             reasoning=(
                 f"User approved the plan: {is_approved}. "
                 f"Selected {len(approved)} safe action(s) for execution."
             ),
-        )
+        ),
+        actions=EventActions(route=route),
     )

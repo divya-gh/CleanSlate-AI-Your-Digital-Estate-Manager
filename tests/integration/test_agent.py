@@ -43,15 +43,18 @@ def test_agent_stream() -> None:
             run_config=RunConfig(streaming_mode=StreamingMode.SSE),
         )
     )
-    assert len(events) > 0, "Expected at least one message"
-
-    has_text_content = False
+    has_valid_content = False
     for event in events:
         if (
             event.content
             and event.content.parts
-            and any(part.text for part in event.content.parts)
+            and (
+                any(part.text for part in event.content.parts)
+                or any(part.function_call for part in event.content.parts)
+            )
         ):
-            has_text_content = True
+            has_valid_content = True
             break
-    assert has_text_content, "Expected at least one message with text content"
+    assert has_valid_content, (
+        "Expected at least one message with text content or function call"
+    )
