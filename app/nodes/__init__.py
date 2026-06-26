@@ -21,6 +21,11 @@ from app.nodes.optimization_planner_node import (
     OptimizationPlannerOutput,
     optimization_planner_node,
 )
+from app.nodes.rollback_node import (
+    RollbackOutput,
+    RollbackSummary,
+    rollback_node,
+)
 from app.nodes.sensitive_detection_node import (
     SensitiveDetectionOutput,
     SensitiveFileEntry,
@@ -41,6 +46,8 @@ __all__ = [
     "ExecutionOutput",
     "HITLApprovalOutput",
     "OptimizationPlannerOutput",
+    "RollbackOutput",
+    "RollbackSummary",
     "SensitiveDetectionOutput",
     "SensitiveFileEntry",
     "SummaryOutput",
@@ -48,6 +55,7 @@ __all__ = [
     "execution_node",
     "hitl_approval_node",
     "optimization_planner_node",
+    "rollback_node",
     "sensitive_detection_node",
     "summary_node",
 ]

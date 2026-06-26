@@ -31,7 +31,7 @@ def test_execution_dry_run() -> None:
         reasoning="User approved",
     )
 
-    output = execution_node(node_input)
+    output = execution_node(node_input).output
     assert len(output.execution_log) == 1
     log = output.execution_log[0]
     assert log.path == "/allowed/dup.txt"
@@ -147,7 +147,7 @@ def test_execution_real_run(tmp_path) -> None:
     )
 
     # Execute Node (dry_run=False)
-    output = execution_node(node_input)
+    output = execution_node(node_input).output
 
     # Assertions on logs
     assert len(output.execution_log) == 6
@@ -255,7 +255,7 @@ def test_execution_never_touches_unapproved_files(tmp_path) -> None:
         reasoning="Runapproved",
     )
 
-    output = execution_node(node_input)
+    output = execution_node(node_input).output
 
     # approved.txt should be deleted
     assert not file_approved.exists()

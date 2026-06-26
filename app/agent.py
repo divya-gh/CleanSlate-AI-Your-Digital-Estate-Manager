@@ -36,6 +36,7 @@ from app.nodes.optimization_planner_node import optimization_planner_node
 from app.nodes.hitl_approval_node import hitl_approval_node
 from app.nodes.execution_node import execution_node
 from app.nodes.summary_node import summary_node
+from app.nodes.rollback_node import rollback_node
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -152,8 +153,13 @@ root_agent = Workflow(
         (sensitive_detection_node, optimization_planner_node),
         (optimization_planner_node, hitl_approval_node),
         (hitl_approval_node, {"approved": execution_node}),
+        # — Execution & Conditional Rollback Routing —
+        # The default path is execution_node -> summary_node.
+        # If execution_node detects actual failures and rollback is enabled,
+        # it emits an Event routing to "rollback", transferring flow to rollback_node.
         (execution_node, summary_node),
-        # (rollback_node, summary_node),  # Prepared wiring for when RollbackNode is implemented
+        (execution_node, {"rollback": rollback_node}),
+        (rollback_node, summary_node),
     ],
     input_schema=UserRequest,
     rerun_on_resume=True,

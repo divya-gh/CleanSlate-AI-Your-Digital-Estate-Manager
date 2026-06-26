@@ -15,6 +15,8 @@ import zipfile
 from pathlib import Path
 from typing import Literal
 
+from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
 from app.nodes.file_discovery_node import FolderScopePolicy
@@ -170,7 +172,7 @@ def _find_matching_allowed_path(path: str, policy: FolderScopePolicy) -> str | N
 # ---------------------------------------------------------------------------
 
 
-def execution_node(node_input: HITLApprovalOutput) -> ExecutionOutput:
+def execution_node(node_input: HITLApprovalOutput) -> Event:
     """ExecutionNode — safely executes each approved action."""
     approved_actions = node_input.approved_actions
     policy = node_input.folder_scope_policy
@@ -181,6 +183,7 @@ def execution_node(node_input: HITLApprovalOutput) -> ExecutionOutput:
     success_count = 0
     failure_count = 0
     estimated_recovery_sum = 0
+    actual_failures_count = 0
 
     for action in approved_actions:
         path = action.path
@@ -450,6 +453,7 @@ def execution_node(node_input: HITLApprovalOutput) -> ExecutionOutput:
                 )
             )
             failure_count += 1
+            actual_failures_count += 1
 
     reasoning = (
         f"Executed {len(approved_actions)} action(s). "
@@ -457,7 +461,10 @@ def execution_node(node_input: HITLApprovalOutput) -> ExecutionOutput:
         f"Dry run mode: {dry_run}."
     )
 
-    return ExecutionOutput(
+    rollback_enabled_flag = node_input.rollback_enabled
+    rollback_should_trigger = rollback_enabled_flag and (actual_failures_count > 0)
+
+    output_payload = ExecutionOutput(
         execution_log=log,
         reasoning=reasoning,
         original_path="",
@@ -465,8 +472,13 @@ def execution_node(node_input: HITLApprovalOutput) -> ExecutionOutput:
         backup_path=None,
         rollback_supported=False,
         dry_run=dry_run,
-        rollback_enabled=True,
+        rollback_enabled=rollback_enabled_flag,
         folder_scope_policy=policy,
         sensitive_files=sensitive_files,
         estimated_recovery=estimated_recovery_sum,
     )
+
+    if rollback_should_trigger:
+        return Event(output=output_payload, actions=EventActions(route="rollback"))
+    else:
+        return Event(output=output_payload, actions=EventActions())

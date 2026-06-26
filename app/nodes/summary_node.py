@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from app.nodes.execution_node import ExecutionOutput
 from app.nodes.file_discovery_node import FolderScopePolicy
+from app.nodes.rollback_node import RollbackOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
 # ---------------------------------------------------------------------------
@@ -139,7 +140,7 @@ def _clean_reasoning(reasoning: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def summary_node(node_input: ExecutionOutput) -> SummaryOutput:
+def summary_node(node_input: ExecutionOutput | RollbackOutput) -> SummaryOutput:
     """SummaryNode — aggregates and reports execution outcomes safely."""
     execution_log = node_input.execution_log
     policy = node_input.folder_scope_policy
@@ -183,6 +184,13 @@ def summary_node(node_input: ExecutionOutput) -> SummaryOutput:
         else:
             rollback_unsupported_actions += 1
 
+    rollback_summary = getattr(node_input, "rollback_summary", None)
+    if rollback_summary is not None:
+        failed_actions += rollback_summary.failed
+        rollback_errors = getattr(node_input, "errors", [])
+        for err in rollback_errors:
+            errors_list.append(err)
+
     # Formulate sectioned markdown report
     report_lines: list[str] = []
     if dry_run:
@@ -194,6 +202,16 @@ def summary_node(node_input: ExecutionOutput) -> SummaryOutput:
     report_lines.append(f"- Failed Actions: {failed_actions}")
     report_lines.append(f"- Skipped Actions: {skipped_actions}")
     report_lines.append("")
+
+    if rollback_summary is not None:
+        report_lines.append("## Rollback Summary")
+        report_lines.append(f"- Restored Files: {rollback_summary.succeeded}")
+        report_lines.append(f"- Unsupported Reversals: {rollback_summary.unsupported}")
+        report_lines.append(f"- Rollback Failures: {rollback_summary.failed}")
+        report_lines.append(f"- Rollback Dry-Run Status: {rollback_summary.dry_run}")
+        report_lines.append("")
+        report_lines.append(rollback_summary.human_readable_report)
+        report_lines.append("")
 
     report_lines.append("## Storage Recovery")
     report_lines.append(
