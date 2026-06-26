@@ -23,6 +23,13 @@ from google.adk.events.request_input import RequestInput
 from google.adk.agents.context import Context
 from google.adk.apps import App, ResumabilityConfig
 
+from app.nodes.file_discovery_node import (
+    FileDiscoveryInput,
+    FileDiscoveryOutput,
+    FolderScopePolicy,
+    file_discovery_node,
+)
+
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
@@ -69,13 +76,39 @@ def finalize_request(node_input: dict) -> str:
         return f"Outcome: REJECTED. Canceled action: '{request}'"
 
 
+# ---------------------------------------------------------------------------
+# FolderScopeNode — placeholder (to be implemented per ADK Agent Graph SPEC)
+# Outputs a FileDiscoveryInput that feeds into FileDiscoveryNode.
+# ---------------------------------------------------------------------------
+def folder_scope_node(node_input: str) -> FileDiscoveryInput:
+    """Placeholder FolderScopeNode — returns a default scope policy.
+
+    This node will be replaced with the full implementation when the
+    FolderScopeNode SPEC is provided.  For now it emits a safe default
+    so that FileDiscoveryNode can be tested in isolation.
+    """
+    return FileDiscoveryInput(
+        folder_scope_policy=FolderScopePolicy(
+            allowed_paths=[],
+            blocked_paths=[],
+        ),
+        search_query=None,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Define the workflow graph
+# ---------------------------------------------------------------------------
 root_agent = Workflow(
     name="cleanslate_pc_workflow",
     edges=[
+        # — Core request pipeline —
         (START, process_request),
         (process_request, verify_request),
         (verify_request, finalize_request),
+        # — File discovery pipeline (no downstream yet) —
+        (finalize_request, folder_scope_node),
+        (folder_scope_node, file_discovery_node),
     ],
     input_schema=UserRequest,
     rerun_on_resume=True,
