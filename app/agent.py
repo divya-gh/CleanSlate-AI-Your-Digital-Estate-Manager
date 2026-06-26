@@ -42,6 +42,10 @@ from app.nodes.weekly_organizer_node import (
     WeeklyOrganizerInput,
     WeeklySummary,
 )
+from app.nodes.my_pc_assistant_node import (
+    MyPCAssistantInput,
+    my_pc_assistant_node,
+)
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -123,7 +127,7 @@ def finalize_request(node_input: dict) -> str:
 # FolderScopeNode — placeholder (to be implemented per ADK Agent Graph SPEC)
 # Outputs a FileDiscoveryInput that feeds into FileDiscoveryNode.
 # ---------------------------------------------------------------------------
-def folder_scope_node(node_input: str) -> FileDiscoveryInput:
+def folder_scope_node(node_input: Any) -> FileDiscoveryInput:
     """Placeholder FolderScopeNode — returns a default scope policy.
 
     This node will be replaced with the full implementation when the
@@ -132,7 +136,7 @@ def folder_scope_node(node_input: str) -> FileDiscoveryInput:
     """
     return FileDiscoveryInput(
         folder_scope_policy=FolderScopePolicy(
-            allowed_paths=[],
+            allowed_paths=[os.getcwd()],
             blocked_paths=[],
         ),
         search_query=None,
@@ -145,12 +149,12 @@ def folder_scope_node(node_input: str) -> FileDiscoveryInput:
 root_agent = Workflow(
     name="cleanslate_pc_workflow",
     edges=[
-        # — Core request pipeline —
-        (START, process_request),
-        (process_request, verify_request),
-        (verify_request, finalize_request),
-        # — File discovery → Classification pipeline (no downstream yet) —
-        (finalize_request, folder_scope_node),
+        # — Interactive Assistant Entry Point & Routing —
+        (START, my_pc_assistant_node),
+        (my_pc_assistant_node, {"cleanup": folder_scope_node}),
+        (my_pc_assistant_node, {"search": file_discovery_node}),
+        (my_pc_assistant_node, {"explain": summary_node}),
+        # — File discovery → Classification pipeline —
         (folder_scope_node, file_discovery_node),
         (file_discovery_node, classification_node),
         (classification_node, duplicate_detection_node),
@@ -159,16 +163,13 @@ root_agent = Workflow(
         (optimization_planner_node, hitl_approval_node),
         (hitl_approval_node, {"approved": execution_node}),
         # — Execution & Conditional Rollback Routing —
-        # The default path is execution_node -> summary_node.
-        # If execution_node detects actual failures and rollback is enabled,
-        # it emits an Event routing to "rollback", transferring flow to rollback_node.
         (execution_node, summary_node),
         (execution_node, {"rollback": rollback_node}),
         (rollback_node, summary_node),
         # In safe mode, optimization_planner_node skips HITL and executes directly
         (optimization_planner_node, {"safe_execute": execution_node}),
     ],
-    input_schema=UserRequest,
+    input_schema=MyPCAssistantInput,
     rerun_on_resume=True,
 )
 

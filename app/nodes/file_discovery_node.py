@@ -12,6 +12,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from app.nodes.my_pc_assistant_node import MyPCAssistantOutput
+
 # ---------------------------------------------------------------------------
 # Input / Output schemas
 # ---------------------------------------------------------------------------
@@ -186,13 +188,52 @@ def _scan_allowed_paths(
 # ---------------------------------------------------------------------------
 
 
-def file_discovery_node(node_input: FileDiscoveryInput) -> FileDiscoveryOutput:
+def file_discovery_node(
+    node_input: FileDiscoveryInput | MyPCAssistantOutput,
+) -> FileDiscoveryOutput:
     """FileDiscoveryNode — scans allowed paths and returns a file inventory.
 
     This function node follows the ADK 2.0 Workflow convention:
     - Accepts a typed Pydantic input (auto-converted from predecessor output).
     - Returns a typed Pydantic output for downstream consumption.
     """
+    if isinstance(node_input, MyPCAssistantOutput):
+        if node_input.intent != "search":
+            raise ValueError(
+                f"FileDiscoveryNode only accepts MyPCAssistantOutput when intent is 'search'. Got: {node_input.intent}"
+            )
+        q = node_input.search_query
+        if not q or not q.strip():
+            raise ValueError("search_query must not be empty.")
+
+        q_lower = q.lower()
+        blocked_keywords = {
+            "system",
+            "windows",
+            "system32",
+            "programdata",
+            "appdata",
+            "ssn",
+            "password",
+            "tax",
+            "banking",
+        }
+        if any(kw in q_lower for kw in blocked_keywords):
+            raise ValueError("search_query contains blocked system/sensitive keywords.")
+
+        if len(q) > 200:
+            raise ValueError("search_query exceeds maximum length of 200 characters.")
+
+        # Construct a default policy allowing the current working directory
+        policy = FolderScopePolicy(
+            allowed_paths=[os.getcwd()],
+            blocked_paths=[],
+        )
+        node_input = FileDiscoveryInput(
+            folder_scope_policy=policy,
+            search_query=q,
+        )
+
     policy = node_input.folder_scope_policy
     search_query = node_input.search_query
 

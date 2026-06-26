@@ -10,10 +10,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from google import genai
 from pydantic import BaseModel, Field
 
 from app.nodes.execution_node import ExecutionOutput
 from app.nodes.file_discovery_node import FolderScopePolicy
+from app.nodes.my_pc_assistant_node import MyPCAssistantOutput
 from app.nodes.rollback_node import RollbackOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
@@ -140,8 +142,49 @@ def _clean_reasoning(reasoning: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def summary_node(node_input: ExecutionOutput | RollbackOutput) -> SummaryOutput:
+def summary_node(
+    node_input: ExecutionOutput | RollbackOutput | MyPCAssistantOutput,
+) -> SummaryOutput:
     """SummaryNode — aggregates and reports execution outcomes safely."""
+    if isinstance(node_input, MyPCAssistantOutput):
+        if node_input.conversational_response:
+            report = node_input.conversational_response
+        elif node_input.explanation_request:
+            # Generate a secure conversational explanation via Gemini
+            client = genai.Client()
+            prompt = (
+                f"You are a helpful PC assistant. Securely explain the following topic to the user:\n"
+                f"Topic: {node_input.explanation_request}\n\n"
+                f"Guidelines:\n"
+                f"- Never reveal any actual absolute file paths, backup folders, or system directories.\n"
+                f"- Speak conversationally and guide the user in markdown formatting.\n"
+                f"- Do not refer to any local files or system-specific metadata."
+            )
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                )
+                report = response.text
+            except Exception as e:
+                report = f"I am sorry, I encountered an issue generating the explanation: {e}"
+        else:
+            report = "No details to display."
+
+        return SummaryOutput(
+            total_actions=0,
+            successful_actions=0,
+            failed_actions=0,
+            skipped_actions=0,
+            estimated_recovery=0,
+            dry_run=False,
+            sensitive_files_protected=0,
+            rollback_supported_actions=0,
+            rollback_unsupported_actions=0,
+            human_readable_report=report,
+            errors=[],
+        )
+
     execution_log = node_input.execution_log
     policy = node_input.folder_scope_policy
     sensitive_files = node_input.sensitive_files

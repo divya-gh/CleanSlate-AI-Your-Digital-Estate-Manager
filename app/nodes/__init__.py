@@ -15,6 +15,11 @@ from app.nodes.hitl_approval_node import (
     HITLApprovalOutput,
     hitl_approval_node,
 )
+from app.nodes.my_pc_assistant_node import (
+    MyPCAssistantInput,
+    MyPCAssistantOutput,
+    my_pc_assistant_node,
+)
 from app.nodes.optimization_planner_node import (
     ActionPlan,
     CleanupAction,
@@ -50,6 +55,8 @@ __all__ = [
     "ExecutionLogEntry",
     "ExecutionOutput",
     "HITLApprovalOutput",
+    "MyPCAssistantInput",
+    "MyPCAssistantOutput",
     "OptimizationPlannerOutput",
     "RollbackOutput",
     "RollbackSummary",
@@ -61,6 +68,7 @@ __all__ = [
     "duplicate_detection_node",
     "execution_node",
     "hitl_approval_node",
+    "my_pc_assistant_node",
     "optimization_planner_node",
     "rollback_node",
     "sensitive_detection_node",
