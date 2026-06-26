@@ -6,6 +6,12 @@ from app.nodes.duplicate_detection_node import (
     DuplicateGroup,
     duplicate_detection_node,
 )
+from app.nodes.optimization_planner_node import (
+    ActionPlan,
+    CleanupAction,
+    OptimizationPlannerOutput,
+    optimization_planner_node,
+)
 from app.nodes.sensitive_detection_node import (
     SensitiveDetectionOutput,
     SensitiveFileEntry,
@@ -13,11 +19,15 @@ from app.nodes.sensitive_detection_node import (
 )
 
 __all__ = [
+    "ActionPlan",
+    "CleanupAction",
     "DuplicateDetectionOutput",
     "DuplicateFileEntry",
     "DuplicateGroup",
+    "OptimizationPlannerOutput",
     "SensitiveDetectionOutput",
     "SensitiveFileEntry",
     "duplicate_detection_node",
+    "optimization_planner_node",
     "sensitive_detection_node",
 ]

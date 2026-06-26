@@ -14,7 +14,8 @@ from google import genai
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field
 
-from app.nodes.duplicate_detection_node import DuplicateDetectionOutput
+from app.nodes.classification_node import ClassifiedFile
+from app.nodes.duplicate_detection_node import DuplicateDetectionOutput, DuplicateGroup
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 
 # ---------------------------------------------------------------------------
@@ -48,6 +49,21 @@ class SensitiveDetectionOutput(BaseModel):
     sensitive_files: list[SensitiveFileEntry] = Field(
         default_factory=list,
         description="List of files with their sensitivity classification results.",
+    )
+    classified_files: list[ClassifiedFile] = Field(
+        default_factory=list,
+        description="List of classification results for every file (propagated downstream).",
+    )
+    duplicate_groups: list[DuplicateGroup] = Field(
+        default_factory=list,
+        description="List of duplicate groups identified (propagated downstream).",
+    )
+    file_inventory: list[FileMetadata] = Field(
+        default_factory=list,
+        description="List of metadata objects for every discovered file (propagated downstream).",
+    )
+    folder_scope_policy: FolderScopePolicy = Field(
+        description="The folder scope policy used for discovery, propagated downstream.",
     )
     reasoning: str = Field(
         description="High-level reasoning summary of sensitive file detection.",
@@ -233,5 +249,9 @@ def sensitive_detection_node(
 
     return SensitiveDetectionOutput(
         sensitive_files=checked,
+        classified_files=node_input.classified_files,
+        duplicate_groups=node_input.duplicate_groups,
+        file_inventory=inventory,
+        folder_scope_policy=policy,
         reasoning=reasoning,
     )
