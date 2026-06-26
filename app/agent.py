@@ -29,6 +29,7 @@ from app.nodes.file_discovery_node import (
     FolderScopePolicy,
     file_discovery_node,
 )
+from app.nodes.classification_node import classification_node
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
@@ -106,9 +107,10 @@ root_agent = Workflow(
         (START, process_request),
         (process_request, verify_request),
         (verify_request, finalize_request),
-        # — File discovery pipeline (no downstream yet) —
+        # — File discovery → Classification pipeline (no downstream yet) —
         (finalize_request, folder_scope_node),
         (folder_scope_node, file_discovery_node),
+        (file_discovery_node, classification_node),
     ],
     input_schema=UserRequest,
     rerun_on_resume=True,
