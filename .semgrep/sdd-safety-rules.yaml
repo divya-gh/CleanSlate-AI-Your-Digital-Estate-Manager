@@ -7,8 +7,8 @@ rules:
     patterns:
       - pattern: |
           $KEY = $VALUE
-      - metavariable-pattern:
-          metavariable: KEY
+      - metavariable-regex:
+          metavariable: $KEY
           regex: ".*API_KEY.*"
       - pattern-not: |
           $KEY = os.environ.get($ENV)
@@ -33,8 +33,8 @@ rules:
       - pattern: |
           if $SENSITIVE:
               os.remove($PATH)
-      - metavariable-pattern:
-          metavariable: SENSITIVE
+      - metavariable-regex:
+          metavariable: $SENSITIVE
           regex: "is_sensitive|sensitive"
 
   # 4. No system folder access
@@ -45,8 +45,8 @@ rules:
     patterns:
       - pattern: |
           $FUNC($PATH, ...)
-      - metavariable-pattern:
-          metavariable: PATH
+      - metavariable-regex:
+          metavariable: $PATH
           regex: ".*/(Windows|System32|Program Files|Library|usr)/.*"
 
   # 5. Enforce Folder Scope Policy
@@ -67,8 +67,8 @@ rules:
     message: "Do not upload raw file contents to external services without permission."
     severity: ERROR
     pattern-either:
-      - pattern: requests.post(..., files={"file": open($PATH, "rb")})
-      - pattern: client.upload_file(open($PATH, "rb"))
+      - pattern: 'requests.post(..., files={"file": open($PATH, "rb")})'
+      - pattern: 'client.upload_file(open($PATH, "rb"))'
 
   # 7. Safe mode: no deletes or compress
   - id: safe-mode-no-deletes-or-compress
@@ -79,8 +79,8 @@ rules:
       - pattern: |
           if safe_mode:
               $DELETE($ARGS)
-      - metavariable-pattern:
-          metavariable: DELETE
+      - metavariable-regex:
+          metavariable: $DELETE
           regex: "os.remove|shutil.rmtree|compress_file"
 
   # 8. Sensitive files must go to Authenticated/

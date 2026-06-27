@@ -8,8 +8,6 @@ from app.nodes.duplicate_detection_node import DuplicateDetectionOutput
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 from app.nodes.sensitive_detection_node import (
     _detect_signals,
-    _extract_pdf_text,
-    _safe_preview,
     sensitive_detection_node,
 )
 
@@ -27,9 +25,9 @@ def test_sensitive_detection(mock_client_class, tmp_path) -> None:
     file_safe = allowed_dir / "public_info.txt"
     file_blocked = blocked_dir / "secret_keys.txt"
 
-    file_sensitive.write_text("SSN: 000-12-3456")
-    file_safe.write_text("Hello World this is public text info.")
-    file_blocked.write_text("SECRET_API_KEY_DO_NOT_READ")
+    file_sensitive.write_text("dummy")
+    file_safe.write_text("dummy")
+    file_blocked.write_text("dummy")
 
     # Define metadata
     meta_sensitive = FileMetadata(
@@ -102,18 +100,7 @@ def test_sensitive_detection(mock_client_class, tmp_path) -> None:
                     "sensitive": True,
                     "sensitivity_type": "tax",
                     "confidence": 0.95,
-                    "reasoning": "Contains SSN format pattern and tax in filename",
-                }
-            )
-            return res
-        elif "public_info.txt" in contents:
-            res = MagicMock()
-            res.text = json.dumps(
-                {
-                    "sensitive": False,
-                    "sensitivity_type": "none",
-                    "confidence": 0.99,
-                    "reasoning": "Generic greeting info",
+                    "reasoning": "Contains tax in filename and category",
                 }
             )
             return res
@@ -127,7 +114,6 @@ def test_sensitive_detection(mock_client_class, tmp_path) -> None:
     assert isinstance(event, Event)
     output = event.output
 
-    # 2. Assertions
     # We expect 3 checked entries
     assert len(output.sensitive_files) == 3
 
@@ -145,10 +131,7 @@ def test_sensitive_detection(mock_client_class, tmp_path) -> None:
     assert sensitive_entry.sensitive is True
     assert sensitive_entry.sensitivity_type == "tax"
     assert sensitive_entry.confidence >= 0.90
-    assert (
-        "SSN" in sensitive_entry.reasoning
-        or "two independent signals" in sensitive_entry.reasoning
-    )
+    assert "tax in filename and category" in sensitive_entry.reasoning.lower()
 
     # Safe check (skips Gemini because of 0 signals)
     safe_entry = lookup[str(file_safe)]
@@ -157,39 +140,6 @@ def test_sensitive_detection(mock_client_class, tmp_path) -> None:
 
     # Make sure generate_content was called exactly 1 time (only for file_sensitive, as file_safe has 0 signals and file_blocked is blocked)
     assert mock_client.models.generate_content.call_count == 1
-
-
-def test_sensitive_detection_safe_mode_blocks_previews(tmp_path) -> None:
-    allowed = tmp_path / "doc.txt"
-    allowed.write_text("tax return SSN 000-12-3456")
-    meta = FileMetadata(
-        path=str(allowed),
-        size=allowed.stat().st_size,
-        extension=".txt",
-        last_modified=1.0,
-        last_accessed=1.0,
-        real_path=str(allowed),
-    )
-    policy = FolderScopePolicy(allowed_paths=[str(tmp_path)], allow_previews=True)
-    # Previews must be disabled in safe mode
-    assert _safe_preview(meta, policy, safe_mode=True) is None
-
-
-def test_sensitive_detection_skips_preview_for_binary_pdf(tmp_path) -> None:
-    # A dummy binary PDF containing some bytes
-    pdf_file = tmp_path / "doc.pdf"
-    pdf_file.write_bytes(bytes([128, 129, 130] * 100))
-    FileMetadata(
-        path=str(pdf_file),
-        size=pdf_file.stat().st_size,
-        extension=".pdf",
-        last_modified=1.0,
-        last_accessed=1.0,
-        real_path=str(pdf_file),
-    )
-    # Binary streams from PDF should not leak, so raw binary stream returns empty parsed text
-    text = _extract_pdf_text(str(pdf_file))
-    assert text == ""
 
 
 def test_sensitive_detection_zero_signal_skips_gemini(tmp_path) -> None:
@@ -202,13 +152,13 @@ def test_sensitive_detection_zero_signal_skips_gemini(tmp_path) -> None:
         last_accessed=1.0,
         real_path="C:/Allowed/sensitive_file_abc123.txt",
     )
-    # Zero signals (masked filename, non-sensitive extension, no preview, no category)
-    signals = _detect_signals(meta, "misc", has_preview=False, preview_text=None)
+    # Zero signals (masked filename, non-sensitive extension, no category, non-matching parent folder)
+    signals = _detect_signals(meta, "misc")
     assert len(signals) == 0
 
 
 def test_sensitive_detection_two_signal_rule_and_confidence_cap(tmp_path) -> None:
-    # 1 signal only (filename keyword, masked is False)
+    # 1 signal only (filename keyword, masked is False, parent folder name has no signal)
     meta = FileMetadata(
         path="C:/Allowed/tax_return.txt",
         size=100,
@@ -217,5 +167,5 @@ def test_sensitive_detection_two_signal_rule_and_confidence_cap(tmp_path) -> Non
         last_accessed=1.0,
         real_path="C:/Allowed/tax_return.txt",
     )
-    signals = _detect_signals(meta, "misc", has_preview=False, preview_text=None)
+    signals = _detect_signals(meta, "misc")
     assert len(signals) == 1

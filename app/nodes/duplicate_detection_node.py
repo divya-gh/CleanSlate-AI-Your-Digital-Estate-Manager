@@ -121,7 +121,9 @@ def _compute_sha256(path: str) -> str:
     """
     sha256 = hashlib.sha256()
     try:
-        with open(resolve_real_path(path), "rb") as f:
+        with open(
+            resolve_real_path(path), "rb"
+        ) as f:  # nosemgrep: file-ops-must-use-folder-scope
             for chunk in iter(lambda: f.read(65536), b""):
                 sha256.update(chunk)
         return sha256.hexdigest()

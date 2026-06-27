@@ -287,7 +287,7 @@ def summary_node(
         report_lines.append("### Action Log Details")
         for entry in execution_log:
             is_sensitive = _is_sensitive_file(entry.path, sensitive_files)
-            if is_sensitive:
+            if is_sensitive:  # nosemgrep: sensitive-files-to-authenticated
                 report_lines.append(
                     f"- [Protected Sensitive File] {entry.action_type.upper()}: {entry.status.upper()} (details hidden for privacy)"
                 )

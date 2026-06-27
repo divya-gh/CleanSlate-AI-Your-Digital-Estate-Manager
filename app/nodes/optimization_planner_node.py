@@ -67,6 +67,9 @@ class CleanupAction(BaseModel):
         ge=0.0,
         le=1.0,
     )
+    rollback_supported: bool = Field(
+        default=True, description="Whether this action can be rolled back."
+    )
 
 
 class ActionPlan(BaseModel):
@@ -314,6 +317,7 @@ def optimization_planner_node(
                             estimated_space_recovered=0,
                             safe_to_delete=False,
                             confidence=1.0,
+                            rollback_supported=True,
                         )
                     )
                 continue
@@ -331,6 +335,7 @@ def optimization_planner_node(
                             estimated_space_recovered=0,
                             safe_to_delete=False,
                             confidence=0.90,
+                            rollback_supported=True,
                         )
                     )
                 continue
@@ -372,6 +377,7 @@ def optimization_planner_node(
                         estimated_space_recovered=file.size,
                         safe_to_delete=True,
                         confidence=0.95,
+                        rollback_supported=True,
                     )
                 )
                 total_recovered += file.size
@@ -400,6 +406,7 @@ def optimization_planner_node(
                     estimated_space_recovered=0,
                     safe_to_delete=False,
                     confidence=0.80,
+                    rollback_supported=True,
                 )
             )
             continue
@@ -423,6 +430,7 @@ def optimization_planner_node(
                     estimated_space_recovered=recovered,
                     safe_to_delete=False,
                     confidence=0.75,
+                    rollback_supported=True,
                 )
             )
             total_recovered += recovered
@@ -441,6 +449,7 @@ def optimization_planner_node(
                     estimated_space_recovered=0,
                     safe_to_delete=False,
                     confidence=0.70,
+                    rollback_supported=True,
                 )
             )
 

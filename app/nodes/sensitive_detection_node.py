@@ -1,14 +1,13 @@
 """SensitiveDetectionNode — ADK 2.0 Graph Workflow Node.
 
 Identifies sensitive files (containing SSNs, banking, tax, legal, medical,
-password, identity documents, or API keys) using metadata and optional safe previews
-via Gemini model classification.
+password, identity documents, or API keys) strictly using metadata elements (no content previews).
+Uses Gemini model classification on metadata and enforces strict safety-biased boundaries.
 """
 
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
 
 from google import genai
@@ -22,8 +21,8 @@ from app.nodes.duplicate_detection_node import DuplicateDetectionOutput, Duplica
 from app.nodes.file_discovery_node import (
     FileMetadata,
     FolderScopePolicy,
-    resolve_real_path,
 )
+from app.utils.headings import get_heading_from_filename
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -144,116 +143,6 @@ def _is_path_allowed(path: str, policy: FolderScopePolicy) -> bool:
     return any_allowed
 
 
-_SAFE_PREVIEW_EXTENSIONS = {
-    ".txt",
-    ".md",
-    ".csv",
-    ".log",
-    ".ini",
-    ".cfg",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".toml",
-    ".pdf",
-}
-
-_SOURCE_CODE_EXTENSIONS = {
-    ".py",
-    ".js",
-    ".ts",
-    ".jsx",
-    ".tsx",
-    ".java",
-    ".c",
-    ".cpp",
-    ".h",
-    ".cs",
-    ".go",
-    ".rs",
-    ".rb",
-    ".php",
-    ".swift",
-    ".kt",
-    ".sh",
-    ".bat",
-    ".ps1",
-    ".sql",
-    ".html",
-    ".css",
-    ".xml",
-}
-
-
-def _extract_pdf_text(path: str) -> str:
-    """Safely extracts text strings from a PDF stream, avoiding raw binary streams."""
-    try:
-        with open(path, "rb") as f:
-            content = f.read(10000)  # Read first 10KB to parse
-
-        # Find printable ASCII segments within PDF text blocks
-        text_segments = re.findall(b"\\(([^)]+)\\)", content)
-        decoded = []
-        for segment in text_segments:
-            if len(decoded) > 512:
-                break
-            try:
-                s = segment.decode("utf-8", errors="ignore")
-                s_clean = "".join(c for c in s if c.isprintable() or c.isspace())
-                if s_clean.strip():
-                    decoded.append(s_clean)
-            except Exception:
-                continue
-        return " ".join(decoded)[:512]
-    except Exception:
-        return ""
-
-
-def _safe_preview(
-    file: FileMetadata, policy: FolderScopePolicy, safe_mode: bool
-) -> str | None:
-    """Read a small preview of the file if allowed, with PDF text extraction and binary guards."""
-    if safe_mode:
-        return None
-
-    if not _is_path_allowed(file.path, policy):
-        return None
-
-    ext = file.extension.lower()
-    if ext not in _SAFE_PREVIEW_EXTENSIONS:
-        return None
-
-    # Source code size limit check
-    if ext in _SOURCE_CODE_EXTENSIONS and file.size > 50 * 1024:
-        return None
-
-    if file.size >= 10 * 1024 * 1024 or file.size <= 0:
-        return None
-
-    real_p = resolve_real_path(file.path)
-
-    # PDF custom text extraction
-    if ext == ".pdf":
-        return _extract_pdf_text(real_p)
-
-    try:
-        with open(real_p, "rb") as f:
-            raw_bytes = f.read(1024)
-
-        if not raw_bytes:
-            return None
-
-        # Binary check heuristic
-        high_bytes = sum(1 for b in raw_bytes if b > 127)
-        if (high_bytes / len(raw_bytes)) > 0.20:
-            return None
-
-        truncated = raw_bytes[:512]
-        return truncated.decode("utf-8", errors="ignore")
-    except OSError:
-        return None
-
-
 # ---------------------------------------------------------------------------
 # Signal Detection & Safety-biased filters
 # ---------------------------------------------------------------------------
@@ -275,10 +164,8 @@ _SENSITIVE_EXTENSIONS = {".tax", ".w2", ".1040", ".med", ".medical", ".key", ".p
 def _detect_signals(
     file: FileMetadata,
     cf_category: str | None,
-    has_preview: bool,
-    preview_text: str | None,
 ) -> list[str]:
-    """Identifies sensitive indicators across metadata and previews."""
+    """Identifies sensitive indicators across metadata elements only."""
     signals = []
     basename = Path(file.path).name.lower()
     ext = file.extension.lower()
@@ -293,15 +180,14 @@ def _detect_signals(
     if ext in _SENSITIVE_EXTENSIONS:
         signals.append("sensitive_extension")
 
-    # 3. Preview keyword match
-    if has_preview and preview_text:
-        preview_lower = preview_text.lower()
-        if any(kw in preview_lower for kw in _SENSITIVE_KEYWORDS):
-            signals.append("preview_keyword")
-
-    # 4. Predecessor classification category
+    # 3. Predecessor classification category
     if cf_category in (FileCategory.TAX, FileCategory.MEDICAL):
         signals.append("classification_category")
+
+    # 4. Folder keyword (parent directory name contains keywords)
+    parent_dir = Path(file.path).parent.name.lower()
+    if any(kw in parent_dir for kw in _SENSITIVE_KEYWORDS):
+        signals.append("folder_keyword")
 
     return signals
 
@@ -314,7 +200,7 @@ def _detect_signals(
 def sensitive_detection_node(
     node_input: DuplicateDetectionOutput,
 ) -> Event:
-    """SensitiveDetectionNode — classifies sensitivity using metadata and Gemini."""
+    """SensitiveDetectionNode — classifies sensitivity using strictly metadata and Gemini."""
     inventory = node_input.file_inventory
     policy = node_input.folder_scope_policy
     safe_mode = node_input.safe_mode
@@ -348,11 +234,8 @@ def sensitive_detection_node(
         cf = classified_lookup.get(file.path)
         category = cf.category if cf else None
 
-        # Resolve preview
-        preview = _safe_preview(file, policy, safe_mode)
-
-        # Detect safety signals
-        signals = _detect_signals(file, category, (preview is not None), preview)
+        # Detect safety signals (metadata only)
+        signals = _detect_signals(file, category)
 
         # Optimization: Zero signals or single signal skips Gemini
         if len(signals) < 2:
@@ -371,12 +254,14 @@ def sensitive_detection_node(
             non_sensitive_paths.append(file.path)
             continue
 
-        # Build prompt for safety biased Gemini
+        # Build prompt for safety biased Gemini using metadata only
         basename = Path(file.path).name
+        parent_folder = Path(file.path).parent.name
+        heading = get_heading_from_filename(file.path)
         is_masked = "sensitive_file_" in basename.lower()
         masked_note = (
             "The filename is masked to protect user privacy. Treat it as a zero-signal for filename. "
-            "Do NOT attempt to guess or infer sensitive categories from the name. Rely only on preview, extension, and category."
+            "Do NOT attempt to guess or infer sensitive categories from the name. Rely only on extension and category."
             if is_masked
             else ""
         )
@@ -384,25 +269,19 @@ def sensitive_detection_node(
         prompt_parts = [
             "Analyze the following file for sensitive personal, financial, or access data.",
             f"Filename: {basename}",
+            f"Derived Heading: {heading}",
             f"Extension: {file.extension}",
+            f"Folder Name: {parent_folder}",
             f"Size: {file.size} bytes",
             f"Predicted Category: {category}",
             masked_note,
+            "",
+            "Safety Bias Instructions:",
+            "1. If uncertain or there is lack of clear sensitive keywords/patterns, "
+            "classify as 'none' with low confidence.",
+            "2. Never guess sensitive categories (SSN, banking, medical, tax, legal, identity) "
+            "unless metadata strongly demonstrates it.",
         ]
-
-        if preview:
-            prompt_parts.append(f"\nContent Preview:\n{preview}")
-
-        prompt_parts.extend(
-            [
-                "",
-                "Safety Bias Instructions:",
-                "1. If uncertain or there is lack of clear sensitive keywords/patterns, "
-                "classify as 'none' with low confidence.",
-                "2. Never guess sensitive categories (SSN, banking, medical, tax, legal, identity) "
-                "unless the preview or metadata strongly demonstrates it.",
-            ]
-        )
 
         prompt = "\n".join(prompt_parts)
 
@@ -437,7 +316,7 @@ def sensitive_detection_node(
             if len(signals) < 2 and conf > 0.40:
                 conf = 0.40
 
-            if is_sensitive:
+            if is_sensitive:  # nosemgrep: sensitive-files-to-authenticated
                 checked.append(
                     SensitiveFileEntry(
                         path=file.path,
@@ -476,7 +355,7 @@ def sensitive_detection_node(
         f"Analyzed {len(inventory) - skipped_count} allowed file(s). "
         f"Skipped {skipped_count} blocked/unallowed file(s). "
         f"Identified {sensitive_count} sensitive file(s). "
-        f"Never uploaded file contents."
+        f"Never read or uploaded file contents."
     )
 
     output = SensitiveDetectionOutput(
