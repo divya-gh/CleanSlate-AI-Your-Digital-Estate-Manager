@@ -396,7 +396,9 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 if calc_backup_path:
                     os.makedirs(os.path.dirname(calc_backup_path), exist_ok=True)
                     shutil.copy2(path, calc_backup_path)
-                os.remove(path)  # nosemgrep: no-direct-file-deletes
+                os.remove(
+                    path
+                )  # nosemgrep: no-direct-file-deletes (Designated ExecutionNode boundary)
                 log.append(
                     ExecutionLogEntry(
                         path=path,
@@ -446,7 +448,9 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 zip_path = path + ".zip"
                 with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                     zipf.write(path, p.name)
-                os.remove(path)  # nosemgrep: no-direct-file-deletes
+                os.remove(
+                    path
+                )  # nosemgrep: no-direct-file-deletes (Designated ExecutionNode boundary)
 
                 log.append(
                     ExecutionLogEntry(

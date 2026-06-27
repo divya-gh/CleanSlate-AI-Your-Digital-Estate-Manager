@@ -114,19 +114,21 @@ def _is_path_allowed(path: str, policy: FolderScopePolicy) -> bool:
     return any_allowed
 
 
-def _compute_sha256(path: str) -> str:
+def _compute_sha256(path: str, policy: FolderScopePolicy) -> str:
     """Compute SHA-256 hash of a file locally in chunks.
 
     Never uploads file contents.
     """
     sha256 = hashlib.sha256()
     try:
-        with open(
-            resolve_real_path(path), "rb"
-        ) as f:  # nosemgrep: file-ops-must-use-folder-scope
-            for chunk in iter(lambda: f.read(65536), b""):
-                sha256.update(chunk)
-        return sha256.hexdigest()
+        if _is_path_allowed(path, policy):
+            with (
+                open(resolve_real_path(path), "rb") as f
+            ):  # nosemgrep: file-ops-must-use-folder-scope, no-file-content-reading (Justified: Hashing is required for exact duplicate matching)
+                for chunk in iter(lambda: f.read(65536), b""):
+                    sha256.update(chunk)
+            return sha256.hexdigest()
+        return ""
     except OSError:
         return ""
 
@@ -197,7 +199,7 @@ def duplicate_detection_node(
     hash_groups: dict[str, list[FileMetadata]] = {}  # hash -> list of files
 
     for file in allowed_files:
-        h = _compute_sha256(file.path)
+        h = _compute_sha256(file.path, policy)
         if h:
             hashes[file.path] = h
             hash_groups.setdefault(h, []).append(file)

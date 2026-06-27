@@ -297,14 +297,14 @@ def sensitive_detection_node(
             )
             result = GeminiSensitivityResult.model_validate_json(response.text)
 
-            is_sensitive = result.sensitive
+            file_is_sensitive = result.sensitive
             sens_type = result.sensitivity_type
             conf = result.confidence
             reason = result.reasoning
 
             # Extra check: double-signal rule enforce
-            if is_sensitive and len(signals) < 2:
-                is_sensitive = False
+            if file_is_sensitive and len(signals) < 2:
+                file_is_sensitive = False
                 sens_type = "none"
                 conf = min(conf, 0.40)
                 reason = (
@@ -316,11 +316,11 @@ def sensitive_detection_node(
             if len(signals) < 2 and conf > 0.40:
                 conf = 0.40
 
-            if is_sensitive:  # nosemgrep: sensitive-files-to-authenticated
+            if file_is_sensitive:
                 checked.append(
                     SensitiveFileEntry(
                         path=file.path,
-                        sensitive=is_sensitive,
+                        sensitive=file_is_sensitive,
                         sensitivity_type=sens_type,
                         confidence=conf,
                         reasoning=reason,

@@ -132,3 +132,42 @@ rules:
                   Edge(source=n_hitl, route="approved", target=n_exec),
               ],
           )
+
+  # 11. No file-content reading
+  - id: no-file-content-reading
+    languages: [python]
+    message: "Opening files to read raw content is forbidden to prevent content leakage."
+    severity: ERROR
+    pattern-either:
+      - pattern: open(..., "r")
+      - pattern: open(..., "rb")
+      - pattern: open(..., mode="r")
+      - pattern: open(..., mode="rb")
+
+  # 12. No content upload to LLM
+  - id: no-content-upload-to-llm
+    languages: [python]
+    message: "Do not pass file content or previews to LLM generation functions."
+    severity: ERROR
+    patterns:
+      - pattern: |
+          client.models.generate_content(
+              ...,
+              contents=$PROMPT,
+              ...
+          )
+      - metavariable-regex:
+          metavariable: $PROMPT
+          regex: ".*(preview|content|text).*_text.*"
+
+  # 13. No sensitive data in logs
+  - id: no-sensitive-data-in-logs
+    languages: [python]
+    message: "Do not print or log unmasked file paths or sensitive contents."
+    severity: WARNING
+    patterns:
+      - pattern: |
+          logger.$LOG(..., $PATH, ...)
+      - metavariable-regex:
+          metavariable: $PATH
+          regex: ".*(sensitive|real_path|real_p).*"
