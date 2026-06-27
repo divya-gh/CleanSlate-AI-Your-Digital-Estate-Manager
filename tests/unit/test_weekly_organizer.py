@@ -184,7 +184,7 @@ def test_safe_mode_planning_and_execution(tmp_path) -> None:
     )
 
     planner_event = optimization_planner_node(planner_input)
-    assert planner_event.actions.route == "safe_execute"
+    assert planner_event.actions.route == "execute"
 
     plan_output = planner_event.output
     # Only 2 actions planned: sensitive -> Authenticated and non-primary duplicate -> WeeklyReview

@@ -1,3 +1,5 @@
+import uuid
+
 from app.nodes.classification_node import ClassifiedFile, FileCategory
 from app.nodes.duplicate_detection_node import DuplicateFileEntry, DuplicateGroup
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
@@ -13,6 +15,8 @@ def test_optimization_planner() -> None:
     policy = FolderScopePolicy(
         allowed_paths=["/allowed"],
         blocked_paths=["/allowed/blocked"],
+        allow_deletes=True,
+        allow_moves=True,
     )
 
     file_dup1 = FileMetadata(
@@ -188,6 +192,8 @@ def test_optimization_planner() -> None:
             file_blocked,
         ],
         folder_scope_policy=policy,
+        safe_mode=False,
+        search_mode=False,
         reasoning="",
     )
 
@@ -218,3 +224,101 @@ def test_optimization_planner() -> None:
 
     # file_blocked must NOT be scheduled for any action
     assert file_blocked.path not in actions_lookup
+
+
+def test_planner_respects_search_mode_no_actions() -> None:
+    # Under search mode, destructive actions are not suggested
+    policy = FolderScopePolicy(allowed_paths=["/allowed"])
+    file = FileMetadata(
+        path="/allowed/dup2.txt",
+        size=100,
+        extension=".txt",
+        last_modified=0.0,
+        last_accessed=0.0,
+    )
+    dup_group = DuplicateGroup(
+        group_id="g1",
+        files=[
+            DuplicateFileEntry(
+                path="/allowed/dup1.txt", size=100, hash="h1", similarity_score=1.0
+            ),
+            DuplicateFileEntry(
+                path="/allowed/dup2.txt", size=100, hash="h1", similarity_score=1.0
+            ),
+        ],
+        reasoning="",
+    )
+    node_input = SensitiveDetectionOutput(
+        sensitive_files=[],
+        classified_files=[],
+        duplicate_groups=[dup_group],
+        file_inventory=[file],
+        folder_scope_policy=policy,
+        safe_mode=False,
+        search_mode=True,  # Search Mode
+        reasoning="",
+    )
+    output = optimization_planner_node(node_input).output
+    assert len(output.action_plan.actions) == 0
+
+
+def test_planner_generates_plan_id_and_metadata() -> None:
+    policy = FolderScopePolicy(allowed_paths=["/allowed"])
+    node_input = SensitiveDetectionOutput(
+        sensitive_files=[],
+        classified_files=[],
+        duplicate_groups=[],
+        file_inventory=[],
+        folder_scope_policy=policy,
+        safe_mode=False,
+        search_mode=False,
+        reasoning="",
+    )
+    output = optimization_planner_node(node_input).output
+    plan = output.action_plan
+    assert plan.plan_version == "1.0"
+    assert plan.generated_by == "OptimizationPlannerNode"
+    # Verify valid plan_id UUID
+    uuid.UUID(plan.plan_id)
+
+
+def test_planner_exclusions() -> None:
+    policy = FolderScopePolicy(allowed_paths=["/allowed"])
+    # File in excluded path
+    file = FileMetadata(
+        path="/allowed/weeklyreview/dup2.txt",
+        size=100,
+        extension=".txt",
+        last_modified=0.0,
+        last_accessed=0.0,
+    )
+    dup_group = DuplicateGroup(
+        group_id="g1",
+        files=[
+            DuplicateFileEntry(
+                path="/allowed/weeklyreview/dup1.txt",
+                size=100,
+                hash="h1",
+                similarity_score=1.0,
+            ),
+            DuplicateFileEntry(
+                path="/allowed/weeklyreview/dup2.txt",
+                size=100,
+                hash="h1",
+                similarity_score=1.0,
+            ),
+        ],
+        reasoning="",
+    )
+    node_input = SensitiveDetectionOutput(
+        sensitive_files=[],
+        classified_files=[],
+        duplicate_groups=[dup_group],
+        file_inventory=[file],
+        folder_scope_policy=policy,
+        safe_mode=False,
+        search_mode=False,
+        reasoning="",
+    )
+    output = optimization_planner_node(node_input).output
+    assert len(output.action_plan.actions) == 0

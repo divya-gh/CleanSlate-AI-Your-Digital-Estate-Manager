@@ -149,7 +149,7 @@ root_agent = Workflow(
         (execution_node, {"rollback": rollback_node}),
         (rollback_node, summary_node),
         # In safe mode, optimization_planner_node skips HITL and executes directly
-        (optimization_planner_node, {"safe_execute": execution_node}),
+        (optimization_planner_node, {"execute": execution_node}),
     ],
     input_schema=MyPCAssistantInput,
     rerun_on_resume=True,
@@ -165,7 +165,7 @@ weekly_organizer_agent = Workflow(
         (classification_node, {"dedupe": duplicate_detection_node}),
         (duplicate_detection_node, {"sensitive": sensitive_detection_node}),
         (sensitive_detection_node, {"plan": optimization_planner_node}),
-        (optimization_planner_node, {"safe_execute": execution_node}),
+        (optimization_planner_node, {"execute": execution_node}),
         (execution_node, summary_node),
     ],
     input_schema=WeeklyOrganizerInput,
