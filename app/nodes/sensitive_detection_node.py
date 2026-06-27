@@ -16,7 +16,11 @@ from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassifiedFile
 from app.nodes.duplicate_detection_node import DuplicateDetectionOutput, DuplicateGroup
-from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
+from app.nodes.file_discovery_node import (
+    FileMetadata,
+    FolderScopePolicy,
+    resolve_real_path,
+)
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -144,7 +148,7 @@ def _safe_preview(file: FileMetadata, policy: FolderScopePolicy) -> str | None:
         return None
 
     try:
-        with open(file.path, encoding="utf-8", errors="ignore") as f:
+        with open(resolve_real_path(file.path), encoding="utf-8", errors="ignore") as f:
             return f.read(_MAX_PREVIEW_BYTES)
     except OSError:
         return None

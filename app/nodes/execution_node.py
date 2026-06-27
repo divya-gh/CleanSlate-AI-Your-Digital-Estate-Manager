@@ -19,7 +19,7 @@ from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
-from app.nodes.file_discovery_node import FolderScopePolicy
+from app.nodes.file_discovery_node import FolderScopePolicy, resolve_real_path
 from app.nodes.hitl_approval_node import HITLApprovalOutput
 from app.nodes.optimization_planner_node import OptimizationPlannerOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
@@ -195,7 +195,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
     actual_failures_count = 0
 
     for action in approved_actions:
-        path = action.path
+        path = resolve_real_path(action.path)
         action_type = action.action_type
         now = time.time()
 

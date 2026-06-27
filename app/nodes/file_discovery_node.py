@@ -1,20 +1,32 @@
 """FileDiscoveryNode — ADK 2.0 Graph Workflow Node.
 
 Scans allowed directories recursively, respects blocked paths, and collects
-file metadata.  Optionally filters results by a search query.
+file metadata. Enforces strict safety limits, symlink/hardlink guards,
+and sensitive path/filename masking.
 """
 
 from __future__ import annotations
 
 import fnmatch
+import hashlib
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from google.adk.events.event import Event
 from pydantic import BaseModel, Field
 
-from app.nodes.my_pc_assistant_node import MyPCAssistantOutput
+# ---------------------------------------------------------------------------
+# Global Path Registry for Masked Resolving
+# ---------------------------------------------------------------------------
+_PATH_REGISTRY: dict[str, str] = {}
+
+
+def resolve_real_path(path: str) -> str:
+    """Resolves a masked or restricted path to its original absolute disk path."""
+    return _PATH_REGISTRY.get(path.replace("\\", "/").lower(), path)
+
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -86,13 +98,20 @@ class FileDiscoveryInput(BaseModel):
 class FileMetadata(BaseModel):
     """Metadata collected for a single discovered file."""
 
-    path: str = Field(description="Absolute path to the file.")
+    path: str = Field(
+        description="Absolute path to the file (masked/sanitized if safe/search mode is active)."
+    )
     size: int = Field(description="File size in bytes.")
     extension: str = Field(
         description="File extension including the leading dot (e.g. '.txt')."
     )
     last_modified: float = Field(description="Last-modified timestamp (epoch seconds).")
     last_accessed: float = Field(description="Last-accessed timestamp (epoch seconds).")
+    real_path: str = Field(
+        default="",
+        exclude=True,
+        description="The actual absolute path on disk, excluded from serialization.",
+    )
 
 
 class FileDiscoveryOutput(BaseModel):
@@ -105,14 +124,88 @@ class FileDiscoveryOutput(BaseModel):
     folder_scope_policy: FolderScopePolicy = Field(
         description="The folder scope policy used for discovery, propagated downstream.",
     )
+    search_mode: bool = Field(
+        default=False,
+        description="Whether the discovery ran in search mode.",
+    )
+    safe_mode: bool = Field(
+        default=False,
+        description="Whether the discovery ran in safe mode.",
+    )
     reasoning: str = Field(
         description="Human-readable explanation of what the node did and why.",
     )
 
 
+FolderScopePolicy.model_rebuild()
+
 # ---------------------------------------------------------------------------
-# Core scanning logic (pure function — easy to unit-test)
+# Safety utilities
 # ---------------------------------------------------------------------------
+
+_SENSITIVE_KEYWORDS = [
+    "ssn",
+    "passport",
+    "bank",
+    "medical",
+    "tax",
+    "password",
+    "social_security",
+]
+
+
+def _is_sensitive_filename(name: str) -> bool:
+    name_lower = name.lower()
+    return any(kw in name_lower for kw in _SENSITIVE_KEYWORDS)
+
+
+def _mask_filename(fname: str) -> str:
+    sha = hashlib.sha1(fname.encode("utf-8")).hexdigest()
+    return f"sensitive_file_{sha}"
+
+
+def _get_agent_internal_blocked_paths() -> list[str]:
+    cwd = os.getcwd().replace("\\", "/").rstrip("/").lower()
+    internal_dirs = [
+        ".git",
+        ".agents",
+        ".venv",
+        ".ruff_cache",
+        ".pytest_cache",
+        "tests",
+        "app",
+        ".rollback",
+        "Authenticated",
+        "WeeklyReview",
+        "Organized",
+    ]
+    return [f"{cwd}/{d}" for d in internal_dirs]
+
+
+def _get_default_system_paths() -> list[str]:
+    system_paths = []
+    if os.name == "nt":
+        win_dir = os.environ.get("SystemRoot", "C:\\Windows")
+        prog_files = os.environ.get("ProgramFiles", "C:\\Program Files")
+        prog_files_x86 = os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")
+        prog_data = os.environ.get("ProgramData", "C:\\ProgramData")
+        appdata = os.environ.get("AppData")
+        local_appdata = os.environ.get("LocalAppData")
+        for p in [
+            win_dir,
+            prog_files,
+            prog_files_x86,
+            prog_data,
+            appdata,
+            local_appdata,
+        ]:
+            if p:
+                system_paths.append(p)
+    else:
+        system_paths.extend(
+            ["/System", "/usr", "/bin", "/sbin", "/etc", "/var", "/Library"]
+        )
+    return [p.replace("\\", "/").rstrip("/").lower() for p in system_paths if p]
 
 
 def _is_blocked(candidate: str, blocked_paths: list[str]) -> bool:
@@ -127,39 +220,96 @@ def _is_blocked(candidate: str, blocked_paths: list[str]) -> bool:
     return False
 
 
+# ---------------------------------------------------------------------------
+# Traversal logic
+# ---------------------------------------------------------------------------
+
+
 def _scan_allowed_paths(
     allowed_paths: list[str],
     blocked_paths: list[str],
     search_query: str | None,
+    search_mode: bool,
+    safe_mode: bool,
 ) -> tuple[list[FileMetadata], str]:
-    """Walk *allowed_paths* and collect file metadata.
-
-    Returns a tuple of (file_inventory, reasoning_text).
-    """
+    """Walk allowed paths under max depth, max count, symlink, and hardlink guards."""
     inventory: list[FileMetadata] = []
     scanned_dirs = 0
     skipped_dirs = 0
 
+    # Ensure system and agent folders are blocked in safe/search mode
+    effective_blocks = list(blocked_paths)
+    if safe_mode or search_mode:
+        all_implicit = _get_default_system_paths() + _get_agent_internal_blocked_paths()
+        for ib in all_implicit:
+            # Skip implicit blocking if it overlaps with/is parent of any allowed path
+            is_parent_of_allowed = False
+            for ap in allowed_paths:
+                ap_norm = ap.replace("\\", "/").rstrip("/").lower()
+                if ap_norm == ib or ap_norm.startswith(ib + "/"):
+                    is_parent_of_allowed = True
+                    break
+
+            if not is_parent_of_allowed and ib not in effective_blocks:
+                effective_blocks.append(ib)
+
     for allowed in allowed_paths:
         allowed_abs = os.path.abspath(allowed)
-
         if not os.path.isdir(allowed_abs):
             continue
 
+        base_depth = len(allowed_abs.replace("\\", "/").split("/"))
+
         for dirpath, dirnames, filenames in os.walk(allowed_abs, topdown=True):
-            # Prune blocked sub-trees in-place so os.walk won't descend into them.
-            dirnames[:] = [
-                d
-                for d in dirnames
-                if not _is_blocked(os.path.join(dirpath, d), blocked_paths)
-            ]
-            scanned_dirs += 1
+            # Enforce max file count limit
+            if len(inventory) >= 5000:
+                break
+
+            # Windows permission & OS resilience
+            try:
+                # Calculate current depth
+                current_depth = len(
+                    os.path.abspath(dirpath).replace("\\", "/").split("/")
+                )
+                depth = current_depth - base_depth
+
+                if depth >= 10:
+                    dirnames[:] = []  # Stop descending
+                    continue
+
+                # Prune symlinks & blocked folders in-place
+                dirnames[:] = [
+                    d
+                    for d in dirnames
+                    if not os.path.islink(os.path.join(dirpath, d))
+                    and not _is_blocked(os.path.join(dirpath, d), effective_blocks)
+                ]
+                scanned_dirs += 1
+            except (PermissionError, OSError):
+                skipped_dirs += 1
+                dirnames[:] = []  # Force skip traversal
+                continue
 
             for fname in filenames:
+                if len(inventory) >= 5000:
+                    break
+
                 full_path = os.path.join(dirpath, fname)
 
-                # Double-check the file itself isn't under a blocked path.
-                if _is_blocked(full_path, blocked_paths):
+                # Skip file symlinks
+                if os.path.islink(full_path):
+                    continue
+
+                # Check blocked files
+                if _is_blocked(full_path, effective_blocks):
+                    continue
+
+                try:
+                    stat = os.stat(full_path)
+                    # Skip hardlinks
+                    if stat.st_nlink > 1:
+                        continue
+                except (PermissionError, OSError):
                     skipped_dirs += 1
                     continue
 
@@ -169,21 +319,38 @@ def _scan_allowed_paths(
                 ):
                     continue
 
-                try:
-                    stat = os.stat(full_path)
-                except OSError:
-                    continue
+                # Resolve path masking rules
+                real_p = os.path.abspath(full_path)
+                display_path = real_p
+
+                if search_mode or safe_mode:
+                    display_name = fname
+                    if _is_sensitive_filename(fname):
+                        display_name = _mask_filename(fname)
+                    display_path = f"[RESTRICTED]/{display_name}"
+                else:
+                    if _is_sensitive_filename(fname):
+                        display_name = _mask_filename(fname)
+                        parent_dir = os.path.dirname(real_p)
+                        display_path = os.path.join(parent_dir, display_name)
+
+                # Register mapping for downstream resolution
+                _PATH_REGISTRY[display_path.replace("\\", "/").lower()] = real_p
 
                 ext = Path(full_path).suffix
                 inventory.append(
                     FileMetadata(
-                        path=full_path,
+                        path=display_path,
                         size=stat.st_size,
                         extension=ext,
                         last_modified=stat.st_mtime,
                         last_accessed=stat.st_atime,
+                        real_path=real_p,
                     )
                 )
+
+        if len(inventory) >= 5000:
+            break
 
     # Build reasoning summary
     filter_note = (
@@ -192,8 +359,8 @@ def _scan_allowed_paths(
         else "No search filter applied; all files included."
     )
     reasoning = (
-        f"Scanned {scanned_dirs} directories across {len(allowed_paths)} allowed path(s). "
-        f"Skipped {skipped_dirs} blocked entries. "
+        f"Scanned {scanned_dirs} directories. "
+        f"Skipped {skipped_dirs} blocked or restricted entries. "
         f"Discovered {len(inventory)} file(s). "
         f"{filter_note}"
     )
@@ -208,23 +375,16 @@ def _scan_allowed_paths(
 
 def file_discovery_node(
     node_input: Any,
-) -> FileDiscoveryOutput:
-    """FileDiscoveryNode — scans allowed paths and returns a file inventory.
+) -> Event:
+    """FileDiscoveryNode — scans allowed paths and returns a file inventory."""
+    input_type = type(node_input).__name__
 
-    This function node follows the ADK 2.0 Workflow convention:
-    - Accepts a typed Pydantic input (auto-converted from predecessor output).
-    - Returns a typed Pydantic output for downstream consumption.
-    """
-    if type(node_input).__name__ == "FolderScopeOutput":
-        policy = getattr(node_input, "folder_scope_policy", None)
-        if not policy:
-            raise ValueError("FolderScopePolicy is missing in FolderScopeOutput.")
-        node_input = FileDiscoveryInput(
-            folder_scope_policy=policy,
-            search_query=None,
-        )
+    search_mode = False
+    safe_mode = False
+    search_query = None
+    policy = None
 
-    if isinstance(node_input, MyPCAssistantOutput):
+    if input_type == "MyPCAssistantOutput":
         if node_input.intent != "search":
             raise ValueError(
                 f"FileDiscoveryNode only accepts MyPCAssistantOutput when intent is 'search'. Got: {node_input.intent}"
@@ -251,18 +411,32 @@ def file_discovery_node(
         if len(q) > 200:
             raise ValueError("search_query exceeds maximum length of 200 characters.")
 
-        # Construct a default policy allowing the current working directory
+        search_query = q
+        search_mode = True
         policy = FolderScopePolicy(
             allowed_paths=[os.getcwd()],
             blocked_paths=[],
         )
-        node_input = FileDiscoveryInput(
-            folder_scope_policy=policy,
-            search_query=q,
-        )
 
-    policy = node_input.folder_scope_policy
-    search_query = node_input.search_query
+    elif input_type == "FolderScopeOutput":
+        policy = getattr(node_input, "folder_scope_policy", None)
+        if not policy:
+            raise ValueError("FolderScopePolicy is missing in FolderScopeOutput.")
+
+    elif input_type == "WeeklyOrganizerInput":
+        policy = getattr(node_input, "folder_scope_policy", None)
+        if not policy:
+            raise ValueError("FolderScopePolicy is missing in WeeklyOrganizerInput.")
+        safe_mode = True
+
+    elif isinstance(node_input, FileDiscoveryInput):
+        policy = node_input.folder_scope_policy
+        search_query = node_input.search_query
+        search_mode = search_query is not None
+        safe_mode = policy.safe_mode
+
+    else:
+        raise ValueError(f"Unsupported input type to FileDiscoveryNode: {input_type}")
 
     # Enforce validation checks on policy
     if not policy.allowed_paths:
@@ -288,13 +462,16 @@ def file_discovery_node(
         allowed_paths=policy.allowed_paths,
         blocked_paths=policy.blocked_paths,
         search_query=search_query,
+        search_mode=search_mode,
+        safe_mode=safe_mode,
     )
 
-    return FileDiscoveryOutput(
+    output = FileDiscoveryOutput(
         file_inventory=inventory,
         folder_scope_policy=policy,
+        search_mode=search_mode,
+        safe_mode=safe_mode,
         reasoning=reasoning,
     )
 
-
-FolderScopePolicy.model_rebuild()
+    return output

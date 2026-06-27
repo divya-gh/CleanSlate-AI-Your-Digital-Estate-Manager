@@ -16,7 +16,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassificationOutput, ClassifiedFile
-from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
+from app.nodes.file_discovery_node import (
+    FileMetadata,
+    FolderScopePolicy,
+    resolve_real_path,
+)
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -107,7 +111,7 @@ def _compute_sha256(path: str) -> str:
     """
     sha256 = hashlib.sha256()
     try:
-        with open(path, "rb") as f:
+        with open(resolve_real_path(path), "rb") as f:
             for chunk in iter(lambda: f.read(65536), b""):
                 sha256.update(chunk)
         return sha256.hexdigest()

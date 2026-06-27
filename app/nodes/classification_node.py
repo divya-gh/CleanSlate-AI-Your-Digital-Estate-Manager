@@ -16,6 +16,7 @@ from app.nodes.file_discovery_node import (
     FileDiscoveryOutput,
     FileMetadata,
     FolderScopePolicy,
+    resolve_real_path,
 )
 
 # ---------------------------------------------------------------------------
@@ -245,7 +246,7 @@ def _safe_preview(file: FileMetadata) -> str | None:
         return None
 
     try:
-        with open(file.path, encoding="utf-8", errors="ignore") as f:
+        with open(resolve_real_path(file.path), encoding="utf-8", errors="ignore") as f:
             return f.read(_MAX_PREVIEW_BYTES)
     except OSError:
         return None
