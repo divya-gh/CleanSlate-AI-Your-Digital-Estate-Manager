@@ -139,7 +139,7 @@ root_agent = Workflow(
         # — File discovery → Classification pipeline —
         (folder_scope_node, {"scan": file_discovery_node}),
         (file_discovery_node, classification_node),
-        (classification_node, duplicate_detection_node),
+        (classification_node, {"dedupe": duplicate_detection_node}),
         (duplicate_detection_node, sensitive_detection_node),
         (sensitive_detection_node, optimization_planner_node),
         (optimization_planner_node, hitl_approval_node),
@@ -162,7 +162,7 @@ weekly_organizer_agent = Workflow(
         (START, weekly_organizer_node),
         (weekly_organizer_node, {"run": file_discovery_node}),
         (file_discovery_node, classification_node),
-        (classification_node, duplicate_detection_node),
+        (classification_node, {"dedupe": duplicate_detection_node}),
         (duplicate_detection_node, sensitive_detection_node),
         (sensitive_detection_node, optimization_planner_node),
         (optimization_planner_node, {"safe_execute": execution_node}),

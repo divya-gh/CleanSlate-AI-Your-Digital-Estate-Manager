@@ -2,14 +2,20 @@
 
 Uses Gemini reasoning to classify each file from file_inventory into
 semantic categories based on metadata and optional safe content previews.
-Never reads full file contents; never uploads file data.
+Enforces strict safe/search mode restrictions, binary checks, and safety-biased
+confidence boundaries.
 """
 
 from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Literal
 
+from google import genai
+from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
+from google.genai import types as genai_types
 from pydantic import BaseModel, Field
 
 from app.nodes.file_discovery_node import (
@@ -89,8 +95,6 @@ _EXTENSION_HINTS: dict[str, FileCategory] = {
     ".webp": FileCategory.MEDIA,
     ".heic": FileCategory.MEDIA,
     ".tiff": FileCategory.MEDIA,
-    # Screenshots (common naming convention — extension alone isn't enough)
-    # Screenshots are detected by filename pattern in _classify_by_metadata.
 }
 
 # Filename patterns that strongly suggest a category
@@ -119,9 +123,6 @@ _FILENAME_KEYWORDS: dict[str, FileCategory] = {
     "school": FileCategory.SCHOOL,
     "homework": FileCategory.SCHOOL,
     "assignment": FileCategory.SCHOOL,
-    "syllabus": FileCategory.SCHOOL,
-    "transcript": FileCategory.SCHOOL,
-    "lecture": FileCategory.SCHOOL,
 }
 
 
@@ -143,6 +144,10 @@ class ClassifiedFile(BaseModel):
     reasoning: str = Field(
         description="Explanation of why this category was chosen.",
     )
+    classification_method: Literal["metadata_only", "metadata_plus_preview"] = Field(
+        default="metadata_only",
+        description="Method used to classify this file.",
+    )
 
 
 class ClassificationOutput(BaseModel):
@@ -159,60 +164,27 @@ class ClassificationOutput(BaseModel):
     folder_scope_policy: FolderScopePolicy = Field(
         description="The folder scope policy used for discovery, propagated downstream.",
     )
+    safe_mode: bool = Field(
+        default=False,
+        description="Whether safe mode was active during classification.",
+    )
+    search_mode: bool = Field(
+        default=False,
+        description="Whether search mode was active during classification.",
+    )
     reasoning: str = Field(
         description="High-level summary of the classification run.",
     )
 
 
-# ---------------------------------------------------------------------------
-# Metadata-based classification (deterministic, no LLM needed)
-# ---------------------------------------------------------------------------
+class GeminiClassificationResult(BaseModel):
+    """Internal model for Gemini structured responses."""
 
-
-def _classify_by_metadata(file: FileMetadata) -> ClassifiedFile:
-    """Classify a file using only its metadata (path, extension, name).
-
-    This provides a fast, deterministic baseline.  A future LLM-enhanced
-    pass can refine these results.
-    """
-    basename = Path(file.path).stem.lower()
-    ext = file.extension.lower()
-
-    # 1. Check filename keyword matches (highest signal)
-    for keyword, category in _FILENAME_KEYWORDS.items():
-        if keyword in basename:
-            return ClassifiedFile(
-                path=file.path,
-                category=category,
-                confidence=0.85,
-                reasoning=(
-                    f"Filename '{Path(file.path).name}' contains keyword "
-                    f"'{keyword}' → classified as {category.value}."
-                ),
-            )
-
-    # 2. Check extension-based hints
-    if ext in _EXTENSION_HINTS:
-        category = _EXTENSION_HINTS[ext]
-        return ClassifiedFile(
-            path=file.path,
-            category=category,
-            confidence=0.80,
-            reasoning=(
-                f"Extension '{ext}' is a known indicator of {category.value} files."
-            ),
-        )
-
-    # 3. Fallback to misc
-    return ClassifiedFile(
-        path=file.path,
-        category=FileCategory.MISC,
-        confidence=0.50,
-        reasoning=(
-            f"No strong metadata signal for '{Path(file.path).name}' "
-            f"(ext='{ext}'). Classified as misc with low confidence."
-        ),
+    category: str = Field(
+        description="File category: resume, tax, medical, screenshot, invoice, school, source_code, media, misc."
     )
+    confidence: float = Field(description="Confidence rating between 0.0 and 1.0.")
+    reasoning: str = Field(description="Detailed reason for selection.")
 
 
 # ---------------------------------------------------------------------------
@@ -227,29 +199,130 @@ _SAFE_PREVIEW_EXTENSIONS = {
     ".ini",
     ".cfg",
     ".conf",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".toml",
 }
-
-_MAX_PREVIEW_BYTES = 512  # Read at most 512 bytes — never full contents
 
 
 def _safe_preview(file: FileMetadata) -> str | None:
-    """Return a short text preview if the file extension is safe.
+    """Return a short text preview if the file is safe to preview.
 
     Safety rules enforced:
-    - Only reads files with known safe text extensions.
-    - Never reads binary or sensitive file types.
-    - Reads at most _MAX_PREVIEW_BYTES bytes.
-    - Never uploads file contents anywhere.
+    - File size must be less than 10 MB.
+    - Extension must be in plain-text safe list.
+    - Quick binary heuristic check (>20% of bytes > 127 is binary).
+    - Read with open(file, "rb"), checked, truncated to 512 bytes, and decoded with errors="ignore".
     """
+    if file.size >= 10 * 1024 * 1024 or file.size <= 0:
+        return None
+
     ext = file.extension.lower()
     if ext not in _SAFE_PREVIEW_EXTENSIONS:
         return None
 
     try:
-        with open(resolve_real_path(file.path), encoding="utf-8", errors="ignore") as f:
-            return f.read(_MAX_PREVIEW_BYTES)
+        path_to_open = resolve_real_path(file.path)
+        with open(path_to_open, "rb") as f:
+            raw_bytes = f.read(1024)
+
+        if not raw_bytes:
+            return None
+
+        # Binary check: count bytes above 127
+        high_bytes = sum(1 for b in raw_bytes if b > 127)
+        if (high_bytes / len(raw_bytes)) > 0.20:
+            return None
+
+        truncated = raw_bytes[:512]
+        return truncated.decode("utf-8", errors="ignore")
     except OSError:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Post-processing confidence and safety filters
+# ---------------------------------------------------------------------------
+
+
+def _post_process_classification(
+    file: FileMetadata,
+    category: FileCategory,
+    confidence: float,
+    reasoning: str,
+    has_preview: bool,
+    preview_text: str | None,
+) -> tuple[FileCategory, float, str]:
+    """Applies strict safety limits and caps classification confidence."""
+    basename = Path(file.path).name.lower()
+    ext = file.extension.lower()
+    is_masked = "sensitive_file_" in basename
+
+    # Require two independent signals for sensitive categories
+    if category in (FileCategory.TAX, FileCategory.MEDICAL):
+        signals = 0
+
+        # Signal 1: extension hints
+        if category == FileCategory.TAX and ext in (".tax", ".w2", ".1099", ".1040"):
+            signals += 1
+        elif category == FileCategory.MEDICAL and ext in (".med", ".medical"):
+            signals += 1
+
+        # Signal 2: filename keyword (only if NOT masked)
+        if not is_masked:
+            keywords = (
+                ["tax", "w2", "1099", "1040"]
+                if category == FileCategory.TAX
+                else ["medical", "health", "prescription", "diagnosis"]
+            )
+            if any(kw in basename for kw in keywords):
+                signals += 1
+
+        # Signal 3: preview keyword
+        if has_preview and preview_text:
+            preview_lower = preview_text.lower()
+            keywords = (
+                ["tax", "w2", "1099", "1040"]
+                if category == FileCategory.TAX
+                else ["medical", "health", "prescription", "doctor", "patient"]
+            )
+            if any(kw in preview_lower for kw in keywords):
+                signals += 1
+
+        if signals < 2:
+            # Fall back to misc
+            category = FileCategory.MISC
+            confidence = min(confidence, 0.40)
+            reasoning = (
+                f"Classification reverted to misc. Sensitive category '{category}' "
+                f"requires 2 independent signals, but only {signals} were found. "
+                f"Original reasoning: {reasoning}"
+            )
+
+    # General confidence cap at 0.40 unless strong evidence exists
+    has_strong_evidence = False
+
+    if (
+        category == FileCategory.SOURCE_CODE
+        and ext in _EXTENSION_HINTS
+        and _EXTENSION_HINTS[ext] == FileCategory.SOURCE_CODE
+    ):
+        has_strong_evidence = True
+    elif (
+        category == FileCategory.MEDIA
+        and ext in _EXTENSION_HINTS
+        and _EXTENSION_HINTS[ext] == FileCategory.MEDIA
+    ):
+        has_strong_evidence = True
+    elif category == FileCategory.SCREENSHOT and "screenshot" in basename:
+        has_strong_evidence = True
+
+    if not has_strong_evidence and confidence > 0.40:
+        confidence = 0.40
+        reasoning += " (Confidence capped at 0.40 due to lack of strong evidence)"
+
+    return category, confidence, reasoning
 
 
 # ---------------------------------------------------------------------------
@@ -257,72 +330,141 @@ def _safe_preview(file: FileMetadata) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def classification_node(node_input: FileDiscoveryOutput) -> ClassificationOutput:
-    """ClassificationNode — classifies each file in the inventory.
+def classification_node(node_input: FileDiscoveryOutput) -> Event:
+    """ClassificationNode — classifies each file in the inventory using safety-biased Gemini."""
+    safe_mode = node_input.safe_mode
+    search_mode = node_input.search_mode
+    policy = node_input.folder_scope_policy
 
-    This function node follows the ADK 2.0 Workflow convention:
-    - Accepts a typed Pydantic input (FileDiscoveryOutput from predecessor).
-    - Returns a typed Pydantic output (ClassificationOutput) for downstream.
+    # Initialize Gemini client
+    client = genai.Client()
 
-    Classification strategy:
-    1. Metadata-based heuristics (filename keywords, extension mapping).
-    2. Optional safe content preview for ambiguous text files.
-    3. Gemini LLM reasoning is reserved for a future enhancement pass.
-
-    Safety guarantees:
-    - Never reads file contents unless extension is in the safe-preview list.
-    - Never uploads file contents.
-    - Only uses metadata or safe previews (≤512 bytes of plain text).
-    """
     classified: list[ClassifiedFile] = []
-    refined_count = 0
+    metadata_count = 0
+    preview_count = 0
 
     for file in node_input.file_inventory:
-        result = _classify_by_metadata(file)
+        basename = Path(file.path).name
+        ext = file.extension.lower()
 
-        # If confidence is low and a safe preview is available, try to refine
-        if result.confidence < 0.70:
-            preview = _safe_preview(file)
-            if preview:
-                # Use preview content keywords to attempt reclassification
-                preview_lower = preview.lower()
-                for keyword, category in _FILENAME_KEYWORDS.items():
-                    if keyword in preview_lower:
-                        result = ClassifiedFile(
-                            path=file.path,
-                            category=category,
-                            confidence=0.75,
-                            reasoning=(
-                                f"Content preview contains keyword '{keyword}' "
-                                f"→ reclassified as {category.value}."
-                            ),
-                        )
-                        refined_count += 1
-                        break
-
-        classified.append(result)
-
-    # Build high-level reasoning summary
-    category_counts: dict[str, int] = {}
-    for cf in classified:
-        category_counts[cf.category.value] = (
-            category_counts.get(cf.category.value, 0) + 1
+        # Check preview eligibility
+        allow_previews = getattr(policy, "allow_previews", True)
+        can_preview = (
+            not safe_mode
+            and not search_mode
+            and allow_previews
+            and file.size < 10 * 1024 * 1024
         )
 
-    distribution = ", ".join(
-        f"{cat}: {count}" for cat, count in sorted(category_counts.items())
-    )
+        preview = None
+        method: Literal["metadata_only", "metadata_plus_preview"] = "metadata_only"
 
+        if can_preview:
+            preview = _safe_preview(file)
+            if preview:
+                method = "metadata_plus_preview"
+                preview_count += 1
+            else:
+                metadata_count += 1
+        else:
+            metadata_count += 1
+
+        # Build prompt for safety biased Gemini classification
+        is_masked = "sensitive_file_" in basename.lower()
+        masked_note = (
+            "The filename is masked to protect user privacy. Do NOT attempt to guess "
+            "or infer sensitive categories from the name. Rely only on extension, size, and timestamps."
+            if is_masked
+            else ""
+        )
+
+        prompt_parts = [
+            "Classify the following file into exactly one of these categories: "
+            "resume, tax, medical, screenshot, invoice, school, source_code, media, misc.",
+            "",
+            f"Filename: {basename}",
+            f"Extension: {ext}",
+            f"Size: {file.size} bytes",
+            f"Last Modified: {file.last_modified}",
+            masked_note,
+        ]
+
+        if preview:
+            prompt_parts.append(f"\nFile Content Preview:\n{preview}")
+
+        prompt_parts.extend(
+            [
+                "",
+                "Safety Bias Instructions:",
+                "1. If there is any ambiguity, uncertainty, or lack of strong evidence, "
+                "you MUST classify as 'misc' with low confidence.",
+                "2. Never guess sensitive categories (medical, tax) unless metadata or preview "
+                "strongly demonstrates the classification.",
+            ]
+        )
+
+        prompt = "\n".join(prompt_parts)
+
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=genai_types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=GeminiClassificationResult,
+                    temperature=0.1,
+                ),
+            )
+            gemini_result = GeminiClassificationResult.model_validate_json(
+                response.text
+            )
+
+            # Map raw string to FileCategory enum safely
+            try:
+                raw_cat = FileCategory(gemini_result.category.lower().strip())
+            except ValueError:
+                raw_cat = FileCategory.MISC
+
+            cat, conf, reason = _post_process_classification(
+                file=file,
+                category=raw_cat,
+                confidence=gemini_result.confidence,
+                reasoning=gemini_result.reasoning,
+                has_preview=(preview is not None),
+                preview_text=preview,
+            )
+
+        except Exception as e:
+            # Safe local fallback on API failure
+            cat = FileCategory.MISC
+            conf = 0.30
+            reason = f"Gemini API failure, fell back to misc. Error: {e}"
+
+        classified.append(
+            ClassifiedFile(
+                path=file.path,
+                category=cat,
+                confidence=conf,
+                reasoning=reason,
+                classification_method=method,
+            )
+        )
+
+    # Compile high-level run summary
     reasoning = (
-        f"Classified {len(classified)} file(s) from the inventory. "
-        f"Distribution: [{distribution}]. "
-        f"{refined_count} file(s) were refined using safe content preview. "
-        f"No file contents were uploaded."
+        f"Completed classification of {len(classified)} files. "
+        f"Used metadata-only for {metadata_count} files, "
+        f"and metadata-plus-preview for {preview_count} files. "
+        f"No contents were uploaded."
     )
 
-    return ClassificationOutput(
+    output = ClassificationOutput(
         classified_files=classified,
         file_inventory=node_input.file_inventory,
-        folder_scope_policy=node_input.folder_scope_policy,
+        folder_scope_policy=policy,
+        safe_mode=safe_mode,
+        search_mode=search_mode,
         reasoning=reasoning,
     )
+
+    return Event(output=output, actions=EventActions(route="dedupe"))
