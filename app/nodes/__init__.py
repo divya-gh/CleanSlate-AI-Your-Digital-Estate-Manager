@@ -11,6 +11,17 @@ from app.nodes.execution_node import (
     ExecutionOutput,
     execution_node,
 )
+from app.nodes.file_discovery_node import (
+    FileDiscoveryInput,
+    FileDiscoveryOutput,
+    FolderScopePolicy,
+    file_discovery_node,
+)
+from app.nodes.folder_scope_node import (
+    FolderScopeInput,
+    FolderScopeOutput,
+    folder_scope_node,
+)
 from app.nodes.hitl_approval_node import (
     HITLApprovalOutput,
     hitl_approval_node,
@@ -54,6 +65,11 @@ __all__ = [
     "DuplicateGroup",
     "ExecutionLogEntry",
     "ExecutionOutput",
+    "FileDiscoveryInput",
+    "FileDiscoveryOutput",
+    "FolderScopeInput",
+    "FolderScopeOutput",
+    "FolderScopePolicy",
     "HITLApprovalOutput",
     "MyPCAssistantInput",
     "MyPCAssistantOutput",
@@ -67,6 +83,8 @@ __all__ = [
     "WeeklySummary",
     "duplicate_detection_node",
     "execution_node",
+    "file_discovery_node",
+    "folder_scope_node",
     "hitl_approval_node",
     "my_pc_assistant_node",
     "optimization_planner_node",

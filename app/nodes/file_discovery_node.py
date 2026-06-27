@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import fnmatch
 import os
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +54,22 @@ class FolderScopePolicy(BaseModel):
     allow_moves: bool = Field(
         default=True,
         description="Whether moving files is allowed in this flow.",
+    )
+    version: str = Field(
+        default="1.0",
+        description="Policy version.",
+    )
+    created_at: datetime | None = Field(
+        default=None,
+        description="Policy creation timestamp.",
+    )
+    created_by: str = Field(
+        default="FolderScopeNode",
+        description="Policy creator.",
+    )
+    source: str = Field(
+        default="interactive_cleanup",
+        description="Policy source.",
     )
 
 
@@ -189,7 +207,7 @@ def _scan_allowed_paths(
 
 
 def file_discovery_node(
-    node_input: FileDiscoveryInput | MyPCAssistantOutput,
+    node_input: Any,
 ) -> FileDiscoveryOutput:
     """FileDiscoveryNode — scans allowed paths and returns a file inventory.
 
@@ -197,6 +215,15 @@ def file_discovery_node(
     - Accepts a typed Pydantic input (auto-converted from predecessor output).
     - Returns a typed Pydantic output for downstream consumption.
     """
+    if type(node_input).__name__ == "FolderScopeOutput":
+        policy = getattr(node_input, "folder_scope_policy", None)
+        if not policy:
+            raise ValueError("FolderScopePolicy is missing in FolderScopeOutput.")
+        node_input = FileDiscoveryInput(
+            folder_scope_policy=policy,
+            search_query=None,
+        )
+
     if isinstance(node_input, MyPCAssistantOutput):
         if node_input.intent != "search":
             raise ValueError(
@@ -237,6 +264,26 @@ def file_discovery_node(
     policy = node_input.folder_scope_policy
     search_query = node_input.search_query
 
+    # Enforce validation checks on policy
+    if not policy.allowed_paths:
+        raise ValueError("allowed_paths must not be empty.")
+
+    for ap in policy.allowed_paths:
+        # Check path existence without reading contents or following symlinks
+        if not os.path.exists(ap):
+            raise ValueError(f"Allowed path '{ap}' does not exist.")
+        if os.path.islink(ap):
+            raise ValueError(
+                f"Allowed path '{ap}' is a symbolic link, which is not supported."
+            )
+
+        # Check for overlaps with blocked paths
+        for bp in policy.blocked_paths:
+            if ap == bp or ap.startswith(bp + os.sep):
+                raise ValueError(
+                    f"Allowed path '{ap}' overlaps with or is inside blocked path '{bp}'."
+                )
+
     inventory, reasoning = _scan_allowed_paths(
         allowed_paths=policy.allowed_paths,
         blocked_paths=policy.blocked_paths,
@@ -248,3 +295,6 @@ def file_discovery_node(
         folder_scope_policy=policy,
         reasoning=reasoning,
     )
+
+
+FolderScopePolicy.model_rebuild()

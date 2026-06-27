@@ -123,25 +123,7 @@ def finalize_request(node_input: dict) -> str:
         return f"Outcome: REJECTED. Canceled action: '{request}'"
 
 
-# ---------------------------------------------------------------------------
-# FolderScopeNode — placeholder (to be implemented per ADK Agent Graph SPEC)
-# Outputs a FileDiscoveryInput that feeds into FileDiscoveryNode.
-# ---------------------------------------------------------------------------
-def folder_scope_node(node_input: Any) -> FileDiscoveryInput:
-    """Placeholder FolderScopeNode — returns a default scope policy.
-
-    This node will be replaced with the full implementation when the
-    FolderScopeNode SPEC is provided.  For now it emits a safe default
-    so that FileDiscoveryNode can be tested in isolation.
-    """
-    return FileDiscoveryInput(
-        folder_scope_policy=FolderScopePolicy(
-            allowed_paths=[os.getcwd()],
-            blocked_paths=[],
-        ),
-        search_query=None,
-    )
-
+from app.nodes.folder_scope_node import folder_scope_node
 
 # ---------------------------------------------------------------------------
 # Define the workflow graph
@@ -155,7 +137,7 @@ root_agent = Workflow(
         (my_pc_assistant_node, {"search": file_discovery_node}),
         (my_pc_assistant_node, {"explain": summary_node}),
         # — File discovery → Classification pipeline —
-        (folder_scope_node, file_discovery_node),
+        (folder_scope_node, {"scan": file_discovery_node}),
         (file_discovery_node, classification_node),
         (classification_node, duplicate_detection_node),
         (duplicate_detection_node, sensitive_detection_node),
