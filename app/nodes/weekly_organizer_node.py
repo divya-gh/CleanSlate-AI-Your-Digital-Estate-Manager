@@ -66,33 +66,47 @@ class WeeklySummary(BaseModel):
 
 def weekly_organizer_node(node_input: WeeklyOrganizerInput) -> Event:
     """WeeklyOrganizerNode — conditionally runs weekly organization in safe mode."""
-    if not node_input.weekly_automation_enabled:
+    try:
+        if not node_input.weekly_automation_enabled:
+            summary = WeeklySummary(
+                automation_ran=False,
+                actions_attempted=0,
+                actions_completed=0,
+                skipped=0,
+                dry_run=node_input.dry_run,
+                human_readable_report="Weekly automation disabled. No actions performed.",
+                sensitive_files_moved=0,
+                duplicates_moved=0,
+                errors=[],
+            )
+            return Event(output=summary, actions=EventActions(route="disabled"))
+
+        # Configure the pre-approved policy to safe mode
+        policy = node_input.folder_scope_policy.model_copy(deep=True)
+        policy.safe_mode = True
+        policy.dry_run = node_input.dry_run
+        policy.allow_deletes = False
+        policy.allow_compress = False
+        policy.allow_archives = True
+        policy.allow_moves = True
+
+        discovery_input = FileDiscoveryInput(
+            folder_scope_policy=policy,
+            search_query=None,
+        )
+
+        return Event(output=discovery_input, actions=EventActions(route="run"))
+
+    except Exception as e:
         summary = WeeklySummary(
             automation_ran=False,
             actions_attempted=0,
             actions_completed=0,
             skipped=0,
             dry_run=node_input.dry_run,
-            human_readable_report="Weekly automation disabled. No actions performed.",
+            human_readable_report=f"Weekly automation error: {e}",
             sensitive_files_moved=0,
             duplicates_moved=0,
-            errors=[],
+            errors=[str(e)],
         )
-        # Terminates the workflow by routing to None (no matching edges downstream)
-        return Event(output=summary, actions=EventActions(route=None))
-
-    # Configure the pre-approved policy to safe mode
-    policy = node_input.folder_scope_policy.model_copy(deep=True)
-    policy.safe_mode = True
-    policy.dry_run = node_input.dry_run
-    policy.allow_deletes = False
-    policy.allow_compress = False
-    policy.allow_archives = True
-    policy.allow_moves = True
-
-    discovery_input = FileDiscoveryInput(
-        folder_scope_policy=policy,
-        search_query=None,
-    )
-
-    return Event(output=discovery_input, actions=EventActions(route="run"))
+        return Event(output=summary, actions=EventActions(route="error"))

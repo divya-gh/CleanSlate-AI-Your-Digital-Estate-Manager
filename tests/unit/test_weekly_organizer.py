@@ -30,7 +30,7 @@ def test_weekly_organizer_disabled() -> None:
         dry_run=False,
     )
     event = weekly_organizer_node(node_input)
-    assert event.actions.route is None
+    assert event.actions.route == "disabled"
 
     summary = event.output
     assert isinstance(summary, WeeklySummary)

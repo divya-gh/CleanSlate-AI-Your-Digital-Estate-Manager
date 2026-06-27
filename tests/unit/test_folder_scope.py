@@ -87,7 +87,7 @@ async def test_folder_scope_validation_error_and_field_clearing() -> None:
     assert len(events) == 1
     event = events[0]
     assert isinstance(event, Event)
-    assert event.actions.route is None
+    assert event.actions.route == "scope_invalid"
     assert event.output.folder_scope_policy is None
     assert len(event.output.validation_errors) > 0
     # Checks that allowed_paths got popped, but blocked_paths remains
@@ -116,7 +116,7 @@ async def test_folder_scope_success_policy_construction() -> None:
     assert len(events) == 1
     event = events[0]
     assert isinstance(event, Event)
-    assert event.actions.route == "scan"
+    assert event.actions.route == "scope_ok"
     policy = event.output.folder_scope_policy
     assert policy is not None
     assert policy.version == "1.0"
@@ -177,6 +177,7 @@ def test_file_discovery_node_integration() -> None:
     )
     scope_output = FolderScopeOutput(folder_scope_policy=policy, message="Success")
 
-    discovery_output = file_discovery_node(scope_output)
+    res = file_discovery_node(scope_output)
+    discovery_output = res.output if hasattr(res, "output") else res
     assert discovery_output.folder_scope_policy.allowed_paths == [allowed_path]
     assert len(discovery_output.file_inventory) >= 0

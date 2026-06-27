@@ -250,6 +250,7 @@ def test_integration_with_classification_node(tmp_path) -> None:
     )
     scope_output = FolderScopeOutput(folder_scope_policy=policy, message="Success")
 
-    discovery_output = file_discovery_node(scope_output)
+    res = file_discovery_node(scope_output)
+    discovery_output = res.output if hasattr(res, "output") else res
     assert isinstance(discovery_output, FileDiscoveryOutput)
     assert len(discovery_output.file_inventory) == 1

@@ -360,7 +360,7 @@ async def folder_scope_node(
         if has_blocked_errors:
             ctx.resume_inputs.pop("blocked_paths", None)
 
-        yield Event(output=output, actions=EventActions(route=None))
+        yield Event(output=output, actions=EventActions(route="scope_invalid"))
         return
 
     # Construct the validated policy
@@ -387,4 +387,4 @@ async def folder_scope_node(
         human_readable_report=success_msg,
     )
 
-    yield Event(output=output, actions=EventActions(route="scan"))
+    yield Event(output=output, actions=EventActions(route="scope_ok"))

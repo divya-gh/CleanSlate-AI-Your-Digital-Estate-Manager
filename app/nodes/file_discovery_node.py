@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
@@ -376,18 +377,17 @@ def _scan_allowed_paths(
 def file_discovery_node(
     node_input: Any,
 ) -> Event:
-    """FileDiscoveryNode — scans allowed paths and returns a file inventory."""
+    """FileDiscoveryNode — scans allowed directories recursively and returns Event."""
     input_type = type(node_input).__name__
-
+    policy = None
+    search_query = None
     search_mode = False
     safe_mode = False
-    search_query = None
-    policy = None
 
     if input_type == "MyPCAssistantOutput":
         if node_input.intent != "search":
             raise ValueError(
-                f"FileDiscoveryNode only accepts MyPCAssistantOutput when intent is 'search'. Got: {node_input.intent}"
+                "FileDiscoveryNode only accepts MyPCAssistantOutput when intent is 'search'."
             )
         q = node_input.search_query
         if not q or not q.strip():
@@ -395,7 +395,6 @@ def file_discovery_node(
 
         q_lower = q.lower()
         blocked_keywords = {
-            "system",
             "windows",
             "system32",
             "programdata",
@@ -458,13 +457,24 @@ def file_discovery_node(
                     f"Allowed path '{ap}' overlaps with or is inside blocked path '{bp}'."
                 )
 
-    inventory, reasoning = _scan_allowed_paths(
-        allowed_paths=policy.allowed_paths,
-        blocked_paths=policy.blocked_paths,
-        search_query=search_query,
-        search_mode=search_mode,
-        safe_mode=safe_mode,
-    )
+    try:
+        inventory, reasoning = _scan_allowed_paths(
+            allowed_paths=policy.allowed_paths,
+            blocked_paths=policy.blocked_paths,
+            search_query=search_query,
+            search_mode=search_mode,
+            safe_mode=safe_mode,
+        )
+    except Exception as e:
+        dummy_policy = FolderScopePolicy(allowed_paths=["."])
+        output = FileDiscoveryOutput(
+            file_inventory=[],
+            folder_scope_policy=dummy_policy,
+            search_mode=False,
+            safe_mode=False,
+            reasoning=f"Error occurred during file discovery: {e}",
+        )
+        return Event(output=output, actions=EventActions(route="error"))
 
     output = FileDiscoveryOutput(
         file_inventory=inventory,
@@ -474,4 +484,10 @@ def file_discovery_node(
         reasoning=reasoning,
     )
 
-    return output
+    route = "cleanup_scan"
+    if search_mode:
+        route = "search_return"
+    elif safe_mode:
+        route = "weekly_scan"
+
+    return Event(output=output, actions=EventActions(route=route))

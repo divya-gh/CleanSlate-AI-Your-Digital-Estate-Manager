@@ -158,7 +158,8 @@ def test_file_discovery_node_accepts_assistant_search() -> None:
         search_query="project_plan.docx",
     )
     # Executing file_discovery_node with MyPCAssistantOutput constructs discovery input
-    output = file_discovery_node(assistant_output)
+    res = file_discovery_node(assistant_output)
+    output = res.output if hasattr(res, "output") else res
     # Check that search query was propagated to output
     assert "project_plan.docx" in output.reasoning
 
