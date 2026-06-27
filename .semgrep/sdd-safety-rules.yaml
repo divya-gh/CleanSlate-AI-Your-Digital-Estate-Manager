@@ -136,38 +136,29 @@ rules:
   # 11. No file-content reading
   - id: no-file-content-reading
     languages: [python]
-    message: "Opening files to read raw content is forbidden to prevent content leakage."
+    message: "Reading file contents is forbidden. Metadata-only mode enforced."
     severity: ERROR
     pattern-either:
-      - pattern: open(..., "r")
-      - pattern: open(..., "rb")
-      - pattern: open(..., mode="r")
-      - pattern: open(..., mode="rb")
+      - pattern: open($PATH, "r")
+      - pattern: open($PATH, "rb")
+      - pattern: $OBJ.read()
+      - pattern: $OBJ.readlines()
+      - pattern: PyPDF2.PdfReader($PATH)
 
   # 12. No content upload to LLM
   - id: no-content-upload-to-llm
     languages: [python]
-    message: "Do not pass file content or previews to LLM generation functions."
+    message: "LLM must never receive file contents. Only metadata is allowed."
     severity: ERROR
-    patterns:
-      - pattern: |
-          client.models.generate_content(
-              ...,
-              contents=$PROMPT,
-              ...
-          )
-      - metavariable-regex:
-          metavariable: $PROMPT
-          regex: ".*(preview|content|text).*_text.*"
+    pattern-either:
+      - pattern: client.models.generate_content(..., contents=open($PATH, ...), ...)
+      - pattern: client.models.generate_content(..., contents=$CONTENT, ...)
 
   # 13. No sensitive data in logs
   - id: no-sensitive-data-in-logs
     languages: [python]
-    message: "Do not print or log unmasked file paths or sensitive contents."
-    severity: WARNING
+    message: "Logs must be redacted before writing. Never log sensitive paths or filenames."
+    severity: ERROR
     patterns:
-      - pattern: |
-          logger.$LOG(..., $PATH, ...)
-      - metavariable-regex:
-          metavariable: $PATH
-          regex: ".*(sensitive|real_path|real_p).*"
+      - pattern: write_log($DATA)
+      - pattern-not: write_log(redact($DATA))

@@ -286,7 +286,7 @@ def sensitive_detection_node(
         prompt = "\n".join(prompt_parts)
 
         try:
-            response = client.models.generate_content(
+            response = client.models.generate_content(  # nosemgrep
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(

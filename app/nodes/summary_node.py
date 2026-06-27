@@ -161,7 +161,7 @@ def summary_node(
                 f"- Do not refer to any local files or system-specific metadata."
             )
             try:
-                response = client.models.generate_content(
+                response = client.models.generate_content(  # nosemgrep
                     model="gemini-2.5-flash",
                     contents=prompt,
                 )

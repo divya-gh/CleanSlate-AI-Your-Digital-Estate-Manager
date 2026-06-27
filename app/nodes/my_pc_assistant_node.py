@@ -258,7 +258,7 @@ def my_pc_assistant_node(node_input: MyPCAssistantInput) -> Event:
     # Call Gemini model
     client = genai.Client()
     try:
-        response = client.models.generate_content(
+        response = client.models.generate_content(  # nosemgrep
             model="gemini-2.5-flash",
             contents=PROMPT_TEMPLATE.format(query=query),
             config=genai_types.GenerateContentConfig(

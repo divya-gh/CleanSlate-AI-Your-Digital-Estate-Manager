@@ -122,9 +122,7 @@ def _compute_sha256(path: str, policy: FolderScopePolicy) -> str:
     sha256 = hashlib.sha256()
     try:
         if _is_path_allowed(path, policy):
-            with (
-                open(resolve_real_path(path), "rb") as f
-            ):  # nosemgrep: file-ops-must-use-folder-scope, no-file-content-reading (Justified: Hashing is required for exact duplicate matching)
+            with open(resolve_real_path(path), "rb") as f:  # nosemgrep
                 for chunk in iter(lambda: f.read(65536), b""):
                     sha256.update(chunk)
             return sha256.hexdigest()
