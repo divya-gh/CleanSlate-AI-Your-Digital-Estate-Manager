@@ -1,6 +1,6 @@
 
 # What is Semgrep ?
-`Semgrep` is a **lightweight static analysis engine** that scans your code for:
+`Semgrep` is a **lightweight static analysis engine** that scans our code for:
 
 •	security vulnerabilities
 •	unsafe patterns
@@ -11,7 +11,7 @@
 •	unsafe path handling
 •	ANY custom rule you define
 
-**Mental Model:**   `“grep + AST + security brain” ` that you can program with your own rules.
+**Mental Model:**   `“grep + AST + security brain” ` that we can program with your own rules.
 
 It’s fast, local, and perfect for agentic codebases where safety must be enforced before execution.
 
@@ -19,8 +19,10 @@ It’s fast, local, and perfect for agentic codebases where safety must be enfor
 ## Implimenting Semgrep in CleanSlateAI - My PC Assistant
     Because runtime safety ≠ static safety.
 Semgrep guarantee that `unsafe code can never enter our repo` in the first place.
-Analysis:
- Since CleanSlateAI :
+
+### Analysis:
+
+**Since CleanSlateAI** :
 •	moves files
 •	deletes files
 •	touches user directories
@@ -29,14 +31,15 @@ Analysis:
 •	runs automated weekly tasks
 •	performs rollback
 •	executes actions on the filesystem
-a simple code  ` os.remove(path)` could bypass:
+
+##### a simple code  ` os.remove(path)` could bypass:
 •	HITL
 •	safe_mode
 •	rollback
 •	sensitive file protection
 •	folder scope  And you’d never know until a user loses data.
 
-Semgrep prevents that with static safety. Semgrep enforces rules like:
+#### Semgrep prevents that with static safety. Semgrep enforces rules like:
 
 ❌ No hardcoded API keys
 ❌ No direct os.remove() without safety wrapper

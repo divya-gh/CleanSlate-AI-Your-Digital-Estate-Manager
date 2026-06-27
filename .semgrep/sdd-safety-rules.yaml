@@ -1,0 +1,134 @@
+rules:
+  # 1. No hardcoded API keys
+  - id: no-hardcoded-api-keys
+    languages: [python]
+    message: "Hardcoded API keys are forbidden. Use environment variables."
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $KEY = $VALUE
+      - metavariable-pattern:
+          metavariable: KEY
+          regex: ".*API_KEY.*"
+      - pattern-not: |
+          $KEY = os.environ.get($ENV)
+
+  # 2. No direct file deletes
+  - id: no-direct-file-deletes
+    languages: [python]
+    message: "Do not call delete operations directly. Use ExecutionNode with HITL + rollback."
+    severity: ERROR
+    pattern-either:
+      - pattern: os.remove($PATH)
+      - pattern: os.unlink($PATH)
+      - pattern: shutil.rmtree($PATH)
+      - pattern: $PATH.unlink()
+
+  # 3. Never delete sensitive files
+  - id: no-delete-sensitive-files
+    languages: [python]
+    message: "Sensitive files must never be deleted. They must be moved to Authenticated/."
+    severity: ERROR
+    patterns:
+      - pattern: |
+          if $SENSITIVE:
+              os.remove($PATH)
+      - metavariable-pattern:
+          metavariable: SENSITIVE
+          regex: "is_sensitive|sensitive"
+
+  # 4. No system folder access
+  - id: no-system-folder-access
+    languages: [python]
+    message: "System folders must never be scanned or modified."
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $FUNC($PATH, ...)
+      - metavariable-pattern:
+          metavariable: PATH
+          regex: ".*/(Windows|System32|Program Files|Library|usr)/.*"
+
+  # 5. Enforce Folder Scope Policy
+  - id: file-ops-must-use-folder-scope
+    languages: [python]
+    message: "File operations must respect folder_scope_policy and allowed_paths."
+    severity: WARNING
+    patterns:
+      - pattern: |
+          open($PATH, $MODE)
+      - pattern-not: |
+          if folder_scope_policy.is_path_allowed($PATH):
+              open($PATH, $MODE)
+
+  # 6. No file content uploads
+  - id: no-file-content-upload
+    languages: [python]
+    message: "Do not upload raw file contents to external services without permission."
+    severity: ERROR
+    pattern-either:
+      - pattern: requests.post(..., files={"file": open($PATH, "rb")})
+      - pattern: client.upload_file(open($PATH, "rb"))
+
+  # 7. Safe mode: no deletes or compress
+  - id: safe-mode-no-deletes-or-compress
+    languages: [python]
+    message: "In safe_mode, deletes and compress actions are forbidden."
+    severity: ERROR
+    patterns:
+      - pattern: |
+          if safe_mode:
+              $DELETE($ARGS)
+      - metavariable-pattern:
+          metavariable: DELETE
+          regex: "os.remove|shutil.rmtree|compress_file"
+
+  # 8. Sensitive files must go to Authenticated/
+  - id: sensitive-files-to-authenticated
+    languages: [python]
+    message: "Sensitive files must be moved to Authenticated/, not deleted or compressed."
+    severity: WARNING
+    patterns:
+      - pattern: |
+          if is_sensitive:
+              $ACTION($PATH)
+      - pattern-not: |
+          if is_sensitive:
+              move_to_authenticated($PATH)
+
+  # 9. Destructive actions require rollback metadata
+  - id: destructive-actions-require-rollback
+    languages: [python]
+    message: "Destructive actions must include rollback_supported=True."
+    severity: WARNING
+    patterns:
+      - pattern: |
+          CleanupAction(
+              action_type=$TYPE,
+              path=$PATH,
+              ...
+          )
+      - pattern-not: |
+          CleanupAction(
+              action_type=$TYPE,
+              path=$PATH,
+              ...,
+              rollback_supported=True,
+          )
+
+  # 10. ExecutionNode must not bypass HITL
+  - id: no-direct-execution-without-hitl
+    languages: [python]
+    message: "ExecutionNode must only run after HITLApprovalNode for cleanup."
+    severity: WARNING
+    patterns:
+      - pattern: |
+          n_exec = ExecutionNode(...)
+      - pattern-not: |
+          workflow = Workflow(
+              start=n_assistant,
+              edges=[
+                  Edge(source=n_planner, target=n_hitl),
+                  Edge(source=n_hitl, route="approved", target=n_exec),
+              ],
+          )
