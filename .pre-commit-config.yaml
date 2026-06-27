@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/semgrep/semgrep
+    rev: v1.80.0
+    hooks:
+      - id: semgrep
+        name: semgrep-sdd-safety-rules
+        entry: semgrep
+        args: ["--config=.semgrep/sdd-safety-rules.yaml", "--error"]
+        language: python
+        types: [python]
+        pass_filenames: true
