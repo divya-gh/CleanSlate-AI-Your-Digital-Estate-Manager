@@ -114,7 +114,8 @@ def test_duplicate_detection_exact_and_near(tmp_path) -> None:
         reasoning="Predecessor classification nodes run.",
     )
 
-    output = duplicate_detection_node(node_input)
+    event = duplicate_detection_node(node_input)
+    output = event.output
 
     # Verify that:
     # 1. Exact duplicate group contains file4 and file5 (similarity 1.0)

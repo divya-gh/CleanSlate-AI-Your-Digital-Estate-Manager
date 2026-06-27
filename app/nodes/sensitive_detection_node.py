@@ -8,13 +8,16 @@ via Gemini model classification.
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from google import genai
+from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field
 
-from app.nodes.classification_node import ClassifiedFile
+from app.nodes.classification_node import ClassifiedFile, FileCategory
 from app.nodes.duplicate_detection_node import DuplicateDetectionOutput, DuplicateGroup
 from app.nodes.file_discovery_node import (
     FileMetadata,
@@ -32,7 +35,8 @@ class SensitiveFileEntry(BaseModel):
 
     path: str = Field(description="Absolute path to the file.")
     sensitive: bool = Field(
-        description="Whether the file was determined to contain sensitive data."
+        default=False,
+        description="Whether the file was determined to contain sensitive data.",
     )
     sensitivity_type: str = Field(
         description="Type of sensitive data (e.g. SSN, banking, tax, legal, medical, password, api_key, identity, none)."
@@ -54,6 +58,10 @@ class SensitiveDetectionOutput(BaseModel):
         default_factory=list,
         description="List of files with their sensitivity classification results.",
     )
+    non_sensitive_files: list[str] = Field(
+        default_factory=list,
+        description="List of non-sensitive file paths.",
+    )
     classified_files: list[ClassifiedFile] = Field(
         default_factory=list,
         description="List of classification results for every file (propagated downstream).",
@@ -68,6 +76,14 @@ class SensitiveDetectionOutput(BaseModel):
     )
     folder_scope_policy: FolderScopePolicy = Field(
         description="The folder scope policy used for discovery, propagated downstream.",
+    )
+    safe_mode: bool = Field(
+        default=False,
+        description="Whether safe mode was active during sensitive file detection.",
+    )
+    search_mode: bool = Field(
+        default=False,
+        description="Whether search mode was active during sensitive file detection.",
     )
     reasoning: str = Field(
         description="High-level reasoning summary of sensitive file detection.",
@@ -93,6 +109,10 @@ class GeminiSensitivityResult(BaseModel):
     )
     reasoning: str = Field(
         description="Reasoning explaining the classification choice."
+    )
+    signals_detected: list[str] | None = Field(
+        default=None,
+        description="Optional list of signals detected during analysis.",
     )
 
 
@@ -129,17 +149,73 @@ _SAFE_PREVIEW_EXTENSIONS = {
     ".md",
     ".csv",
     ".log",
+    ".ini",
+    ".cfg",
     ".json",
-    ".xml",
     ".yaml",
     ".yml",
+    ".toml",
+    ".pdf",
 }
 
-_MAX_PREVIEW_BYTES = 512
+_SOURCE_CODE_EXTENSIONS = {
+    ".py",
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".cs",
+    ".go",
+    ".rs",
+    ".rb",
+    ".php",
+    ".swift",
+    ".kt",
+    ".sh",
+    ".bat",
+    ".ps1",
+    ".sql",
+    ".html",
+    ".css",
+    ".xml",
+}
 
 
-def _safe_preview(file: FileMetadata, policy: FolderScopePolicy) -> str | None:
-    """Read a small preview of the file if allowed and has a safe text extension."""
+def _extract_pdf_text(path: str) -> str:
+    """Safely extracts text strings from a PDF stream, avoiding raw binary streams."""
+    try:
+        with open(path, "rb") as f:
+            content = f.read(10000)  # Read first 10KB to parse
+
+        # Find printable ASCII segments within PDF text blocks
+        text_segments = re.findall(b"\\(([^)]+)\\)", content)
+        decoded = []
+        for segment in text_segments:
+            if len(decoded) > 512:
+                break
+            try:
+                s = segment.decode("utf-8", errors="ignore")
+                s_clean = "".join(c for c in s if c.isprintable() or c.isspace())
+                if s_clean.strip():
+                    decoded.append(s_clean)
+            except Exception:
+                continue
+        return " ".join(decoded)[:512]
+    except Exception:
+        return ""
+
+
+def _safe_preview(
+    file: FileMetadata, policy: FolderScopePolicy, safe_mode: bool
+) -> str | None:
+    """Read a small preview of the file if allowed, with PDF text extraction and binary guards."""
+    if safe_mode:
+        return None
+
     if not _is_path_allowed(file.path, policy):
         return None
 
@@ -147,11 +223,87 @@ def _safe_preview(file: FileMetadata, policy: FolderScopePolicy) -> str | None:
     if ext not in _SAFE_PREVIEW_EXTENSIONS:
         return None
 
+    # Source code size limit check
+    if ext in _SOURCE_CODE_EXTENSIONS and file.size > 50 * 1024:
+        return None
+
+    if file.size >= 10 * 1024 * 1024 or file.size <= 0:
+        return None
+
+    real_p = resolve_real_path(file.path)
+
+    # PDF custom text extraction
+    if ext == ".pdf":
+        return _extract_pdf_text(real_p)
+
     try:
-        with open(resolve_real_path(file.path), encoding="utf-8", errors="ignore") as f:
-            return f.read(_MAX_PREVIEW_BYTES)
+        with open(real_p, "rb") as f:
+            raw_bytes = f.read(1024)
+
+        if not raw_bytes:
+            return None
+
+        # Binary check heuristic
+        high_bytes = sum(1 for b in raw_bytes if b > 127)
+        if (high_bytes / len(raw_bytes)) > 0.20:
+            return None
+
+        truncated = raw_bytes[:512]
+        return truncated.decode("utf-8", errors="ignore")
     except OSError:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Signal Detection & Safety-biased filters
+# ---------------------------------------------------------------------------
+
+_SENSITIVE_KEYWORDS = [
+    "ssn",
+    "passport",
+    "bank",
+    "medical",
+    "tax",
+    "password",
+    "social_security",
+    "api_key",
+    "secret",
+]
+_SENSITIVE_EXTENSIONS = {".tax", ".w2", ".1040", ".med", ".medical", ".key", ".pem"}
+
+
+def _detect_signals(
+    file: FileMetadata,
+    cf_category: str | None,
+    has_preview: bool,
+    preview_text: str | None,
+) -> list[str]:
+    """Identifies sensitive indicators across metadata and previews."""
+    signals = []
+    basename = Path(file.path).name.lower()
+    ext = file.extension.lower()
+
+    # 1. Filename keyword (only if NOT masked)
+    is_masked = "sensitive_file_" in basename
+    if not is_masked:
+        if any(kw in basename for kw in _SENSITIVE_KEYWORDS):
+            signals.append("filename_keyword")
+
+    # 2. Extension hint
+    if ext in _SENSITIVE_EXTENSIONS:
+        signals.append("sensitive_extension")
+
+    # 3. Preview keyword match
+    if has_preview and preview_text:
+        preview_lower = preview_text.lower()
+        if any(kw in preview_lower for kw in _SENSITIVE_KEYWORDS):
+            signals.append("preview_keyword")
+
+    # 4. Predecessor classification category
+    if cf_category in (FileCategory.TAX, FileCategory.MEDICAL):
+        signals.append("classification_category")
+
+    return signals
 
 
 # ---------------------------------------------------------------------------
@@ -161,23 +313,25 @@ def _safe_preview(file: FileMetadata, policy: FolderScopePolicy) -> str | None:
 
 def sensitive_detection_node(
     node_input: DuplicateDetectionOutput,
-) -> SensitiveDetectionOutput:
+) -> Event:
     """SensitiveDetectionNode — classifies sensitivity using metadata and Gemini."""
     inventory = node_input.file_inventory
     policy = node_input.folder_scope_policy
+    safe_mode = node_input.safe_mode
+    search_mode = node_input.search_mode
     classified_lookup = {cf.path: cf for cf in node_input.classified_files}
 
     # Initialize Gemini client
     client = genai.Client()
 
     checked: list[SensitiveFileEntry] = []
+    non_sensitive_paths: list[str] = []
     skipped_count = 0
 
     for file in inventory:
         # Respect policy strictly — never scan or preview blocked paths
         if not _is_path_allowed(file.path, policy):
             skipped_count += 1
-            # Explicitly mark blocked paths as non-sensitive and safe
             checked.append(
                 SensitiveFileEntry(
                     path=file.path,
@@ -187,30 +341,71 @@ def sensitive_detection_node(
                     reasoning="File skipped because it resides under a blocked or unallowed path.",
                 )
             )
+            non_sensitive_paths.append(file.path)
             continue
 
-        # Get predecessor classification category if available
+        # Fetch predecessor category
         cf = classified_lookup.get(file.path)
-        category = cf.category if cf else "unknown"
+        category = cf.category if cf else None
 
-        # Read preview
-        preview = _safe_preview(file, policy)
+        # Resolve preview
+        preview = _safe_preview(file, policy, safe_mode)
 
-        # Build LLM Prompt
-        filename = Path(file.path).name
+        # Detect safety signals
+        signals = _detect_signals(file, category, (preview is not None), preview)
+
+        # Optimization: Zero signals or single signal skips Gemini
+        if len(signals) < 2:
+            checked.append(
+                SensitiveFileEntry(
+                    path=file.path,
+                    sensitive=False,
+                    sensitivity_type="none",
+                    confidence=1.0,
+                    reasoning=(
+                        f"Skipped Gemini: Requires at least 2 independent signals "
+                        f"for sensitivity. Found only {len(signals)} signal(s)."
+                    ),
+                )
+            )
+            non_sensitive_paths.append(file.path)
+            continue
+
+        # Build prompt for safety biased Gemini
+        basename = Path(file.path).name
+        is_masked = "sensitive_file_" in basename.lower()
+        masked_note = (
+            "The filename is masked to protect user privacy. Treat it as a zero-signal for filename. "
+            "Do NOT attempt to guess or infer sensitive categories from the name. Rely only on preview, extension, and category."
+            if is_masked
+            else ""
+        )
+
         prompt_parts = [
             "Analyze the following file for sensitive personal, financial, or access data.",
-            f"Filename: {filename}",
+            f"Filename: {basename}",
             f"Extension: {file.extension}",
             f"Size: {file.size} bytes",
             f"Predicted Category: {category}",
+            masked_note,
         ]
+
         if preview:
-            prompt_parts.append(f"Content Preview (first 512 bytes):\n{preview}")
+            prompt_parts.append(f"\nContent Preview:\n{preview}")
+
+        prompt_parts.extend(
+            [
+                "",
+                "Safety Bias Instructions:",
+                "1. If uncertain or there is lack of clear sensitive keywords/patterns, "
+                "classify as 'none' with low confidence.",
+                "2. Never guess sensitive categories (SSN, banking, medical, tax, legal, identity) "
+                "unless the preview or metadata strongly demonstrates it.",
+            ]
+        )
 
         prompt = "\n".join(prompt_parts)
 
-        # Call Gemini
         try:
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
@@ -222,17 +417,49 @@ def sensitive_detection_node(
                 ),
             )
             result = GeminiSensitivityResult.model_validate_json(response.text)
-            checked.append(
-                SensitiveFileEntry(
-                    path=file.path,
-                    sensitive=result.sensitive,
-                    sensitivity_type=result.sensitivity_type,
-                    confidence=result.confidence,
-                    reasoning=result.reasoning,
+
+            is_sensitive = result.sensitive
+            sens_type = result.sensitivity_type
+            conf = result.confidence
+            reason = result.reasoning
+
+            # Extra check: double-signal rule enforce
+            if is_sensitive and len(signals) < 2:
+                is_sensitive = False
+                sens_type = "none"
+                conf = min(conf, 0.40)
+                reason = (
+                    f"Sensitive flag overridden to none. Two independent signals required "
+                    f"but only {len(signals)} were detected."
                 )
-            )
+
+            # Cap confidence at 0.40 if two signals are not present
+            if len(signals) < 2 and conf > 0.40:
+                conf = 0.40
+
+            if is_sensitive:
+                checked.append(
+                    SensitiveFileEntry(
+                        path=file.path,
+                        sensitive=is_sensitive,
+                        sensitivity_type=sens_type,
+                        confidence=conf,
+                        reasoning=reason,
+                    )
+                )
+            else:
+                checked.append(
+                    SensitiveFileEntry(
+                        path=file.path,
+                        sensitive=False,
+                        sensitivity_type="none",
+                        confidence=conf,
+                        reasoning=reason,
+                    )
+                )
+                non_sensitive_paths.append(file.path)
+
         except Exception as e:
-            # Fallback in case of API issues
             checked.append(
                 SensitiveFileEntry(
                     path=file.path,
@@ -242,6 +469,7 @@ def sensitive_detection_node(
                     reasoning=f"Failed to analyze sensitivity using Gemini: {e}",
                 )
             )
+            non_sensitive_paths.append(file.path)
 
     sensitive_count = sum(1 for entry in checked if entry.sensitive)
     reasoning = (
@@ -251,11 +479,16 @@ def sensitive_detection_node(
         f"Never uploaded file contents."
     )
 
-    return SensitiveDetectionOutput(
+    output = SensitiveDetectionOutput(
         sensitive_files=checked,
+        non_sensitive_files=non_sensitive_paths,
         classified_files=node_input.classified_files,
         duplicate_groups=node_input.duplicate_groups,
         file_inventory=inventory,
         folder_scope_policy=policy,
+        safe_mode=safe_mode,
+        search_mode=search_mode,
         reasoning=reasoning,
     )
+
+    return Event(output=output, actions=EventActions(route="plan"))

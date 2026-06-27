@@ -13,6 +13,8 @@ import os
 import uuid
 from pathlib import Path
 
+from google.adk.events.event import Event
+from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassificationOutput, ClassifiedFile
@@ -68,6 +70,14 @@ class DuplicateDetectionOutput(BaseModel):
     )
     reasoning: str = Field(
         description="High-level summary of the duplicate detection run.",
+    )
+    safe_mode: bool = Field(
+        default=False,
+        description="Whether safe mode was active during duplicate detection.",
+    )
+    search_mode: bool = Field(
+        default=False,
+        description="Whether search mode was active during duplicate detection.",
     )
 
 
@@ -272,10 +282,14 @@ def duplicate_detection_node(
         f"No file contents were uploaded."
     )
 
-    return DuplicateDetectionOutput(
+    output = DuplicateDetectionOutput(
         duplicate_groups=groups,
         classified_files=node_input.classified_files,
         file_inventory=inventory,
         folder_scope_policy=policy,
+        safe_mode=node_input.safe_mode,
+        search_mode=node_input.search_mode,
         reasoning=reasoning,
     )
+
+    return Event(output=output, actions=EventActions(route="sensitive"))
