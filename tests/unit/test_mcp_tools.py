@@ -264,23 +264,25 @@ def test_log_redaction_and_read(tmp_path, monkeypatch):
 def test_registry_list_and_get():
     """Assert registry registers, gets, and lists tools correctly."""
     from app.mcp_tools.registry import get_tool, list_tools, normalize_name
-    
+
     # 1. Normalization tests
     assert normalize_name("ListFiles") == "list_files"
     assert normalize_name("list-files") == "list_files"
     assert normalize_name("LIST_FILES") == "list_files"
     assert normalize_name("listFiles") == "list_files"
     assert normalize_name("  list-files  ") == "list_files"
-    
+    assert normalize_name("list files") == "list_files"
+
     tools = list_tools()
     assert len(tools) == 10
     assert any(x["name"] == "list_files" for x in tools)
     assert "input_schema" in tools[0]
     assert "output_schema" in tools[0]
-    
-    func = get_tool("List-Files")
+    assert tools[0].get("version") == "1.0"
+
+    func = get_tool("list files")
     assert callable(func)
-    
+
     with pytest.raises(KeyError):
         get_tool("nonexistent_tool")
 
@@ -289,38 +291,51 @@ def test_registry_test_tool(mock_config_paths):
     """Assert registry test_tool validates arguments and checks policy."""
     tmp_path, _ = mock_config_paths
     from app.mcp_tools.registry import test_tool
-    
+
     # 1. Unknown tool
     res = test_tool("nonexistent")
     assert "error" in res
     assert res["error"]["type"] == "ToolNotFound"
-    
+    assert res["error"]["details"]["tool"] == "nonexistent"
+    assert res["error"]["details"]["schema_validated"] is False
+
     # 2. Missing argument
     res = test_tool("list_files")
     assert "error" in res
     assert res["error"]["type"] == "SchemaError"
     assert "Missing required argument" in res["error"]["message"]
-    
-    # 3. Invalid argument type
+    assert res["error"]["details"]["schema_validated"] is False
+    assert "missing_key" in res["error"]["details"]["schema_diff"]
+
+    # 3. Coercion tests ("10" -> 10)
+    res = test_tool("read_log", limit="10")
+    assert "status" in res or "error" in res
+    # Even if it errors due to empty log, the type coercion should succeed (it won't raise SchemaError for type mismatch)
+    if "error" in res:
+        assert res["error"]["type"] != "SchemaError"
+
+    # Invalid integer type error format
     res = test_tool("read_log", limit="not_an_int")
     assert "error" in res
     assert res["error"]["type"] == "SchemaError"
     assert "must be an integer" in res["error"]["message"]
-    
+    assert res["error"]["details"]["schema_diff"]["expected_type"] == "integer"
+
     # 4. Unknown key
     res = test_tool("list_files", path=str(tmp_path), unexpected="extra")
     assert "error" in res
     assert res["error"]["type"] == "SchemaError"
     assert "Unexpected argument" in res["error"]["message"]
-    
+
     # 5. Success run
     allowed_dir = tmp_path / "allowed"
-    res = test_tool("List-Files", path=str(allowed_dir))
+    res = test_tool("list files", path=str(allowed_dir))
     assert res["status"] == "success"
     assert "files" in res["result"]
-    
+
     # 6. Policy check is handled inside tool, but test_tool bubbles it up as ToolError
     res = test_tool("list_files", path="/Windows/System32")
     assert "error" in res
     assert res["error"]["type"] == "ToolError"
-
+    assert res["error"]["details"]["schema_validated"] is True
+    assert res["error"]["details"]["normalized_name"] == "list_files"

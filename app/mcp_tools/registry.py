@@ -1,15 +1,16 @@
 import re
-from app.mcp_tools.list_files import list_files
-from app.mcp_tools.read_file_metadata import read_file_metadata
-from app.mcp_tools.compute_hash import compute_hash
-from app.mcp_tools.move_file import move_file
-from app.mcp_tools.delete_file import delete_file
-from app.mcp_tools.create_folder import create_folder
+
 from app.mcp_tools.compress_files import compress_files
-from app.mcp_tools.write_log import write_log
-from app.mcp_tools.read_log import read_log
+from app.mcp_tools.compute_hash import compute_hash
+from app.mcp_tools.create_folder import create_folder
+from app.mcp_tools.delete_file import delete_file
+from app.mcp_tools.list_files import list_files
+from app.mcp_tools.move_file import move_file
 from app.mcp_tools.move_to_authenticated_folder import move_to_authenticated_folder
-from app.security.audit_logger import log_action
+from app.mcp_tools.read_file_metadata import read_file_metadata
+from app.mcp_tools.read_log import read_log
+from app.mcp_tools.write_log import write_log
+
 
 def normalize_name(name: str) -> str:
     """Normalizes tool name from formats like camelCase, kebab-case, or spaces to snake_case."""
@@ -18,6 +19,7 @@ def normalize_name(name: str) -> str:
     name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
     name = name.lower().replace("-", "_").replace(" ", "_")
     return name
+
 
 TOOLS = {
     "list_files": {
@@ -97,7 +99,10 @@ TOOLS = {
         },
         "output_schema": {
             "type": "object",
-            "properties": {"status": {"type": "string"}, "destination": {"type": "string"}},
+            "properties": {
+                "status": {"type": "string"},
+                "destination": {"type": "string"},
+            },
         },
     },
     "delete_file": {
@@ -107,7 +112,10 @@ TOOLS = {
             "type": "object",
             "properties": {
                 "path": {"type": "string", "description": "File path to delete"},
-                "hitl_approved": {"type": "boolean", "description": "Whether HITL approval is granted"},
+                "hitl_approved": {
+                    "type": "boolean",
+                    "description": "Whether HITL approval is granted",
+                },
             },
             "required": ["path"],
         },
@@ -142,7 +150,10 @@ TOOLS = {
                     "items": {"type": "string"},
                     "description": "List of files to compress",
                 },
-                "destination": {"type": "string", "description": "Destination zip file path"},
+                "destination": {
+                    "type": "string",
+                    "description": "Destination zip file path",
+                },
             },
             "required": ["files", "destination"],
         },
@@ -157,7 +168,10 @@ TOOLS = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "entry": {"type": "string", "description": "JSON string containing structured log details"}
+                "entry": {
+                    "type": "string",
+                    "description": "JSON string containing structured log details",
+                }
             },
             "required": ["entry"],
         },
@@ -172,7 +186,10 @@ TOOLS = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "limit": {"type": "integer", "description": "Max number of entries to return"}
+                "limit": {
+                    "type": "integer",
+                    "description": "Max number of entries to return",
+                }
             },
             "required": [],
         },
@@ -192,17 +209,27 @@ TOOLS = {
         "input_schema": {
             "type": "object",
             "properties": {
-                "source": {"type": "string", "description": "Sensitive source file path"},
-                "destination": {"type": "string", "description": "Authenticated folder destination path"},
+                "source": {
+                    "type": "string",
+                    "description": "Sensitive source file path",
+                },
+                "destination": {
+                    "type": "string",
+                    "description": "Authenticated folder destination path",
+                },
             },
             "required": ["source", "destination"],
         },
         "output_schema": {
             "type": "object",
-            "properties": {"status": {"type": "string"}, "destination": {"type": "string"}},
+            "properties": {
+                "status": {"type": "string"},
+                "destination": {"type": "string"},
+            },
         },
     },
 }
+
 
 def get_tool(name: str):
     """Retrieves a registered tool metadata object by name (supporting normalization)."""
@@ -211,29 +238,39 @@ def get_tool(name: str):
         raise KeyError(f"Tool '{name}' is not registered.")
     return TOOLS[norm]["fn"]
 
+
 def list_tools() -> list[dict]:
     """Returns metadata for all registered tools."""
     list_res = []
     for name, metadata in TOOLS.items():
-        list_res.append({
-            "name": name,
-            "description": metadata["description"],
-            "input_schema": metadata["input_schema"],
-            "output_schema": metadata["output_schema"],
-        })
+        list_res.append(
+            {
+                "name": name,
+                "description": metadata["description"],
+                "input_schema": metadata["input_schema"],
+                "output_schema": metadata["output_schema"],
+                "version": "1.0",
+            }
+        )
     return list_res
+
 
 def test_tool(name: str, **kwargs) -> dict:
     """Safely validates input schema, normalizes names, and executes a tool."""
     norm = normalize_name(name)
-    
+
     # 1. Availability check
     if norm not in TOOLS:
         return {
             "error": {
                 "type": "ToolNotFound",
                 "message": f"Tool '{name}' is not registered.",
-                "details": {"requested_name": name, "normalized_name": norm},
+                "details": {
+                    "tool": name,
+                    "normalized_name": norm,
+                    "input": kwargs,
+                    "schema_validated": False,
+                },
             }
         }
 
@@ -251,14 +288,20 @@ def test_tool(name: str, **kwargs) -> dict:
                 "error": {
                     "type": "SchemaError",
                     "message": f"Unexpected argument: '{k}'",
-                    "details": {"unknown_key": k},
+                    "details": {
+                        "tool": name,
+                        "normalized_name": norm,
+                        "input": kwargs,
+                        "schema_validated": False,
+                        "schema_diff": {"unexpected_key": k},
+                    },
                 }
             }
 
     # 3. Schema validation & type coercion
     for key, prop_info in properties.items():
         expected_type_str = prop_info["type"]
-        
+
         if key not in kwargs:
             # Handle optional args with defaults
             if norm == "delete_file" and key == "hitl_approved":
@@ -267,19 +310,25 @@ def test_tool(name: str, **kwargs) -> dict:
             if norm == "read_log" and key == "limit":
                 validated_args["limit"] = None
                 continue
-            
+
             if key in required:
                 return {
                     "error": {
                         "type": "SchemaError",
                         "message": f"Missing required argument: '{key}'",
-                        "details": {"missing_key": key},
+                        "details": {
+                            "tool": name,
+                            "normalized_name": norm,
+                            "input": kwargs,
+                            "schema_validated": False,
+                            "schema_diff": {"missing_key": key},
+                        },
                     }
                 }
             continue
 
         val = kwargs[key]
-        
+
         # Type coercion
         if expected_type_str == "integer":
             if val is None:
@@ -292,7 +341,18 @@ def test_tool(name: str, **kwargs) -> dict:
                         "error": {
                             "type": "SchemaError",
                             "message": f"Argument '{key}' must be an integer.",
-                            "details": {"key": key, "invalid_value": val},
+                            "details": {
+                                "tool": name,
+                                "normalized_name": norm,
+                                "input": kwargs,
+                                "schema_validated": False,
+                                "schema_diff": {
+                                    "key": key,
+                                    "expected_type": "integer",
+                                    "received_type": type(val).__name__,
+                                    "received_value": val,
+                                },
+                            },
                         }
                     }
         elif expected_type_str == "boolean":
@@ -305,7 +365,18 @@ def test_tool(name: str, **kwargs) -> dict:
                     "error": {
                         "type": "SchemaError",
                         "message": f"Argument '{key}' must be a boolean.",
-                        "details": {"key": key, "invalid_value": val},
+                        "details": {
+                            "tool": name,
+                            "normalized_name": norm,
+                            "input": kwargs,
+                            "schema_validated": False,
+                            "schema_diff": {
+                                "key": key,
+                                "expected_type": "boolean",
+                                "received_type": type(val).__name__,
+                                "received_value": val,
+                            },
+                        },
                     }
                 }
         elif expected_type_str == "array":
@@ -318,7 +389,18 @@ def test_tool(name: str, **kwargs) -> dict:
                     "error": {
                         "type": "SchemaError",
                         "message": f"Argument '{key}' must be an array or list.",
-                        "details": {"key": key, "invalid_value": val},
+                        "details": {
+                            "tool": name,
+                            "normalized_name": norm,
+                            "input": kwargs,
+                            "schema_validated": False,
+                            "schema_diff": {
+                                "key": key,
+                                "expected_type": "array",
+                                "received_type": type(val).__name__,
+                                "received_value": val,
+                            },
+                        },
                     }
                 }
         else:  # string
@@ -327,51 +409,38 @@ def test_tool(name: str, **kwargs) -> dict:
                     "error": {
                         "type": "SchemaError",
                         "message": f"Argument '{key}' must be a string.",
-                        "details": {"key": key, "invalid_value": val},
+                        "details": {
+                            "tool": name,
+                            "normalized_name": norm,
+                            "input": kwargs,
+                            "schema_validated": False,
+                            "schema_diff": {
+                                "key": key,
+                                "expected_type": "string",
+                                "received_type": type(val).__name__,
+                                "received_value": val,
+                            },
+                        },
                     }
                 }
             validated_args[key] = val
 
-    # 4. Log invocation start
-    log_action(
-        node="ToolRegistry_test_tool",
-        action_type="test_invocation",
-        path=validated_args.get("path") or validated_args.get("source"),
-        is_sensitive=False,
-        hitl_status="none",
-        result="started",
-        reason=f"Testing tool {norm}",
-    )
-
-    # 5. Call the tool safely (Pure Registry - safety and policy checks executed inside the tool function itself)
+    # 4. Call the tool safely (100% pure registry dispatching to actual local tool callback)
     try:
         tool_func = tool_meta["fn"]
         res = tool_func(**validated_args)
-        
-        log_action(
-            node="ToolRegistry_test_tool",
-            action_type="test_invocation",
-            path=validated_args.get("path") or validated_args.get("source"),
-            is_sensitive=False,
-            hitl_status="none",
-            result="success",
-            reason=f"Tested tool {norm} successfully",
-        )
         return {"status": "success", "result": res}
     except Exception as e:
-        log_action(
-            node="ToolRegistry_test_tool",
-            action_type="test_invocation",
-            path=validated_args.get("path") or validated_args.get("source"),
-            is_sensitive=False,
-            hitl_status="none",
-            result="failed",
-            reason=f"Tool execution failed: {e}",
-        )
         return {
             "error": {
                 "type": "ToolError",
                 "message": str(e),
-                "details": {"exception_class": type(e).__name__, "normalized_name": norm},
+                "details": {
+                    "tool": name,
+                    "normalized_name": norm,
+                    "input": kwargs,
+                    "schema_validated": True,
+                    "exception_class": type(e).__name__,
+                },
             }
         }
