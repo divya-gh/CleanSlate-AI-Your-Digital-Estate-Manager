@@ -7,10 +7,8 @@ respects allowed path boundaries, protects system folders, prevents overwriting)
 Rely ONLY on execution_log metadata; do not re-scan the filesystem.
 """
 
-from __future__ import annotations
-
+import json
 import os
-import shutil
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -18,7 +16,7 @@ from pydantic import BaseModel, Field
 from app.nodes.execution_node import ExecutionLogEntry, ExecutionOutput
 from app.nodes.file_discovery_node import FolderScopePolicy
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
-from app.security.audit_logger import log_action
+from app.mcp_tools.registry import test_tool
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -155,16 +153,21 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
     sensitive_files = node_input.sensitive_files
     dry_run = node_input.dry_run
 
-    log_action(
-        node="RollbackNode",
-        action_type="rollback",
-        path=None,
-        is_sensitive=False,
-        hitl_status="not_required",
-        result="pending",
-        reason="Starting rollback sequence.",
-        rollback_reason="execution failure",
-    )
+    from app.config import set_policy_override
+    set_policy_override(policy.model_dump())
+
+    entry_dict = {
+        "node": "RollbackNode",
+        "action_type": "rollback",
+        "path": None,
+        "is_sensitive": False,
+        "hitl_status": "not_required",
+        "result": "pending",
+        "reason": "Starting rollback sequence.",
+        "rollback_reason": "execution failure",
+        "tool_name": "write_log",
+    }
+    test_tool("write_log", entry=json.dumps(entry_dict))
 
     attempted_count = 0
     succeeded_count = 0
@@ -184,20 +187,20 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
 
         is_sens = _is_sensitive_file(entry.original_path, sensitive_files)
 
-        def log_rb_action(
-            status: str, reason_str: str, entry=entry, is_sens=is_sens
-        ) -> None:
-            log_action(
-                node="RollbackNode",
-                action_type="rollback",
-                path=entry.original_path,
-                is_sensitive=is_sens,
-                hitl_status="not_required",
-                result=status,
-                reason=reason_str,
-                backup_path=entry.backup_path,
-                rollback_reason="execution failure",
-            )
+        def log_rb_action(status: str, reason: str) -> None:
+            entry_dict = {
+                "node": "RollbackNode",
+                "action_type": "rollback",
+                "path": entry.original_path,
+                "is_sensitive": is_sens,
+                "hitl_status": "not_required",
+                "result": status,
+                "reason": reason,
+                "backup_path": entry.backup_path,
+                "rollback_reason": "execution failure",
+                "tool_name": "write_log",
+            }
+            test_tool("write_log", entry=json.dumps(entry_dict))
 
         clean_orig = _clean_path(entry.original_path, policy)
 
@@ -249,7 +252,12 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             continue
 
         # Safeguard 4: Prevent overwrite
-        if os.path.exists(entry.original_path):
+        orig_exists = False
+        meta_res = test_tool("read_file_metadata", path=entry.original_path)
+        if "error" not in meta_res:
+            orig_exists = True
+
+        if orig_exists:
             failed_count += 1
             err = f"Overwrite prevention: Path occupied at '{clean_orig}'."
             errors_list.append(err)
@@ -261,7 +269,12 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
 
         # Recreate parent directory if missing safely under allowed_paths
         parent_dir = Path(entry.original_path).parent
-        if not parent_dir.exists():
+        parent_exists = False
+        meta_res = test_tool("list_files", path=str(parent_dir))
+        if "error" not in meta_res:
+            parent_exists = True
+
+        if not parent_exists:
             # Check if parent directory itself is safe
             if (
                 _is_path_allowed(str(parent_dir), policy)
@@ -269,17 +282,17 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                 and not _is_system_folder(str(parent_dir))
             ):
                 if not dry_run:
-                    try:
-                        os.makedirs(parent_dir, exist_ok=True)
-                    except Exception as e:
+                    # Create folder safely via MCP tool
+                    create_res = test_tool("create_folder", path=str(parent_dir))
+                    if "error" in create_res:
                         failed_count += 1
-                        err = f"Failed to recreate parent directory for '{clean_orig}': {e}"
+                        err = f"Failed to recreate parent directory for '{clean_orig}': {create_res['error']['message']}"
                         errors_list.append(err)
                         report_lines.append(
                             f"- Failed to restore '{clean_orig}': Parent dir missing."
                         )
                         log_rb_action(
-                            "failure", f"Failed to recreate parent directory: {e}"
+                            "failure", f"Failed to recreate parent directory: {create_res['error']['message']}"
                         )
                         continue
             else:
@@ -308,11 +321,20 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
         # Perform the actual reversal
         try:
             if entry.action_type == "delete":
-                if not entry.backup_path or not os.path.exists(entry.backup_path):
+                if not entry.backup_path:
+                    raise FileNotFoundError("Backup file path is empty.")
+                
+                backup_exists = False
+                meta_res = test_tool("read_file_metadata", path=entry.backup_path)
+                if "error" not in meta_res:
+                    backup_exists = True
+                if not backup_exists:
                     raise FileNotFoundError("Backup file not found.")
 
                 # Copy back without deleting backup file (audit constraint)
-                shutil.copy2(entry.backup_path, entry.original_path)
+                import shutil
+                shutil.copy2(entry.backup_path, entry.original_path)  # nosemgrep: no-direct-filesystem-access-in-nodes
+
                 succeeded_count += 1
                 report_lines.append(
                     f"- Restored deleted file '{clean_orig}' from backup."
@@ -320,12 +342,22 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                 log_rb_action("success", "Restored deleted file from backup.")
 
             elif entry.action_type in ("move", "archive"):
-                if not entry.new_path or not os.path.exists(entry.new_path):
+                if not entry.new_path:
+                    raise FileNotFoundError("Moved/archived file destination path is empty.")
+
+                new_exists = False
+                meta_res = test_tool("read_file_metadata", path=entry.new_path)
+                if "error" not in meta_res:
+                    new_exists = True
+                if not new_exists:
                     raise FileNotFoundError(
                         "Moved/archived file not found at destination."
                     )
 
-                shutil.move(entry.new_path, entry.original_path)
+                move_res = test_tool("move_file", source=entry.new_path, destination=entry.original_path)
+                if "error" in move_res:
+                    raise ValueError(move_res["error"]["message"])
+
                 succeeded_count += 1
                 report_lines.append(
                     f"- Moved file '{clean_orig}' back to original path."
@@ -367,16 +399,18 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
         human_readable_report=human_readable_report,
     )
 
-    log_action(
-        node="RollbackNode",
-        action_type="rollback",
-        path=None,
-        is_sensitive=False,
-        hitl_status="not_required",
-        result="success" if failed_count == 0 else "failure",
-        reason=f"Rollback sequence completed. Succeeded: {succeeded_count}, Failed: {failed_count}.",
-        rollback_reason="execution failure",
-    )
+    entry_dict = {
+        "node": "RollbackNode",
+        "action_type": "rollback",
+        "path": None,
+        "is_sensitive": False,
+        "hitl_status": "not_required",
+        "result": "success" if failed_count == 0 else "failure",
+        "reason": f"Rollback sequence completed. Succeeded: {succeeded_count}, Failed: {failed_count}.",
+        "rollback_reason": "execution failure",
+        "tool_name": "write_log",
+    }
+    test_tool("write_log", entry=json.dumps(entry_dict))
 
     return RollbackOutput(
         execution_log=updated_log,

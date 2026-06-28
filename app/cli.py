@@ -433,6 +433,36 @@ def cmd_config_reset():
 # ---------------------------------------------------------------------------
 
 
+def _sanitize_path(raw: str) -> str:
+    """Strips absolute prefix from a path string for CLI display.
+
+    Converts absolute paths to parent_folder/filename form so that the CLI
+    never exposes absolute filesystem paths in its output.
+    Complies with the no-absolute-paths-in-cli-output Semgrep rule.
+    """
+    if not isinstance(raw, str):
+        return str(raw)
+    # Only sanitize strings that look like filesystem paths
+    if os.sep in raw or "/" in raw or "\\" in raw:
+        norm = os.path.normpath(raw)
+        parts = norm.split(os.sep)
+        if len(parts) >= 2:
+            return f"{parts[-2]}/{parts[-1]}"
+        return parts[-1]
+    return raw
+
+
+def _sanitize_result_for_display(obj) -> object:
+    """Recursively sanitize paths inside a dict/list for safe human-readable display."""
+    if isinstance(obj, dict):
+        return {k: _sanitize_result_for_display(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_result_for_display(i) for i in obj]
+    if isinstance(obj, str):
+        return _sanitize_path(obj)
+    return obj
+
+
 def cmd_tools_list(json_opt: bool = False) -> None:
     """Lists all registered MCP tools from the registry."""
     tools = list_tools()
@@ -494,12 +524,16 @@ def cmd_tools_test(tool_name: str, raw_args: list[str], json_opt: bool = False) 
         print(f"[ERROR] {err.get('type', 'ToolError')}: {err.get('message', '')}")
         details = err.get("details", {})
         if details:
+            # Sanitize details before display to prevent absolute path leakage
+            sanitized = _sanitize_result_for_display(details)
             print("Details:")
-            for k, v in details.items():
+            for k, v in sanitized.items():
                 print(f"  {k}: {v}")
     else:
         print(f"[SUCCESS] Tool '{norm}' executed.")
-        print(json.dumps(result.get("result", result), indent=2))
+        # Sanitize result paths before display; --json mode is raw developer output
+        sanitized_result = _sanitize_result_for_display(result.get("result", result))
+        print(json.dumps(sanitized_result, indent=2))
 
 
 def main():
