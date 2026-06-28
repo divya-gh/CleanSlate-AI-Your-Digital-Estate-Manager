@@ -185,3 +185,17 @@ rules:
       - metavariable-regex:
           metavariable: $PATH
           regex: ".*(absolute_path|abs_path).*"
+
+  # 16. Registry must be pure
+  - id: registry-no-policy-checks
+    languages: [python]
+    message: "The Tool Registry must remain pure. It must not touch the filesystem, read policies, or import app.config."
+    severity: ERROR
+    paths:
+      include: ["**/app/mcp_tools/registry.py"]
+    pattern-either:
+      - pattern: is_path_allowed_by_policy(...)
+      - pattern: open(...)
+      - pattern: import app.config
+      - pattern: from app.config import $X
+

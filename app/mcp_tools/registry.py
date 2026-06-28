@@ -1,147 +1,338 @@
-from app.mcp_tools import TOOLS
-from app.mcp_tools.utils import is_path_allowed_by_policy
+import re
+from app.mcp_tools.list_files import list_files
+from app.mcp_tools.read_file_metadata import read_file_metadata
+from app.mcp_tools.compute_hash import compute_hash
+from app.mcp_tools.move_file import move_file
+from app.mcp_tools.delete_file import delete_file
+from app.mcp_tools.create_folder import create_folder
+from app.mcp_tools.compress_files import compress_files
+from app.mcp_tools.write_log import write_log
+from app.mcp_tools.read_log import read_log
+from app.mcp_tools.move_to_authenticated_folder import move_to_authenticated_folder
 from app.security.audit_logger import log_action
 
-TOOL_SCHEMAS = {
-    "list_files": {"path": str},
-    "read_file_metadata": {"path": str},
-    "compute_hash": {"path": str},
-    "move_file": {"source": str, "destination": str},
-    "delete_file": {"path": str, "hitl_approved": bool},
-    "create_folder": {"path": str},
-    "compress_files": {"files": list, "destination": str},
-    "write_log": {"entry": str},
-    "read_log": {"limit": int},
-    "move_to_authenticated_folder": {"source": str, "destination": str},
-}
+def normalize_name(name: str) -> str:
+    """Normalizes tool name from formats like camelCase, kebab-case, or spaces to snake_case."""
+    name = name.strip()
+    # camelCase -> snake_case
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    name = name.lower().replace("-", "_").replace(" ", "_")
+    return name
 
-TOOL_DESCRIPTIONS = {
-    "list_files": "List files in a directory within allowed folder scope.",
-    "read_file_metadata": "Retrieve metadata (size, timestamps, MIME type) without opening file contents.",
-    "compute_hash": "Compute SHA256 hash for duplicate detection using streaming chunked reads.",
-    "move_file": "Move a file from source to destination respecting folder scope and sensitive policies.",
-    "delete_file": "Delete a file requiring HITL approval, safe mode checks, and sensitive path validation.",
-    "create_folder": "Create a folder under allowed directories.",
-    "compress_files": "Create a ZIP archive of selected files, skipping sensitive files.",
-    "write_log": "Write an entry to the central audit log.",
-    "read_log": "Retrieve audit logs for summaries with limits and redactions.",
-    "move_to_authenticated_folder": "Secure sensitive files to authenticated directories.",
+TOOLS = {
+    "list_files": {
+        "fn": list_files,
+        "description": "List files in a directory within allowed folder scope.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The directory path to list"}
+            },
+            "required": ["path"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "path": {"type": "string"},
+                            "is_dir": {"type": "boolean"},
+                            "size": {"type": "integer"},
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "read_file_metadata": {
+        "fn": read_file_metadata,
+        "description": "Retrieve metadata (size, timestamps, MIME type) without opening file contents.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The file path to query"}
+            },
+            "required": ["path"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "size": {"type": "integer"},
+                "created_at": {"type": "string"},
+                "modified_at": {"type": "string"},
+                "extension": {"type": "string"},
+                "mime_type": {"type": "string"},
+            },
+        },
+    },
+    "compute_hash": {
+        "fn": compute_hash,
+        "description": "Compute SHA256 hash for duplicate detection using streaming chunked reads.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The file path to hash"}
+            },
+            "required": ["path"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"sha256": {"type": "string"}},
+        },
+    },
+    "move_file": {
+        "fn": move_file,
+        "description": "Move a file from source to destination respecting folder scope and sensitive policies.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "source": {"type": "string", "description": "Source path"},
+                "destination": {"type": "string", "description": "Destination path"},
+            },
+            "required": ["source", "destination"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}, "destination": {"type": "string"}},
+        },
+    },
+    "delete_file": {
+        "fn": delete_file,
+        "description": "Delete a file requiring HITL approval, safe mode checks, and sensitive path validation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "File path to delete"},
+                "hitl_approved": {"type": "boolean", "description": "Whether HITL approval is granted"},
+            },
+            "required": ["path"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}, "path": {"type": "string"}},
+        },
+    },
+    "create_folder": {
+        "fn": create_folder,
+        "description": "Create a folder under allowed directories.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Folder path to create"}
+            },
+            "required": ["path"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}},
+        },
+    },
+    "compress_files": {
+        "fn": compress_files,
+        "description": "Create a ZIP archive of selected files, skipping sensitive files.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of files to compress",
+                },
+                "destination": {"type": "string", "description": "Destination zip file path"},
+            },
+            "required": ["files", "destination"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}, "archive": {"type": "string"}},
+        },
+    },
+    "write_log": {
+        "fn": write_log,
+        "description": "Write an entry to the central audit log.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "entry": {"type": "string", "description": "JSON string containing structured log details"}
+            },
+            "required": ["entry"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}},
+        },
+    },
+    "read_log": {
+        "fn": read_log,
+        "description": "Retrieve audit logs for summaries with limits and redactions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "Max number of entries to return"}
+            },
+            "required": [],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                }
+            },
+        },
+    },
+    "move_to_authenticated_folder": {
+        "fn": move_to_authenticated_folder,
+        "description": "Secure sensitive files to authenticated directories.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "source": {"type": "string", "description": "Sensitive source file path"},
+                "destination": {"type": "string", "description": "Authenticated folder destination path"},
+            },
+            "required": ["source", "destination"],
+        },
+        "output_schema": {
+            "type": "object",
+            "properties": {"status": {"type": "string"}, "destination": {"type": "string"}},
+        },
+    },
 }
-
 
 def get_tool(name: str):
-    """Retrieves a registered tool function by name."""
-    if name not in TOOLS:
+    """Retrieves a registered tool metadata object by name (supporting normalization)."""
+    norm = normalize_name(name)
+    if norm not in TOOLS:
         raise KeyError(f"Tool '{name}' is not registered.")
-    return TOOLS[name]
-
+    return TOOLS[norm]["fn"]
 
 def list_tools() -> list[dict]:
     """Returns metadata for all registered tools."""
     list_res = []
-    for name in TOOLS:
-        list_res.append(
-            {
-                "name": name,
-                "description": TOOL_DESCRIPTIONS.get(name, ""),
-                "parameters": TOOL_SCHEMAS.get(name, {}),
-            }
-        )
+    for name, metadata in TOOLS.items():
+        list_res.append({
+            "name": name,
+            "description": metadata["description"],
+            "input_schema": metadata["input_schema"],
+            "output_schema": metadata["output_schema"],
+        })
     return list_res
 
-
 def test_tool(name: str, **kwargs) -> dict:
-    """Safely validates, logs, and executes a tool for test/CLI wrappers."""
-    # 1. Check if tool exists
-    if name not in TOOLS:
+    """Safely validates input schema, normalizes names, and executes a tool."""
+    norm = normalize_name(name)
+    
+    # 1. Availability check
+    if norm not in TOOLS:
         return {
-            "status": "error",
-            "error_code": "UnknownTool",
-            "message": f"Tool '{name}' is not registered.",
+            "error": {
+                "type": "ToolNotFound",
+                "message": f"Tool '{name}' is not registered.",
+                "details": {"requested_name": name, "normalized_name": norm},
+            }
         }
 
-    schema = TOOL_SCHEMAS[name]
+    tool_meta = TOOLS[norm]
+    input_schema = tool_meta["input_schema"]
+    properties = input_schema.get("properties", {})
+    required = input_schema.get("required", [])
+
     validated_args = {}
 
-    # 2. Schema validation
-    for key, expected_type in schema.items():
-        if key not in kwargs:
-            # Handle optional args with defaults
-            if name == "delete_file" and key == "hitl_approved":
-                validated_args["hitl_approved"] = False
-                continue
-            if name == "read_log" and key == "limit":
-                validated_args["limit"] = None
-                continue
+    # 2. Reject unknown keys
+    for k in kwargs:
+        if k not in properties:
             return {
-                "status": "error",
-                "error_code": "MissingArgument",
-                "message": f"Missing required argument: '{key}'",
+                "error": {
+                    "type": "SchemaError",
+                    "message": f"Unexpected argument: '{k}'",
+                    "details": {"unknown_key": k},
+                }
             }
 
+    # 3. Schema validation & type coercion
+    for key, prop_info in properties.items():
+        expected_type_str = prop_info["type"]
+        
+        if key not in kwargs:
+            # Handle optional args with defaults
+            if norm == "delete_file" and key == "hitl_approved":
+                validated_args["hitl_approved"] = False
+                continue
+            if norm == "read_log" and key == "limit":
+                validated_args["limit"] = None
+                continue
+            
+            if key in required:
+                return {
+                    "error": {
+                        "type": "SchemaError",
+                        "message": f"Missing required argument: '{key}'",
+                        "details": {"missing_key": key},
+                    }
+                }
+            continue
+
         val = kwargs[key]
-        if expected_type is int:
+        
+        # Type coercion
+        if expected_type_str == "integer":
             if val is None:
                 validated_args[key] = None
             else:
                 try:
                     validated_args[key] = int(val)
-                except Exception:
+                except (ValueError, TypeError):
                     return {
-                        "status": "error",
-                        "error_code": "InvalidArgumentType",
-                        "message": f"Argument '{key}' must be an integer.",
+                        "error": {
+                            "type": "SchemaError",
+                            "message": f"Argument '{key}' must be an integer.",
+                            "details": {"key": key, "invalid_value": val},
+                        }
                     }
-        elif expected_type is bool:
+        elif expected_type_str == "boolean":
             if isinstance(val, str):
                 validated_args[key] = val.lower() in ("true", "yes", "1", "y")
             elif isinstance(val, bool):
                 validated_args[key] = val
             else:
                 return {
-                    "status": "error",
-                    "error_code": "InvalidArgumentType",
-                    "message": f"Argument '{key}' must be a boolean.",
+                    "error": {
+                        "type": "SchemaError",
+                        "message": f"Argument '{key}' must be a boolean.",
+                        "details": {"key": key, "invalid_value": val},
+                    }
                 }
-        elif expected_type is list:
+        elif expected_type_str == "array":
             if isinstance(val, str):
                 validated_args[key] = [x.strip() for x in val.split(",") if x.strip()]
             elif isinstance(val, list):
                 validated_args[key] = val
             else:
                 return {
-                    "status": "error",
-                    "error_code": "InvalidArgumentType",
-                    "message": f"Argument '{key}' must be a list or comma-separated string.",
+                    "error": {
+                        "type": "SchemaError",
+                        "message": f"Argument '{key}' must be an array or list.",
+                        "details": {"key": key, "invalid_value": val},
+                    }
                 }
-        else:
+        else:  # string
             if not isinstance(val, str):
                 return {
-                    "status": "error",
-                    "error_code": "InvalidArgumentType",
-                    "message": f"Argument '{key}' must be a string.",
+                    "error": {
+                        "type": "SchemaError",
+                        "message": f"Argument '{key}' must be a string.",
+                        "details": {"key": key, "invalid_value": val},
+                    }
                 }
             validated_args[key] = val
 
-    # 3. Policy checks on arguments
-    for key, val in validated_args.items():
-        if key in ("path", "source", "destination"):
-            if val and not is_path_allowed_by_policy(val):
-                return {
-                    "status": "error",
-                    "error_code": "PathNotAllowed",
-                    "message": f"Path '{val}' violates the folder scope policy.",
-                }
-        elif key == "files" and isinstance(val, list):
-            for f in val:
-                if not is_path_allowed_by_policy(f):
-                    return {
-                        "status": "error",
-                        "error_code": "PathNotAllowed",
-                        "message": f"Path '{f}' violates the folder scope policy.",
-                    }
-
-    # 4. Log the test invocation
+    # 4. Log invocation start
     log_action(
         node="ToolRegistry_test_tool",
         action_type="test_invocation",
@@ -149,14 +340,14 @@ def test_tool(name: str, **kwargs) -> dict:
         is_sensitive=False,
         hitl_status="none",
         result="started",
-        reason=f"Testing tool {name}",
+        reason=f"Testing tool {norm}",
     )
 
-    # 5. Call the tool safely
+    # 5. Call the tool safely (Pure Registry - safety and policy checks executed inside the tool function itself)
     try:
-        tool_func = TOOLS[name]
+        tool_func = tool_meta["fn"]
         res = tool_func(**validated_args)
-
+        
         log_action(
             node="ToolRegistry_test_tool",
             action_type="test_invocation",
@@ -164,7 +355,7 @@ def test_tool(name: str, **kwargs) -> dict:
             is_sensitive=False,
             hitl_status="none",
             result="success",
-            reason=f"Tested tool {name} successfully",
+            reason=f"Tested tool {norm} successfully",
         )
         return {"status": "success", "result": res}
     except Exception as e:
@@ -178,7 +369,9 @@ def test_tool(name: str, **kwargs) -> dict:
             reason=f"Tool execution failed: {e}",
         )
         return {
-            "status": "error",
-            "error_code": type(e).__name__,
-            "message": str(e),
+            "error": {
+                "type": "ToolError",
+                "message": str(e),
+                "details": {"exception_class": type(e).__name__, "normalized_name": norm},
+            }
         }
