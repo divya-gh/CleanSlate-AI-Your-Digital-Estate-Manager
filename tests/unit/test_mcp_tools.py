@@ -259,3 +259,50 @@ def test_log_redaction_and_read(tmp_path, monkeypatch):
     # Assert path redaction
     assert entries[0]["path"] == "<sensitive file>"
     assert entries[1]["path"] == "to/regular_file.txt"
+
+
+def test_registry_list_and_get():
+    """Assert registry registers, gets, and lists tools correctly."""
+    from app.mcp_tools.registry import get_tool, list_tools
+
+    tools = list_tools()
+    assert len(tools) == 10
+    assert any(x["name"] == "list_files" for x in tools)
+
+    func = get_tool("list_files")
+    assert callable(func)
+
+    with pytest.raises(KeyError):
+        get_tool("nonexistent_tool")
+
+
+def test_registry_test_tool(mock_config_paths):
+    """Assert registry test_tool validates arguments and checks policy."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    # 1. Unknown tool
+    res = test_tool("nonexistent")
+    assert res["status"] == "error"
+    assert res["error_code"] == "UnknownTool"
+
+    # 2. Missing argument
+    res = test_tool("list_files")
+    assert res["status"] == "error"
+    assert res["error_code"] == "MissingArgument"
+
+    # 3. Invalid argument type
+    res = test_tool("read_log", limit="not_an_int")
+    assert res["status"] == "error"
+    assert res["error_code"] == "InvalidArgumentType"
+
+    # 4. Policy check validation
+    res = test_tool("list_files", path="/Windows/System32")
+    assert res["status"] == "error"
+    assert res["error_code"] == "PathNotAllowed"
+
+    # 5. Success run
+    allowed_dir = tmp_path / "allowed"
+    res = test_tool("list_files", path=str(allowed_dir))
+    assert res["status"] == "success"
+    assert "files" in res["result"]
