@@ -23,6 +23,7 @@ from app.nodes.file_discovery_node import FolderScopePolicy, resolve_real_path
 from app.nodes.hitl_approval_node import HITLApprovalOutput
 from app.nodes.optimization_planner_node import OptimizationPlannerOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
+from app.security.audit_logger import log_action
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -201,6 +202,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
 
         p = Path(path)
         parent_dir = p.parent
+        is_sensitive = _is_sensitive_file(path, sensitive_files)
 
         # Pre-compute rollback-related paths and flags
         if action_type == "delete":
@@ -214,7 +216,6 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
             calc_new_path = None
             calc_rollback_supported = True
         elif action_type == "move":
-            is_sensitive = _is_sensitive_file(path, sensitive_files)
             dest_dir = parent_dir / (
                 "Authenticated"
                 if is_sensitive
@@ -237,6 +238,33 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
             calc_new_path = None
             calc_rollback_supported = False
 
+        def log_exec_action(
+            status: str,
+            reason: str,
+            backup: str | None = None,
+            action_type=action_type,
+            path=path,
+            is_sensitive=is_sensitive,
+            calc_rollback_supported=calc_rollback_supported,
+        ) -> None:
+            log_action(
+                node="ExecutionNode",
+                action_type=action_type,
+                path=path,
+                is_sensitive=is_sensitive,
+                hitl_status="approved"
+                if isinstance(node_input, HITLApprovalOutput)
+                else "not_required",
+                result=status,
+                reason=reason,
+                rollback_supported=calc_rollback_supported,
+                rollback_enabled=rollback_enabled_flag,
+                backup_path=backup,
+            )
+
+        if rollback_enabled_flag and not dry_run:
+            log_exec_action("pending", "Starting execution with rollback enabled.")
+
         # Guard 1: Blocked path double-guard
         if _is_path_blocked(path, policy):
             log.append(
@@ -254,6 +282,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Target path is inside blocked directories.",
+            )
             continue
 
         # Guard 2: Allowed path double-guard
@@ -273,6 +305,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Target path is outside allowed directories.",
+            )
             continue
 
         # Guard 3: System folder double-guard
@@ -292,6 +328,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Modifying system directories is prohibited.",
+            )
             continue
 
         # Guard 4: Sensitive file deletion double-guard
@@ -311,6 +351,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Sensitive files must never be deleted.",
+            )
             continue
 
         # Guard 5: safe_mode double-guard against deletes and compressions
@@ -330,6 +374,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
+            )
             continue
 
         # Guard 6: Prevent overwrite guard for target destinations
@@ -349,6 +397,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action(
+                "failure",
+                "Runtime Safety Check: Overwrite prevention. Target path is occupied.",
+            )
             continue
 
         # File presence check (for dry-run=False)
@@ -368,6 +420,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
             )
             failure_count += 1
+            log_exec_action("failure", "File not found on disk at time of execution.")
             continue
 
         # Simulate execution in dry-run mode
@@ -388,6 +441,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
             )
             success_count += 1
             estimated_recovery_sum += action.estimated_space_recovered
+            log_exec_action("skipped", "dry_run")
             continue
 
         # Real execution (dry_run=False)
@@ -489,6 +543,11 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
 
             success_count += 1
             estimated_recovery_sum += action.estimated_space_recovered
+            log_exec_action(
+                "success",
+                f"Action {action_type} completed successfully.",
+                backup=calc_backup_path,
+            )
 
         except Exception as e:
             log.append(
@@ -507,6 +566,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
             )
             failure_count += 1
             actual_failures_count += 1
+            log_exec_action("failure", f"Execution error: {e}", backup=calc_backup_path)
 
     reasoning = (
         f"Executed {len(approved_actions)} action(s). "

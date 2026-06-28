@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from app.nodes.execution_node import ExecutionLogEntry, ExecutionOutput
 from app.nodes.file_discovery_node import FolderScopePolicy
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
+from app.security.audit_logger import log_action
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -154,6 +155,17 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
     sensitive_files = node_input.sensitive_files
     dry_run = node_input.dry_run
 
+    log_action(
+        node="RollbackNode",
+        action_type="rollback",
+        path=None,
+        is_sensitive=False,
+        hitl_status="not_required",
+        result="pending",
+        reason="Starting rollback sequence.",
+        rollback_reason="execution failure",
+    )
+
     attempted_count = 0
     succeeded_count = 0
     failed_count = 0
@@ -169,6 +181,23 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
         # We only roll back actions that successfully executed
         if entry.status != "success":
             continue
+
+        is_sens = _is_sensitive_file(entry.original_path, sensitive_files)
+
+        def log_rb_action(
+            status: str, reason_str: str, entry=entry, is_sens=is_sens
+        ) -> None:
+            log_action(
+                node="RollbackNode",
+                action_type="rollback",
+                path=entry.original_path,
+                is_sensitive=is_sens,
+                hitl_status="not_required",
+                result=status,
+                reason=reason_str,
+                backup_path=entry.backup_path,
+                rollback_reason="execution failure",
+            )
 
         clean_orig = _clean_path(entry.original_path, policy)
 
@@ -188,6 +217,9 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             err = f"Rollback safety violation: Target path '{clean_orig}' is blocked."
             errors_list.append(err)
             report_lines.append(f"- Failed to restore '{clean_orig}': Blocked path.")
+            log_rb_action(
+                "failure", "Rollback safety violation: Target path is blocked."
+            )
             continue
 
         # Safeguard 2: Allowed paths
@@ -198,6 +230,10 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             report_lines.append(
                 f"- Failed to restore '{clean_orig}': Outside allowed paths."
             )
+            log_rb_action(
+                "failure",
+                "Rollback safety violation: Target path is outside allowed directories.",
+            )
             continue
 
         # Safeguard 3: System folders
@@ -206,6 +242,10 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             err = f"Rollback safety violation: Target path '{clean_orig}' resides inside a system directory."
             errors_list.append(err)
             report_lines.append(f"- Failed to restore '{clean_orig}': System folder.")
+            log_rb_action(
+                "failure",
+                "Rollback safety violation: Target path resides inside a system directory.",
+            )
             continue
 
         # Safeguard 4: Prevent overwrite
@@ -216,6 +256,7 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             report_lines.append(
                 f"- Failed to restore '{clean_orig}': Path is occupied."
             )
+            log_rb_action("failure", "Overwrite prevention: Path occupied.")
             continue
 
         # Recreate parent directory if missing safely under allowed_paths
@@ -237,6 +278,9 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                         report_lines.append(
                             f"- Failed to restore '{clean_orig}': Parent dir missing."
                         )
+                        log_rb_action(
+                            "failure", f"Failed to recreate parent directory: {e}"
+                        )
                         continue
             else:
                 failed_count += 1
@@ -247,6 +291,9 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                 report_lines.append(
                     f"- Failed to restore '{clean_orig}': Parent dir unsafe."
                 )
+                log_rb_action(
+                    "failure", "Parent directory recreation safety violation."
+                )
                 continue
 
         # Dry run simulation
@@ -255,6 +302,7 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             report_lines.append(
                 f"- [Simulated] Restored '{clean_orig}' to its original location."
             )
+            log_rb_action("skipped", "dry_run")
             continue
 
         # Perform the actual reversal
@@ -269,6 +317,7 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                 report_lines.append(
                     f"- Restored deleted file '{clean_orig}' from backup."
                 )
+                log_rb_action("success", "Restored deleted file from backup.")
 
             elif entry.action_type in ("move", "archive"):
                 if not entry.new_path or not os.path.exists(entry.new_path):
@@ -281,6 +330,7 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
                 report_lines.append(
                     f"- Moved file '{clean_orig}' back to original path."
                 )
+                log_rb_action("success", "Moved file back to original location.")
 
             else:
                 raise ValueError(
@@ -292,6 +342,7 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
             err = f"Reversal failed for '{clean_orig}': {e}"
             errors_list.append(err)
             report_lines.append(f"- Failed to restore '{clean_orig}': {e}")
+            log_rb_action("failure", f"Reversal failed: {e}")
 
     # Generate human readable report summary
     hdr_lines = ["### Rollback Activity Report"]
@@ -314,6 +365,17 @@ def rollback_node(node_input: ExecutionOutput) -> RollbackOutput:
         unsupported=unsupported_count,
         dry_run=dry_run,
         human_readable_report=human_readable_report,
+    )
+
+    log_action(
+        node="RollbackNode",
+        action_type="rollback",
+        path=None,
+        is_sensitive=False,
+        hitl_status="not_required",
+        result="success" if failed_count == 0 else "failure",
+        reason=f"Rollback sequence completed. Succeeded: {succeeded_count}, Failed: {failed_count}.",
+        rollback_reason="execution failure",
     )
 
     return RollbackOutput(

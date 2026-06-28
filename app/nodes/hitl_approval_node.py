@@ -18,6 +18,7 @@ from app.nodes.duplicate_detection_node import DuplicateGroup
 from app.nodes.file_discovery_node import FileMetadata, FolderScopePolicy
 from app.nodes.optimization_planner_node import CleanupAction, OptimizationPlannerOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
+from app.security.audit_logger import log_action
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -126,6 +127,24 @@ async def hitl_approval_node(
             approved.append(action)
 
     route = "approved" if approved else "rejected"
+
+    # Audit logging for HITL
+    approved_cnt = len(approved)
+    rejected_cnt = len(plan.actions) - approved_cnt
+    log_action(
+        node="HITLApprovalNode",
+        action_type="plan",
+        path=None,
+        is_sensitive=False,
+        hitl_status="approved" if is_approved else "rejected",
+        result="success" if is_approved else "skipped",
+        reason="User confirmation response processed."
+        if is_approved
+        else "User rejected optimization plan.",
+        approved_actions_count=approved_cnt,
+        rejected_actions_count=rejected_cnt,
+        hitl_required=True,
+    )
 
     yield Event(
         output=HITLApprovalOutput(

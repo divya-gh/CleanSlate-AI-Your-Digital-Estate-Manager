@@ -1,4 +1,5 @@
 import zipfile
+from unittest.mock import patch
 
 from app.nodes.execution_node import execution_node
 from app.nodes.file_discovery_node import FolderScopePolicy
@@ -6,7 +7,8 @@ from app.nodes.hitl_approval_node import CleanupAction, HITLApprovalOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
 
-def test_execution_dry_run() -> None:
+@patch("app.nodes.execution_node.log_action")
+def test_execution_dry_run(mock_log_action) -> None:
     policy = FolderScopePolicy(
         allowed_paths=["/allowed"],
         blocked_paths=["/allowed/blocked"],
@@ -38,6 +40,7 @@ def test_execution_dry_run() -> None:
     assert log.status == "success"
     assert log.dry_run is True
     assert "Dry-run simulation" in log.reasoning
+    assert mock_log_action.called
 
 
 def test_execution_real_run(tmp_path) -> None:
