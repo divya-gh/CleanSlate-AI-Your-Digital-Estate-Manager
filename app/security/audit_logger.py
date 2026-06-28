@@ -23,8 +23,12 @@ def log_action(
     plan_id: str | None = None,
     session_id: str | None = None,
     safety_override_reason: str | None = None,
+    operation_id: str | None = None,
+    tool_name: str | None = None,
 ) -> None:
     """Logs structured audit events to a JSONL format securely, redacting absolute paths."""
+    import uuid
+
     timestamp = datetime.now(UTC).isoformat()
 
     # Path redaction rules
@@ -67,7 +71,11 @@ def log_action(
         "hitl_status": hitl_status,
         "result": result,
         "reason": reason,
+        "operation_id": operation_id or str(uuid.uuid4()),
     }
+
+    if tool_name:
+        entry["tool_name"] = tool_name
 
     # Add optional context parameters
     if rollback_supported is not None:
@@ -95,6 +103,33 @@ def log_action(
     log_dir = os.path.dirname(log_file_path)
     if log_dir:
         os.makedirs(log_dir, exist_ok=True)
+
+    # Log rotation guard (10MB limit)
+    max_log_size = 10 * 1024 * 1024
+    if os.path.exists(log_file_path) and os.path.getsize(log_file_path) > max_log_size:
+        backup_log_path = log_file_path + ".1"
+        try:
+            if os.path.exists(backup_log_path):
+                os.remove(backup_log_path)  # nosemgrep: no-direct-file-deletes
+            os.rename(log_file_path, backup_log_path)
+        except Exception:
+            pass
+
+        rotation_entry = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "node": "AuditSystem",
+            "action_type": "rotation",
+            "path": None,
+            "hitl_status": "none",
+            "result": "success",
+            "reason": "log_file_exceeded_10MB",
+            "operation_id": str(uuid.uuid4()),
+        }
+        try:
+            with open(log_file_path, "w", encoding="utf-8") as f:
+                f.write(json.dumps(rotation_entry) + "\n")
+        except Exception:
+            pass
 
     with (
         open(log_file_path, "a", encoding="utf-8") as f

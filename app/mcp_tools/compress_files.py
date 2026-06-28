@@ -1,15 +1,14 @@
 import os
 import zipfile
 
-from app.mcp_tools.utils import is_path_allowed_by_policy, is_sensitive
+from app.mcp_tools.utils import is_sensitive, validate_path_safety
 from app.security.audit_logger import log_action
 
 
 def compress_files(files: list[str], destination: str) -> dict:
     """Creates a ZIP archive of selected files, skipping sensitive items and validating paths."""
-    # 1. Validate destination path
-    if not is_path_allowed_by_policy(destination):
-        raise ValueError("PathNotAllowed: Archive destination is not allowed by policy")
+    # 1. Validate destination path safety
+    validate_path_safety(destination)
 
     if os.path.exists(destination):
         raise ValueError("AlreadyExists: Destination archive already exists")
@@ -19,11 +18,15 @@ def compress_files(files: list[str], destination: str) -> dict:
     skipped_sensitive = []
 
     for f in files:
-        if not is_path_allowed_by_policy(f):
-            # Skip disallowed paths silently or raise
+        try:
+            validate_path_safety(f)
+        except Exception:
+            # Skip disallowed or unsafe paths
             continue
+
         if not os.path.exists(f):
             raise FileNotFoundError(f"FileNotFound: {f} not found")
+
         if is_sensitive(f):
             skipped_sensitive.append(f)
             # Log skipped sensitive file
@@ -79,6 +82,7 @@ def compress_files(files: list[str], destination: str) -> dict:
         return {
             "status": "compressed",
             "archive_path": destination,
+            "skipped_sensitive": [os.path.basename(x) for x in skipped_sensitive],
         }
     except PermissionError:
         log_action(

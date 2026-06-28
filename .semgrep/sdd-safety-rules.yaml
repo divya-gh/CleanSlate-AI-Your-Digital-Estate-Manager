@@ -199,3 +199,47 @@ rules:
       - pattern: import app.config
       - pattern: from app.config import $X
 
+  # 17. No symlink following
+  - id: no-symlink-following
+    languages: [python]
+    message: "Explicit symlink following is disabled for safety. Do not set followlinks=True."
+    severity: ERROR
+    pattern: os.walk(..., followlinks=True)
+
+  # 18. No unsafe shutil move
+  - id: no-unsafe-shutil-move
+    languages: [python]
+    message: "Calling shutil.move directly is unsafe without prior path scope validations."
+    severity: WARNING
+    paths:
+      include: ["**/app/mcp_tools/**"]
+    patterns:
+      - pattern: shutil.move($SRC, $DST)
+      - pattern-not-inside: |
+          validate_path_safety(...)
+          ...
+          shutil.move($SRC, $DST)
+
+  # 19. No absolute path return
+  - id: no-absolute-path-return
+    languages: [python]
+    message: "Do not expose absolute path parameters in error outputs or logged messages."
+    severity: WARNING
+    pattern: raise ValueError(..., os.path.abspath(...), ...)
+
+  # 20. No directory traversal
+  - id: no-directory-traversal
+    languages: [python]
+    message: "Enforce directory traversal checks on raw file paths before performing file access."
+    severity: ERROR
+    paths:
+      include: ["**/app/mcp_tools/**"]
+    patterns:
+      - pattern: open($PATH, ...)
+      - pattern-not-inside: |
+          validate_path_safety($PATH)
+          ...
+          open($PATH, ...)
+
+
+

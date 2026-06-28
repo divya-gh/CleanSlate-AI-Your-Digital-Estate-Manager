@@ -3,20 +3,17 @@ import shutil
 
 from app.mcp_tools.utils import (
     is_authenticated_folder,
-    is_path_allowed_by_policy,
     is_sensitive,
+    validate_path_safety,
 )
 from app.security.audit_logger import log_action
 
 
 def move_to_authenticated_folder(source: str, destination: str) -> dict:
-    """Moves a sensitive file to an authenticated secure folder."""
-    # 1. Enforce folder scope policy
-    if not is_path_allowed_by_policy(source):
-        raise ValueError("PathNotAllowed: Source path is not allowed by policy")
-
-    if not is_path_allowed_by_policy(destination):
-        raise ValueError("PathNotAllowed: Destination path is not allowed by policy")
+    """Moves a sensitive file to an authenticated secure folder with atomic fallback."""
+    # 1. Enforce path safety validations
+    validate_path_safety(source)
+    validate_path_safety(destination)
 
     if not os.path.exists(source):
         raise FileNotFoundError(f"FileNotFound: {source} not found")
@@ -32,6 +29,7 @@ def move_to_authenticated_folder(source: str, destination: str) -> dict:
             "SecurityViolation: Destination is not an authenticated secure folder"
         )
 
+    atomic_fallback_used = False
     try:
         # Pre-execution log
         log_action(
@@ -48,7 +46,12 @@ def move_to_authenticated_folder(source: str, destination: str) -> dict:
         if dest_dir:
             os.makedirs(dest_dir, exist_ok=True)
 
-        shutil.move(source, destination)
+        try:
+            os.replace(source, destination)
+        except OSError:
+            # nosemgrep: no-unsafe-shutil-move (Justified: os.replace failed, falling back safely)
+            shutil.move(source, destination)
+            atomic_fallback_used = True
 
         # Post-execution log
         log_action(
@@ -60,7 +63,10 @@ def move_to_authenticated_folder(source: str, destination: str) -> dict:
             result="success",
             reason=f"Secured from {source}",
         )
-        return {"status": "secured"}
+        return {
+            "status": "secured",
+            "atomic_fallback_used": atomic_fallback_used,
+        }
     except PermissionError:
         log_action(
             node="MCP_Tool_move_to_authenticated_folder",

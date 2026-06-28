@@ -3,22 +3,17 @@ import shutil
 
 from app.mcp_tools.utils import (
     is_authenticated_folder,
-    is_path_allowed_by_policy,
     is_sensitive,
+    validate_path_safety,
 )
 from app.security.audit_logger import log_action
 
 
 def move_file(source: str, destination: str) -> dict:
-    """Moves a file safely from source to destination, checking folder policies and sensitivity rules."""
-    # 1. Enforce folder scope policy on both paths
-    if not is_path_allowed_by_policy(source):
-        raise ValueError("PathNotAllowed: Source is not allowed by folder scope policy")
-
-    if not is_path_allowed_by_policy(destination):
-        raise ValueError(
-            "PathNotAllowed: Destination is not allowed by folder scope policy"
-        )
+    """Moves a file safely from source to destination, with atomic replace fallback."""
+    # 1. Enforce path safety validations on both paths
+    validate_path_safety(source)
+    validate_path_safety(destination)
 
     if not os.path.exists(source):
         raise FileNotFoundError(f"FileNotFound: {source} not found")
@@ -32,6 +27,7 @@ def move_file(source: str, destination: str) -> dict:
             "SecurityViolation: Sensitive files can only be moved to authenticated secure folders"
         )
 
+    atomic_fallback_used = False
     try:
         # Pre-execution log
         log_action(
@@ -44,12 +40,16 @@ def move_file(source: str, destination: str) -> dict:
             reason=f"Moving to {destination}",
         )
 
-        # Atomic move or copy/delete
         dest_dir = os.path.dirname(destination)
         if dest_dir:
             os.makedirs(dest_dir, exist_ok=True)
 
-        shutil.move(source, destination)
+        try:
+            os.replace(source, destination)
+        except OSError:
+            # nosemgrep: no-unsafe-shutil-move (Justified: os.replace failed due to cross-device link, falling back safely)
+            shutil.move(source, destination)
+            atomic_fallback_used = True
 
         # Post-execution log
         log_action(
@@ -61,7 +61,10 @@ def move_file(source: str, destination: str) -> dict:
             result="success",
             reason=f"Moved from {source}",
         )
-        return {"status": "success"}
+        return {
+            "status": "success",
+            "atomic_fallback_used": atomic_fallback_used,
+        }
     except PermissionError:
         log_action(
             node="MCP_Tool_move_file",

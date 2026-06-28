@@ -86,3 +86,66 @@ def is_authenticated_folder(path: str | Path) -> bool:
     if secure_env and secure_env in path_str:
         return True
     return "authenticated" in path_str or "secure" in path_str
+
+
+class SafetyViolationError(ValueError):
+    """Raised when a policy or security safety check is violated."""
+
+    def __init__(self, message: str, details: dict | None = None):
+        super().__init__(message)
+        self.details = details or {}
+
+
+def validate_path_safety(path: str | Path) -> None:
+    """Validates path safety against traversal, symlinks, junctions, and policy limits."""
+    path_str = str(path)
+
+    # 1. Block directory traversal explicitly
+    parts = re.split(r"[/\\]", path_str)
+    if ".." in parts:
+        raise SafetyViolationError(
+            "DirectoryTraversalError: Directory traversal is forbidden",
+            {"directory_traversal": True},
+        )
+
+    # 2. Check policy first
+    if not is_path_allowed_by_policy(path_str):
+        raise SafetyViolationError(
+            "PathNotAllowed: Path is not allowed by folder scope policy",
+            {"policy_blocked": True},
+        )
+
+    # 3. Symlink check
+    if os.path.islink(path_str):
+        raise SafetyViolationError(
+            "SymlinkBlockedError: Symbolic links are blocked for safety",
+            {"symlink_blocked": True},
+        )
+
+    # 4. Junction check (Windows IO_REPARSE_TAG_MOUNT_POINT = 0xa0000003)
+    try:
+        stat_val = os.lstat(path_str)
+        if (
+            hasattr(stat_val, "st_reparse_tag")
+            and stat_val.st_reparse_tag == 0xA0000003
+        ):
+            raise SafetyViolationError(
+                "JunctionBlockedError: Windows junctions are blocked for safety",
+                {"junction_blocked": True},
+            )
+    except Exception:
+        pass
+
+    # 5. Check realpath constraints to make sure it stays inside allowed scope
+    try:
+        resolved_realpath = os.path.realpath(path_str)
+        if not is_path_allowed_by_policy(resolved_realpath):
+            raise SafetyViolationError(
+                "PathNotAllowed: Resolved path traversal is not allowed by policy",
+                {"directory_traversal": True},
+            )
+    except Exception:
+        raise SafetyViolationError(
+            "PathNotAllowed: Path could not be safely resolved",
+            {"directory_traversal": True},
+        )

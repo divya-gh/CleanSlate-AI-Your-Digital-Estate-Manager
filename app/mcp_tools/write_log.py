@@ -16,6 +16,8 @@ def write_log(entry: str) -> dict:
             hitl_status = data.get("hitl_status", "none")
             result = data.get("result", "info")
             reason = data.get("reason")
+            operation_id = data.get("operation_id")
+            tool_name = data.get("tool_name")
 
             log_action(
                 node=node,
@@ -25,6 +27,8 @@ def write_log(entry: str) -> dict:
                 hitl_status=hitl_status,
                 result=result,
                 reason=reason,
+                operation_id=operation_id,
+                tool_name=tool_name,
             )
             return {"status": "logged"}
     except Exception:
@@ -43,6 +47,8 @@ def write_log(entry: str) -> dict:
         )
         return {"status": "logged"}
     except PermissionError:
-        raise PermissionError("PermissionDenied: Unable to write to audit log")
+        raise PermissionError(
+            "PermissionDenied: Unable to write to audit log"
+        ) from None
     except Exception as e:
         raise e

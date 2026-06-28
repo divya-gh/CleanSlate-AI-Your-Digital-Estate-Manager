@@ -2,13 +2,17 @@ import mimetypes
 import os
 from datetime import datetime
 
-from app.mcp_tools.utils import is_path_allowed_by_policy
+from app.mcp_tools.utils import is_sensitive, validate_path_safety
 
 
 def read_file_metadata(path: str) -> dict:
-    """Retrieves file metadata without opening the file."""
-    if not is_path_allowed_by_policy(path):
-        raise ValueError("PathNotAllowed: Path is not allowed by folder scope policy")
+    """Retrieves file metadata without opening the file, enforcing safety checks."""
+    validate_path_safety(path)
+
+    if is_sensitive(path):
+        raise ValueError(
+            "SensitiveFileError: Cannot retrieve metadata for sensitive files"
+        )
 
     if not os.path.exists(path):
         raise FileNotFoundError(f"FileNotFound: {path} not found")

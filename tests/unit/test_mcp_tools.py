@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -339,3 +340,123 @@ def test_registry_test_tool(mock_config_paths):
     assert res["error"]["type"] == "ToolError"
     assert res["error"]["details"]["schema_validated"] is True
     assert res["error"]["details"]["normalized_name"] == "list_files"
+
+
+def test_safety_symlink_and_traversal(mock_config_paths):
+    """Assert symlinks and traversal paths are blocked."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    allowed_dir = tmp_path / "allowed"
+
+    # 1. Directory Traversal
+    traversal_path = str(allowed_dir / ".." / "allowed" / "test.txt")
+    res = test_tool("list_files", path=traversal_path)
+    assert "error" in res
+    assert res["error"]["details"].get("directory_traversal") is True
+
+    # 2. Symlinks
+    link_path = allowed_dir / "my_link"
+    target_file = allowed_dir / "target.txt"
+    target_file.write_text("hello")
+
+    # Create symlink if supported by OS
+    try:
+        os.symlink(str(target_file), str(link_path))
+        res = test_tool("read_file_metadata", path=str(link_path))
+        assert "error" in res
+        assert res["error"]["details"].get("symlink_blocked") is True
+    except OSError:
+        # Skip if symlink creation is not permitted by OS security policy
+        pass
+
+
+def test_compute_hash_large_file(mock_config_paths, monkeypatch):
+    """Assert compute_hash rejects files >2GB with details."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    std_file = tmp_path / "allowed" / "large_file.bin"
+    std_file.write_text("dummy content")
+
+    # Mock os.path.getsize to simulate a 3GB file
+    monkeypatch.setattr(os.path, "getsize", lambda x: 3 * 1024 * 1024 * 1024)
+
+    res = test_tool("compute_hash", path=str(std_file))
+    assert "error" in res
+    assert res["error"]["details"].get("file_too_large") is True
+    assert res["error"]["details"].get("max_supported_size") == "2GB"
+
+
+def test_log_rotation_guard(tmp_path, monkeypatch):
+    """Assert logs are rotated automatically when exceeding 10MB."""
+    mock_log = tmp_path / "audit.log"
+    monkeypatch.setenv("CLEANSLATE_LOG_PATH", str(mock_log))
+
+    from app.security.audit_logger import log_action
+
+    # 1. Write an entry to create the file
+    log_action("TestNode", "test", None, False, "none", "success")
+    assert mock_log.exists()
+
+    # 2. Mock os.path.getsize to simulate file > 10MB
+    monkeypatch.setattr(os.path, "getsize", lambda x: 11 * 1024 * 1024)
+
+    # 3. Next log should trigger rotation
+    log_action("TestNode", "test", None, False, "none", "success")
+
+    backup_log = tmp_path / "audit.log.1"
+    assert backup_log.exists()
+    assert mock_log.exists()
+
+    # The rotated file should have a rotation success entry as the first line
+    with open(mock_log, encoding="utf-8") as f:
+        first_line = json.loads(f.readline())
+        assert first_line["action_type"] == "rotation"
+        assert first_line["reason"] == "log_file_exceeded_10MB"
+
+
+def test_atomic_move_fallback(mock_config_paths, monkeypatch):
+    """Assert move_file tries os.replace first and falls back to shutil.move."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    src = tmp_path / "allowed" / "src.txt"
+    src.write_text("data")
+    dest = tmp_path / "allowed" / "dest.txt"
+
+    # Mock os.replace to raise OSError (to trigger fallback)
+    def mock_replace(s, d):
+        raise OSError("Cross-device link")
+
+    monkeypatch.setattr(os, "replace", mock_replace)
+
+    res = test_tool("move_file", source=str(src), destination=str(dest))
+    assert res["status"] == "success"
+    assert res["result"].get("atomic_fallback_used") is True
+    assert dest.exists()
+
+
+def test_delete_file_safety_details(mock_config_paths, monkeypatch):
+    """Assert delete_file error details are populated correctly on policy block."""
+    tmp_path, mock_policy_file = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    # Write policy with safe_mode=True
+    with open(mock_policy_file, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "allowed_paths": [str(tmp_path / "allowed")],
+                "blocked_paths": [],
+                "safe_mode": True,
+            },
+            f,
+        )
+
+    target = tmp_path / "allowed" / "junk.txt"
+    target.write_text("delete me")
+
+    res = test_tool("delete_file", path=str(target), hitl_approved=True)
+    assert "error" in res
+    assert res["error"]["details"].get("safe_mode_blocked") is True
+    assert res["error"]["details"].get("safe_mode") is True

@@ -9,6 +9,7 @@ from app.mcp_tools.move_file import move_file
 from app.mcp_tools.move_to_authenticated_folder import move_to_authenticated_folder
 from app.mcp_tools.read_file_metadata import read_file_metadata
 from app.mcp_tools.read_log import read_log
+from app.mcp_tools.utils import SafetyViolationError
 from app.mcp_tools.write_log import write_log
 
 
@@ -270,6 +271,7 @@ def test_tool(name: str, **kwargs) -> dict:
                     "normalized_name": norm,
                     "input": kwargs,
                     "schema_validated": False,
+                    "tool_version": "1.0",
                 },
             }
         }
@@ -293,6 +295,7 @@ def test_tool(name: str, **kwargs) -> dict:
                         "normalized_name": norm,
                         "input": kwargs,
                         "schema_validated": False,
+                        "tool_version": "1.0",
                         "schema_diff": {"unexpected_key": k},
                     },
                 }
@@ -321,6 +324,7 @@ def test_tool(name: str, **kwargs) -> dict:
                             "normalized_name": norm,
                             "input": kwargs,
                             "schema_validated": False,
+                            "tool_version": "1.0",
                             "schema_diff": {"missing_key": key},
                         },
                     }
@@ -346,6 +350,7 @@ def test_tool(name: str, **kwargs) -> dict:
                                 "normalized_name": norm,
                                 "input": kwargs,
                                 "schema_validated": False,
+                                "tool_version": "1.0",
                                 "schema_diff": {
                                     "key": key,
                                     "expected_type": "integer",
@@ -370,6 +375,7 @@ def test_tool(name: str, **kwargs) -> dict:
                             "normalized_name": norm,
                             "input": kwargs,
                             "schema_validated": False,
+                            "tool_version": "1.0",
                             "schema_diff": {
                                 "key": key,
                                 "expected_type": "boolean",
@@ -394,6 +400,7 @@ def test_tool(name: str, **kwargs) -> dict:
                             "normalized_name": norm,
                             "input": kwargs,
                             "schema_validated": False,
+                            "tool_version": "1.0",
                             "schema_diff": {
                                 "key": key,
                                 "expected_type": "array",
@@ -414,6 +421,7 @@ def test_tool(name: str, **kwargs) -> dict:
                             "normalized_name": norm,
                             "input": kwargs,
                             "schema_validated": False,
+                            "tool_version": "1.0",
                             "schema_diff": {
                                 "key": key,
                                 "expected_type": "string",
@@ -430,6 +438,23 @@ def test_tool(name: str, **kwargs) -> dict:
         tool_func = tool_meta["fn"]
         res = tool_func(**validated_args)
         return {"status": "success", "result": res}
+    except SafetyViolationError as e:
+        err_details = {
+            "tool": name,
+            "normalized_name": norm,
+            "input": kwargs,
+            "schema_validated": True,
+            "tool_version": "1.0",
+            "exception_class": type(e).__name__,
+        }
+        err_details.update(e.details)
+        return {
+            "error": {
+                "type": "ToolError",
+                "message": str(e),
+                "details": err_details,
+            }
+        }
     except Exception as e:
         return {
             "error": {
@@ -440,6 +465,7 @@ def test_tool(name: str, **kwargs) -> dict:
                     "normalized_name": norm,
                     "input": kwargs,
                     "schema_validated": True,
+                    "tool_version": "1.0",
                     "exception_class": type(e).__name__,
                 },
             }

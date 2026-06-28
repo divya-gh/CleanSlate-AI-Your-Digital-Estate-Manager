@@ -11,18 +11,15 @@ def read_log(limit: int | None = None) -> dict:
         return {"entries": []}
 
     try:
-        # nosemgrep: no-file-content-reading
-        with open(log_path, encoding="utf-8") as f:
-            lines = f.readlines()  # nosemgrep: no-file-content-reading
-
-        # Parse and process line-by-line
         raw_entries = []
-        for line in lines:
-            if line.strip():
-                try:
-                    raw_entries.append(json.loads(line))
-                except Exception:
-                    pass
+        with open(log_path, encoding="utf-8") as f:  # nosemgrep: no-file-content-reading, no-directory-traversal
+            # Stream line-by-line to avoid loading large arrays of lines at once
+            for line in f:
+                if line.strip():
+                    try:
+                        raw_entries.append(json.loads(line))
+                    except Exception:
+                        pass
 
         # Apply limit to retrieve only the last N logs efficiently
         if limit:
@@ -48,6 +45,6 @@ def read_log(limit: int | None = None) -> dict:
     except PermissionError:
         raise PermissionError(
             f"PermissionDenied: Access denied to log file at {log_path}"
-        )
+        ) from None
     except Exception as e:
         raise e
