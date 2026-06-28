@@ -18,6 +18,7 @@ from app.config import (
     save_config,
     save_policy,
 )
+from app.mcp_tools.registry import list_tools, normalize_name, test_tool
 from app.nodes.classification_node import classification_node
 from app.nodes.duplicate_detection_node import duplicate_detection_node
 from app.nodes.execution_node import ExecutionOutput, execution_node
@@ -427,6 +428,80 @@ def cmd_config_reset():
     print("Configuration reset to default settings.")
 
 
+# ---------------------------------------------------------------------------
+# Developer tool commands (registry-only, no direct filesystem access)
+# ---------------------------------------------------------------------------
+
+
+def cmd_tools_list(json_opt: bool = False) -> None:
+    """Lists all registered MCP tools from the registry."""
+    tools = list_tools()
+    if json_opt:
+        print(json.dumps(tools, indent=2))
+        return
+
+    print(f"Registered MCP tools ({len(tools)}):")
+    print("-" * 50)
+    for tool in tools:
+        required_keys = tool["input_schema"].get("required", [])
+        props = list(tool["input_schema"].get("properties", {}).keys())
+        print(f"  {tool['name']}")
+        print(f"    Description : {tool['description']}")
+        print(f"    Inputs      : {', '.join(props) if props else '(none)'}")
+        print(f"    Required    : {', '.join(required_keys) if required_keys else '(none)'}")
+        print(f"    Version     : {tool.get('version', '1.0')}")
+        print()
+
+
+def cmd_tools_test(tool_name: str, raw_args: list[str], json_opt: bool = False) -> None:
+    """Executes a single MCP tool through registry.test_tool() for developer debugging.
+
+    All safety and policy checks inside the tool are preserved — this command
+    never bypasses MCP enforcement.
+    """
+    # Normalize the tool name using registry rules
+    norm = normalize_name(tool_name)
+
+    # Parse key=value pairs from CLI args
+    parsed: dict = {}
+    for token in raw_args:
+        if "=" not in token:
+            print(
+                json.dumps(
+                    {
+                        "error": {
+                            "type": "SchemaError",
+                            "message": f"Invalid argument format '{token}'. Expected key=value.",
+                            "details": {"token": token},
+                        }
+                    },
+                    indent=2,
+                )
+            )
+            return
+        k, _, v = token.partition("=")
+        parsed[k.strip()] = v.strip()
+
+    # Dispatch through the registry — never direct filesystem calls
+    result = test_tool(norm, **parsed)
+
+    if json_opt:
+        print(json.dumps(result, indent=2))
+        return
+
+    if "error" in result:
+        err = result["error"]
+        print(f"[ERROR] {err.get('type', 'ToolError')}: {err.get('message', '')}")
+        details = err.get("details", {})
+        if details:
+            print("Details:")
+            for k, v in details.items():
+                print(f"  {k}: {v}")
+    else:
+        print(f"[SUCCESS] Tool '{norm}' executed.")
+        print(json.dumps(result.get("result", result), indent=2))
+
+
 def main():
     parser = argparse.ArgumentParser(description="CleanSlate AI - My PC Assistant CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -502,6 +577,38 @@ def main():
     weekly_subparsers.add_parser("disable", help="Disable weekly automation")
     weekly_subparsers.add_parser("status", help="Print weekly automation status")
 
+    # tools (developer commands)
+    tools_parser = subparsers.add_parser(
+        "tools", help="Developer MCP tool registry commands"
+    )
+    tools_parser.add_argument(
+        "--json", action="store_true", help="Output results in JSON format"
+    )
+    tools_subparsers = tools_parser.add_subparsers(
+        dest="tools_command", help="Tools subcommand"
+    )
+    # tools list
+    tools_list_parser = tools_subparsers.add_parser(
+        "list", help="List all registered MCP tools"
+    )
+    tools_list_parser.add_argument(
+        "--json", action="store_true", help="Output in JSON format"
+    )
+    # tools test
+    tools_test_parser = tools_subparsers.add_parser(
+        "test", help="Execute a single MCP tool for developer debugging"
+    )
+    tools_test_parser.add_argument("tool_name", type=str, help="Name of the tool to test")
+    tools_test_parser.add_argument(
+        "args",
+        nargs="*",
+        metavar="key=value",
+        help="Tool arguments in key=value format",
+    )
+    tools_test_parser.add_argument(
+        "--json", action="store_true", help="Output result in JSON format"
+    )
+
     args = parser.parse_args()
 
     if args.command == "run":
@@ -537,6 +644,14 @@ def main():
             cmd_weekly_status()
         else:
             weekly_parser.print_help()
+    elif args.command == "tools":
+        json_flag = getattr(args, "json", False)
+        if args.tools_command == "list":
+            cmd_tools_list(json_opt=json_flag)
+        elif args.tools_command == "test":
+            cmd_tools_test(args.tool_name, args.args, json_opt=json_flag)
+        else:
+            tools_parser.print_help()
     else:
         parser.print_help()
 
