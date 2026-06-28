@@ -91,11 +91,12 @@ def log_action(
     if safety_override_reason is not None:
         entry["safety_override_reason"] = safety_override_reason
 
-    log_dir = os.path.dirname(LOG_PATH)
+    log_file_path = os.environ.get("CLEANSLATE_LOG_PATH", LOG_PATH)
+    log_dir = os.path.dirname(log_file_path)
     if log_dir:
         os.makedirs(log_dir, exist_ok=True)
 
     with (
-        open(LOG_PATH, "a", encoding="utf-8") as f
+        open(log_file_path, "a", encoding="utf-8") as f
     ):  # nosemgrep: no-file-content-reading, file-ops-must-use-folder-scope (Justified: Log writing is a system audit command)
         f.write(json.dumps(entry) + "\n")
