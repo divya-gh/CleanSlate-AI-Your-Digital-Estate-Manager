@@ -12,7 +12,9 @@ def read_log(limit: int | None = None) -> dict:
 
     try:
         raw_entries = []
-        with open(log_path, encoding="utf-8") as f:  # nosemgrep: no-file-content-reading, no-directory-traversal
+        with open(  # nosemgrep: no-file-content-reading, no-directory-traversal
+            log_path, encoding="utf-8"
+        ) as f:
             # Stream line-by-line to avoid loading large arrays of lines at once
             for line in f:
                 if line.strip():

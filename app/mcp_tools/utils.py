@@ -98,15 +98,18 @@ class SafetyViolationError(ValueError):
 
 def validate_path_safety(path: str | Path) -> None:
     """Validates path safety against traversal, symlinks, junctions, and policy limits."""
-    path_str = str(path)
+    path_raw = str(path)
 
-    # 1. Block directory traversal explicitly
-    parts = re.split(r"[/\\]", path_str)
+    # 1. Block directory traversal explicitly on raw input
+    parts = re.split(r"[/\\]", path_raw)
     if ".." in parts:
         raise SafetyViolationError(
             "DirectoryTraversalError: Directory traversal is forbidden",
             {"directory_traversal": True},
         )
+
+    # Normalize path and strip trailing slashes/redundant separators
+    path_str = os.path.normpath(path_raw.rstrip(r"\/"))
 
     # 2. Check policy first
     if not is_path_allowed_by_policy(path_str):
@@ -133,17 +136,29 @@ def validate_path_safety(path: str | Path) -> None:
                 "JunctionBlockedError: Windows junctions are blocked for safety",
                 {"junction_blocked": True},
             )
+    except SafetyViolationError:
+        raise
     except Exception:
         pass
 
     # 5. Check realpath constraints to make sure it stays inside allowed scope
     try:
-        resolved_realpath = os.path.realpath(path_str)
+        resolved_realpath = os.path.normpath(
+            os.path.realpath(path_str).rstrip(r"\/")  # nosemgrep: no-unsafe-realpath
+        )
         if not is_path_allowed_by_policy(resolved_realpath):
+            # Check if resolution changed the path (escaping relative symlink)
+            norm_abs = os.path.normpath(os.path.abspath(path_str).rstrip(r"\/"))
+            is_escaping_link = resolved_realpath != norm_abs
+            err_details = {"directory_traversal": True}
+            if is_escaping_link:
+                err_details["symlink_blocked"] = True
             raise SafetyViolationError(
                 "PathNotAllowed: Resolved path traversal is not allowed by policy",
-                {"directory_traversal": True},
+                err_details,
             )
+    except SafetyViolationError:
+        raise
     except Exception:
         raise SafetyViolationError(
             "PathNotAllowed: Path could not be safely resolved",

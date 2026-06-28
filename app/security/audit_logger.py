@@ -25,6 +25,7 @@ def log_action(
     safety_override_reason: str | None = None,
     operation_id: str | None = None,
     tool_name: str | None = None,
+    delete_reason: str | None = None,
 ) -> None:
     """Logs structured audit events to a JSONL format securely, redacting absolute paths."""
     import uuid
@@ -76,6 +77,8 @@ def log_action(
 
     if tool_name:
         entry["tool_name"] = tool_name
+    if delete_reason:
+        entry["delete_reason"] = delete_reason
 
     # Add optional context parameters
     if rollback_supported is not None:
@@ -109,9 +112,8 @@ def log_action(
     if os.path.exists(log_file_path) and os.path.getsize(log_file_path) > max_log_size:
         backup_log_path = log_file_path + ".1"
         try:
-            if os.path.exists(backup_log_path):
-                os.remove(backup_log_path)  # nosemgrep: no-direct-file-deletes
-            os.rename(log_file_path, backup_log_path)
+            # Atomic replace for rotation
+            os.replace(log_file_path, backup_log_path)
         except Exception:
             pass
 
@@ -123,6 +125,7 @@ def log_action(
             "hitl_status": "none",
             "result": "success",
             "reason": "log_file_exceeded_10MB",
+            "rotation_triggered": True,
             "operation_id": str(uuid.uuid4()),
         }
         try:

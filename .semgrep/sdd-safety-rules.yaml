@@ -241,5 +241,36 @@ rules:
           ...
           open($PATH, ...)
 
+  # 21. No unsafe realpath
+  - id: no-unsafe-realpath
+    languages: [python]
+    message: "Using os.path.realpath is unsafe unless scoped and validated against folder_scope_policy."
+    severity: ERROR
+    paths:
+      include: ["**/app/mcp_tools/**"]
+    patterns:
+      - pattern: os.path.realpath($PATH)
+      - pattern-not-inside: |
+          ...
+          is_path_allowed_by_policy(...)
+
+  # 22. No absolute path in error details
+  - id: no-absolute-path-in-error-details
+    languages: [python]
+    message: "Do not return absolute paths in error details. Use relative/redacted/sanitized paths instead."
+    severity: ERROR
+    pattern: 'raise SafetyViolationError(..., {"path": $PATH})'
+
+  # 23. No unsafe open (narrow chunk size verification)
+  - id: no-unsafe-open
+    languages: [python]
+    message: "Ensure open operations in compute_hash read narrow, streaming chunks only (e.g. read(65536))."
+    severity: ERROR
+    paths:
+      include: ["**/app/mcp_tools/compute_hash.py"]
+    patterns:
+      - pattern: $F.read()
+
+
 
 

@@ -21,10 +21,15 @@ def delete_file(path: str, hitl_approved: bool = False) -> dict:
             hitl_status="none",
             result="failed",
             reason="safe_mode_blocked",
+            delete_reason="safe_mode_enabled",
         )
         raise SafetyViolationError(
             "SafeModeActive: Deletes are forbidden when safe mode is enabled",
-            {"safe_mode_blocked": True, "safe_mode": True},
+            {
+                "safe_mode_blocked": True,
+                "safe_mode": True,
+                "operation": "delete_file",
+            },
         )
 
     # 3. Check sensitivity (never delete sensitive files)
@@ -38,17 +43,18 @@ def delete_file(path: str, hitl_approved: bool = False) -> dict:
             hitl_status="none",
             result="failed",
             reason="sensitive_file_blocked",
+            delete_reason="sensitive_file_blocked",
         )
         raise SafetyViolationError(
             "SecurityViolation: Sensitive files cannot be deleted",
-            {"blocked_by_sensitive": True},
+            {"blocked_by_sensitive": True, "operation": "delete_file"},
         )
 
     # 4. Require HITL approval
     if not hitl_approved:
         raise SafetyViolationError(
             "HITLApprovalRequired: Interactive approval is required to delete files",
-            {"hitl_required": True},
+            {"hitl_required": True, "operation": "delete_file"},
         )
 
     if not os.path.exists(path):

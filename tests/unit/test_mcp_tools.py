@@ -460,3 +460,42 @@ def test_delete_file_safety_details(mock_config_paths, monkeypatch):
     assert "error" in res
     assert res["error"]["details"].get("safe_mode_blocked") is True
     assert res["error"]["details"].get("safe_mode") is True
+
+
+def test_junction_blocking_mock(mock_config_paths, monkeypatch):
+    """Assert Windows junction is detected and blocked."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    target = tmp_path / "allowed" / "junction_dir"
+    target.mkdir(exist_ok=True)
+
+    # Mock os.lstat to return a st_reparse_tag == 0xA0000003
+    class MockStat:
+        st_reparse_tag = 0xA0000003
+        st_size = 0
+        st_mtime = 1000
+        st_ctime = 1000
+        st_mode = 16877  # directory S_IFDIR
+
+    monkeypatch.setattr(os, "lstat", lambda x: MockStat())
+
+    res = test_tool("list_files", path=str(target))
+    assert "error" in res
+    assert res["error"]["details"].get("junction_blocked") is True
+
+
+def test_realpath_symlink_escaping_scope(mock_config_paths, monkeypatch):
+    """Assert that a symlink escaping allowed scope is blocked and flagged as symlink_blocked."""
+    tmp_path, _ = mock_config_paths
+    from app.mcp_tools.registry import test_tool
+
+    target = tmp_path / "allowed" / "escaped_link.txt"
+
+    # Mock realpath to return a path outside allowed scope (e.g. /Windows/System32)
+    monkeypatch.setattr(os.path, "realpath", lambda x: "/Windows/System32/file.txt")
+
+    res = test_tool("read_file_metadata", path=str(target))
+    assert "error" in res
+    assert res["error"]["details"].get("symlink_blocked") is True
+    assert res["error"]["details"].get("directory_traversal") is True
