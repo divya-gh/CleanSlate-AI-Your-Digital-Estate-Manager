@@ -288,3 +288,59 @@ def test_cli_logs_limit(tmp_path, monkeypatch, capsys):
     assert "Showing last 1 log entries" in captured.out
     assert "NodeB" in captured.out
     assert "NodeA" not in captured.out
+
+
+def test_cli_weekly_status(mock_config_paths, capsys):
+    """Assert cleanslate weekly status prints the correct state."""
+    _, mock_config, _, _ = mock_config_paths
+
+    with open(mock_config, "w", encoding="utf-8") as f:
+        json.dump({"weekly_automation_enabled": False}, f)
+    from app.cli import cmd_weekly_status
+
+    cmd_weekly_status()
+    captured = capsys.readouterr()
+    assert "Weekly automation status: DISABLED" in captured.out
+
+    with open(mock_config, "w", encoding="utf-8") as f:
+        json.dump({"weekly_automation_enabled": True}, f)
+    cmd_weekly_status()
+    captured = capsys.readouterr()
+    assert "Weekly automation status: ENABLED" in captured.out
+
+
+def test_cli_config_show_and_reset(mock_config_paths, capsys):
+    """Assert cleanslate config show and reset behave correctly."""
+    _, mock_config, _, _ = mock_config_paths
+
+    from app.cli import cmd_config_reset, cmd_config_show
+
+    cmd_config_show()
+    captured = capsys.readouterr()
+    assert "Current Configuration" in captured.out
+    assert "weekly_automation_enabled" in captured.out
+
+    cmd_config_reset()
+    captured = capsys.readouterr()
+    assert "Configuration reset to default settings." in captured.out
+    with open(mock_config, encoding="utf-8") as f:
+        data = json.load(f)
+    assert data["weekly_automation_enabled"] is False
+
+
+def test_cli_error_handling(mock_config_paths, capsys):
+    """Assert cleanslate commands handle invalid paths and missing configs gracefully."""
+    _, _, _, _ = mock_config_paths
+
+    from unittest.mock import patch
+
+    from app.cli import cmd_search
+
+    with patch(
+        "app.cli.file_discovery_node",
+        side_effect=ValueError("Invalid path configuration"),
+    ):
+        cmd_search("test")
+
+    captured = capsys.readouterr()
+    assert "Error during search: Invalid path configuration" in captured.out

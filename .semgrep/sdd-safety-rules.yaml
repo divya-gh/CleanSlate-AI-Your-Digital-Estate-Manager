@@ -162,3 +162,26 @@ rules:
     patterns:
       - pattern: write_log($DATA)
       - pattern-not: write_log(redact($DATA))
+
+  # 14. No direct config paths
+  - id: no-direct-config-paths
+    languages: [python]
+    message: "Do not hardcode configuration directories or files. Use CONFIG_DIR, CONFIG_FILE, or POLICY_FILE constants from app.config."
+    severity: ERROR
+    pattern-either:
+      - pattern: '"/.cleanslate"'
+      - pattern: '"/config.json"'
+      - pattern: '"/policy.json"'
+      - pattern: '".cleanslate/config.json"'
+      - pattern: '".cleanslate/policy.json"'
+
+  # 15. No absolute paths in CLI output
+  - id: no-absolute-paths-in-cli-output
+    languages: [python]
+    message: "Do not display absolute paths in CLI console outputs. Print relative or redacted paths."
+    severity: WARNING
+    patterns:
+      - pattern: print(..., $PATH, ...)
+      - metavariable-regex:
+          metavariable: $PATH
+          regex: ".*(absolute_path|abs_path).*"

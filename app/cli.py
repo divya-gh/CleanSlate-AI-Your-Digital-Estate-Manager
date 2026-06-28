@@ -11,6 +11,7 @@ from google.genai import types
 from app.agent import root_agent
 from app.config import (
     CONFIG_DIR,
+    DEFAULT_CONFIG,
     load_config,
     load_policy,
     reset_policy,
@@ -242,7 +243,9 @@ def cmd_cleanup(dry_run=False):
 def cmd_weekly_run():
     """Runs the weekly organizer automation."""
     config = load_config()
-    if not config.get("weekly_automation_enabled", False):
+    enabled = config.get("weekly_automation_enabled", False)
+    print(f"Checking weekly automation state: Enabled={enabled}")
+    if not enabled:
         print("Weekly automation disabled. Enable it with: cleanslate weekly enable")
         sys.exit(0)
 
@@ -403,6 +406,27 @@ def cmd_weekly_disable():
     print("Weekly automation disabled.")
 
 
+def cmd_weekly_status():
+    """Prints the weekly automation status."""
+    config = load_config()
+    enabled = config.get("weekly_automation_enabled", False)
+    status_str = "ENABLED" if enabled else "DISABLED"
+    print(f"Weekly automation status: {status_str}")
+
+
+def cmd_config_show():
+    """Prints the current configuration."""
+    config = load_config()
+    print("Current Configuration:")
+    print(json.dumps(config, indent=2))
+
+
+def cmd_config_reset():
+    """Resets the configuration to default settings."""
+    save_config(DEFAULT_CONFIG)
+    print("Configuration reset to default settings.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="CleanSlate AI - My PC Assistant CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -456,13 +480,27 @@ def main():
     )
     scope_subparsers.add_parser("reset", help="Clear stored folder scope policy")
 
+    # config
+    config_parser = subparsers.add_parser(
+        "config", help="Manage persistent configurations"
+    )
+    config_subparsers = config_parser.add_subparsers(
+        dest="config_command", help="Config subcommand"
+    )
+    config_subparsers.add_parser("show", help="Show current configuration")
+    config_subparsers.add_parser("reset", help="Reset configuration to defaults")
+
     # weekly
     weekly_parser = subparsers.add_parser("weekly", help="Weekly automation control")
+    weekly_parser.add_argument(
+        "--status", "-s", action="store_true", help="Print weekly automation status"
+    )
     weekly_subparsers = weekly_parser.add_subparsers(
         dest="weekly_command", help="Weekly subcommand"
     )
     weekly_subparsers.add_parser("enable", help="Enable weekly automation")
     weekly_subparsers.add_parser("disable", help="Disable weekly automation")
+    weekly_subparsers.add_parser("status", help="Print weekly automation status")
 
     args = parser.parse_args()
 
@@ -483,11 +521,20 @@ def main():
             cmd_scope_reset()
         else:
             scope_parser.print_help()
+    elif args.command == "config":
+        if args.config_command == "show":
+            cmd_config_show()
+        elif args.config_command == "reset":
+            cmd_config_reset()
+        else:
+            config_parser.print_help()
     elif args.command == "weekly":
         if args.weekly_command == "enable":
             cmd_weekly_enable()
         elif args.weekly_command == "disable":
             cmd_weekly_disable()
+        elif args.weekly_command == "status" or args.status:
+            cmd_weekly_status()
         else:
             weekly_parser.print_help()
     else:

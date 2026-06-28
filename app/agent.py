@@ -47,12 +47,6 @@ from app.nodes.my_pc_assistant_node import (
     MyPCAssistantInput,
     my_pc_assistant_node,
 )
-from app.config import load_config
-
-_config = load_config()
-WeeklyOrganizerInput.model_fields["weekly_automation_enabled"].default = _config.get(
-    "weekly_automation_enabled", False
-)
 
 # Set Google Cloud environment variables
 _, project_id = google.auth.default()
