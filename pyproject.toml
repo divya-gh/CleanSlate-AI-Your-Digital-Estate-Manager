@@ -85,6 +85,9 @@ skip = "./locust_env/*,uv.lock,.venv,./frontend,**/package-lock.json"
 
 
 
+[project.scripts]
+cleanslate = "app.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

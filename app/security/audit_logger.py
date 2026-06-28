@@ -2,7 +2,7 @@ import json
 import os
 from datetime import UTC, datetime
 
-LOG_PATH = "logs/audit.log"
+LOG_PATH = os.environ.get("CLEANSLATE_LOG_PATH", "logs/audit.log")
 
 
 def log_action(
