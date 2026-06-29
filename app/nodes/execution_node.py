@@ -9,9 +9,7 @@ folders). Supports dry-run and logs all outcomes.
 from __future__ import annotations
 
 import os
-import shutil
 import time
-import zipfile
 from pathlib import Path
 from typing import Literal
 
@@ -23,7 +21,7 @@ from app.nodes.file_discovery_node import FolderScopePolicy, resolve_real_path
 from app.nodes.hitl_approval_node import HITLApprovalOutput
 from app.nodes.optimization_planner_node import OptimizationPlannerOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
-from app.security.audit_logger import log_action
+from app.mcp_tools.registry import test_tool
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -184,413 +182,439 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
         # OptimizationPlannerOutput (Weekly Safe Mode)
         approved_actions = node_input.action_plan.actions
         rollback_enabled_flag = False
-        dry_run = node_input.action_plan.dry_run
+        dry_run = node_input.folder_scope_policy.dry_run
 
     policy = node_input.folder_scope_policy
     sensitive_files = node_input.sensitive_files
 
-    log: list[ExecutionLogEntry] = []
-    success_count = 0
-    failure_count = 0
-    estimated_recovery_sum = 0
-    actual_failures_count = 0
+    from app.config import set_policy_override
+    set_policy_override(policy.model_dump())
+    try:
+        log: list[ExecutionLogEntry] = []
+        success_count = 0
+        failure_count = 0
+        estimated_recovery_sum = 0
+        actual_failures_count = 0
 
-    for action in approved_actions:
-        path = resolve_real_path(action.path)
-        action_type = action.action_type
-        now = time.time()
+        for action in approved_actions:
+            path = resolve_real_path(action.path)
+            action_type = action.action_type
+            now = time.time()
 
-        p = Path(path)
-        parent_dir = p.parent
-        is_sensitive = _is_sensitive_file(path, sensitive_files)
+            p = Path(path)
+            parent_dir = p.parent
+            is_sensitive = _is_sensitive_file(path, sensitive_files)
 
-        # Pre-compute rollback-related paths and flags
-        if action_type == "delete":
-            matching_ap = _find_matching_allowed_path(path, policy)
-            rollback_dir = (
-                Path(matching_ap) / ".rollback"
-                if matching_ap
-                else parent_dir / ".rollback"
-            )
-            calc_backup_path = str(rollback_dir / p.name)
-            calc_new_path = None
-            calc_rollback_supported = True
-        elif action_type == "move":
-            dest_dir = parent_dir / (
-                "Authenticated"
-                if is_sensitive
-                else ("WeeklyReview" if policy.safe_mode else "Organized")
-            )
-            calc_backup_path = None
-            calc_new_path = str(dest_dir / p.name)
-            calc_rollback_supported = True
-        elif action_type == "archive":
-            dest_dir = parent_dir / "Archive"
-            calc_backup_path = None
-            calc_new_path = str(dest_dir / p.name)
-            calc_rollback_supported = True
-        elif action_type == "compress":
-            calc_backup_path = None
-            calc_new_path = path + ".zip"
-            calc_rollback_supported = False
-        else:
-            calc_backup_path = None
-            calc_new_path = None
-            calc_rollback_supported = False
+            # Pre-compute rollback-related paths and flags
+            if action_type == "delete":
+                matching_ap = _find_matching_allowed_path(path, policy)
+                rollback_dir = (
+                    Path(matching_ap) / ".rollback"
+                    if matching_ap
+                    else parent_dir / ".rollback"
+                )
+                calc_backup_path = str(rollback_dir / p.name)
+                calc_new_path = None
+                calc_rollback_supported = True
+            elif action_type == "move":
+                dest_dir = parent_dir / (
+                    "Authenticated"
+                    if is_sensitive
+                    else ("WeeklyReview" if policy.safe_mode else "Organized")
+                )
+                calc_backup_path = None
+                calc_new_path = str(dest_dir / p.name)
+                calc_rollback_supported = True
+            elif action_type == "archive":
+                dest_dir = parent_dir / "Archive"
+                calc_backup_path = None
+                calc_new_path = str(dest_dir / p.name)
+                calc_rollback_supported = True
+            elif action_type == "compress":
+                calc_backup_path = None
+                calc_new_path = path + ".zip"
+                calc_rollback_supported = False
+            else:
+                calc_backup_path = None
+                calc_new_path = None
+                calc_rollback_supported = False
 
-        def log_exec_action(
-            status: str,
-            reason: str,
-            backup: str | None = None,
-            action_type=action_type,
-            path=path,
-            is_sensitive=is_sensitive,
-            calc_rollback_supported=calc_rollback_supported,
-        ) -> None:
-            log_action(
-                node="ExecutionNode",
+            def log_exec_action(
+                status: str,
+                reason: str,
+                backup: str | None = None,
                 action_type=action_type,
                 path=path,
                 is_sensitive=is_sensitive,
-                hitl_status="approved"
-                if isinstance(node_input, HITLApprovalOutput)
-                else "not_required",
-                result=status,
-                reason=reason,
-                rollback_supported=calc_rollback_supported,
-                rollback_enabled=rollback_enabled_flag,
-                backup_path=backup,
-            )
+                calc_rollback_supported=calc_rollback_supported,
+            ) -> None:
+                import json
+                entry_dict = {
+                    "node": "ExecutionNode",
+                    "action_type": action_type,
+                    "path": path,
+                    "is_sensitive": is_sensitive,
+                    "hitl_status": "approved"
+                    if isinstance(node_input, HITLApprovalOutput)
+                    else "not_required",
+                    "result": status,
+                    "reason": reason,
+                    "rollback_supported": calc_rollback_supported,
+                    "rollback_enabled": rollback_enabled_flag,
+                    "backup_path": backup,
+                    "tool_name": "write_log",
+                }
+                test_tool("write_log", entry=json.dumps(entry_dict))
 
-        if rollback_enabled_flag and not dry_run:
-            log_exec_action("pending", "Starting execution with rollback enabled.")
+            if rollback_enabled_flag and not dry_run:
+                log_exec_action("pending", "Starting execution with rollback enabled.")
 
-        # Guard 1: Blocked path double-guard
-        if _is_path_blocked(path, policy):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="Runtime Safety Check: Target path is inside blocked directories.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=None,
-                    backup_path=None,
-                    rollback_supported=False,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Target path is inside blocked directories.",
-            )
-            continue
-
-        # Guard 2: Allowed path double-guard
-        if not _is_path_allowed(path, policy):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="Runtime Safety Check: Target path is outside allowed directories.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=None,
-                    backup_path=None,
-                    rollback_supported=False,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Target path is outside allowed directories.",
-            )
-            continue
-
-        # Guard 3: System folder double-guard
-        if _is_system_folder(path):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="Runtime Safety Check: Modifying system directories is prohibited.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=None,
-                    backup_path=None,
-                    rollback_supported=False,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Modifying system directories is prohibited.",
-            )
-            continue
-
-        # Guard 4: Sensitive file deletion double-guard
-        if action_type == "delete" and _is_sensitive_file(path, sensitive_files):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="Runtime Safety Check: Sensitive files must never be deleted.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=None,
-                    backup_path=None,
-                    rollback_supported=False,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Sensitive files must never be deleted.",
-            )
-            continue
-
-        # Guard 5: safe_mode double-guard against deletes and compressions
-        if policy.safe_mode and action_type in ("delete", "compress"):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=None,
-                    backup_path=None,
-                    rollback_supported=False,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
-            )
-            continue
-
-        # Guard 6: Prevent overwrite guard for target destinations
-        if calc_new_path and not dry_run and os.path.exists(calc_new_path):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning=f"Runtime Safety Check: Overwrite prevention. Target path '{os.path.basename(calc_new_path)}' is occupied.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=calc_new_path,
-                    backup_path=calc_backup_path,
-                    rollback_supported=calc_rollback_supported,
-                )
-            )
-            failure_count += 1
-            log_exec_action(
-                "failure",
-                "Runtime Safety Check: Overwrite prevention. Target path is occupied.",
-            )
-            continue
-
-        # File presence check (for dry-run=False)
-        if not dry_run and not os.path.exists(path):
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning="File not found on disk at time of execution.",
-                    dry_run=dry_run,
-                    original_path=path,
-                    new_path=calc_new_path,
-                    backup_path=calc_backup_path,
-                    rollback_supported=calc_rollback_supported,
-                )
-            )
-            failure_count += 1
-            log_exec_action("failure", "File not found on disk at time of execution.")
-            continue
-
-        # Simulate execution in dry-run mode
-        if dry_run:
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="success",
-                    timestamp=now,
-                    reasoning=f"Dry-run simulation: Proposing {action_type} action successfully verified.",
-                    dry_run=True,
-                    original_path=path,
-                    new_path=calc_new_path,
-                    backup_path=calc_backup_path,
-                    rollback_supported=calc_rollback_supported,
-                )
-            )
-            success_count += 1
-            estimated_recovery_sum += action.estimated_space_recovered
-            log_exec_action("skipped", "dry_run")
-            continue
-
-        # Real execution (dry_run=False)
-        try:
-            if action_type == "delete":
-                if calc_backup_path:
-                    os.makedirs(os.path.dirname(calc_backup_path), exist_ok=True)
-                    shutil.copy2(path, calc_backup_path)
-                os.remove(path)  # nosemgrep
+            # Guard 1: Blocked path double-guard
+            if _is_path_blocked(path, policy):
                 log.append(
                     ExecutionLogEntry(
                         path=path,
-                        action_type="delete",
-                        status="success",
+                        action_type=action_type,
+                        status="failure",
                         timestamp=now,
-                        reasoning="File removed successfully from disk with backup copy saved for rollback.",
-                        dry_run=False,
+                        reasoning="Runtime Safety Check: Target path is inside blocked directories.",
+                        dry_run=dry_run,
                         original_path=path,
                         new_path=None,
-                        backup_path=calc_backup_path,
-                        rollback_supported=True,
-                    )
-                )
-
-            elif action_type == "move":
-                is_sensitive = _is_sensitive_file(path, sensitive_files)
-                if is_sensitive:
-                    parent_dir = p.parent
-                    dest_dir = parent_dir / "Authenticated"
-                else:
-                    parent_dir = p.parent
-                    dest_dir = parent_dir / (
-                        "WeeklyReview" if policy.safe_mode else "Organized"
-                    )
-
-                os.makedirs(dest_dir, exist_ok=True)
-                dest_path = dest_dir / p.name
-                shutil.move(path, str(dest_path))
-
-                log.append(
-                    ExecutionLogEntry(
-                        path=path,
-                        action_type="move",
-                        status="success",
-                        timestamp=now,
-                        reasoning=f"File moved successfully to '{dest_path}'.",
-                        dry_run=False,
-                        original_path=path,
-                        new_path=str(dest_path),
-                        backup_path=None,
-                        rollback_supported=True,
-                    )
-                )
-
-            elif action_type == "compress":
-                zip_path = path + ".zip"
-                with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                    zipf.write(path, p.name)
-                os.remove(path)  # nosemgrep
-
-                log.append(
-                    ExecutionLogEntry(
-                        path=path,
-                        action_type="compress",
-                        status="success",
-                        timestamp=now,
-                        reasoning=f"File compressed successfully into '{zip_path}'.",
-                        dry_run=False,
-                        original_path=path,
-                        new_path=zip_path,
                         backup_path=None,
                         rollback_supported=False,
                     )
                 )
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Target path is inside blocked directories.",
+                )
+                continue
 
-            elif action_type == "archive":
-                parent_dir = p.parent
-                dest_dir = parent_dir / "Archive"
-                os.makedirs(dest_dir, exist_ok=True)
-                dest_path = dest_dir / p.name
-                shutil.move(path, str(dest_path))
-
+            # Guard 2: Allowed path double-guard
+            if not _is_path_allowed(path, policy):
                 log.append(
                     ExecutionLogEntry(
                         path=path,
-                        action_type="archive",
-                        status="success",
+                        action_type=action_type,
+                        status="failure",
                         timestamp=now,
-                        reasoning=f"File archived successfully to '{dest_path}'.",
-                        dry_run=False,
+                        reasoning="Runtime Safety Check: Target path is outside allowed directories.",
+                        dry_run=dry_run,
                         original_path=path,
-                        new_path=str(dest_path),
+                        new_path=None,
                         backup_path=None,
-                        rollback_supported=True,
+                        rollback_supported=False,
                     )
                 )
-            else:
-                raise ValueError(f"Unknown action type: {action_type}")
-
-            success_count += 1
-            estimated_recovery_sum += action.estimated_space_recovered
-            log_exec_action(
-                "success",
-                f"Action {action_type} completed successfully.",
-                backup=calc_backup_path,
-            )
-
-        except Exception as e:
-            log.append(
-                ExecutionLogEntry(
-                    path=path,
-                    action_type=action_type,
-                    status="failure",
-                    timestamp=now,
-                    reasoning=f"Execution error: {e}",
-                    dry_run=False,
-                    original_path=path,
-                    new_path=calc_new_path,
-                    backup_path=calc_backup_path,
-                    rollback_supported=calc_rollback_supported,
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Target path is outside allowed directories.",
                 )
-            )
-            failure_count += 1
-            actual_failures_count += 1
-            log_exec_action("failure", f"Execution error: {e}", backup=calc_backup_path)
+                continue
 
-    reasoning = (
-        f"Executed {len(approved_actions)} action(s). "
-        f"Status: {success_count} success(es), {failure_count} failure(s). "
-        f"Dry run mode: {dry_run}."
-    )
+            # Guard 3: System folder double-guard
+            if _is_system_folder(path):
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning="Runtime Safety Check: Modifying system directories is prohibited.",
+                        dry_run=dry_run,
+                        original_path=path,
+                        new_path=None,
+                        backup_path=None,
+                        rollback_supported=False,
+                    )
+                )
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Modifying system directories is prohibited.",
+                )
+                continue
 
-    rollback_should_trigger = rollback_enabled_flag and (actual_failures_count > 0)
+            # Guard 4: Sensitive file deletion double-guard
+            if action_type == "delete" and _is_sensitive_file(path, sensitive_files):
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning="Runtime Safety Check: Sensitive files must never be deleted.",
+                        dry_run=dry_run,
+                        original_path=path,
+                        new_path=None,
+                        backup_path=None,
+                        rollback_supported=False,
+                    )
+                )
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Sensitive files must never be deleted.",
+                )
+                continue
 
-    output_payload = ExecutionOutput(
-        execution_log=log,
-        reasoning=reasoning,
-        original_path="",
-        new_path=None,
-        backup_path=None,
-        rollback_supported=False,
-        dry_run=dry_run,
-        rollback_enabled=rollback_enabled_flag,
-        folder_scope_policy=policy,
-        sensitive_files=sensitive_files,
-        estimated_recovery=estimated_recovery_sum,
-    )
+            # Guard 5: safe_mode double-guard against deletes and compressions
+            if policy.safe_mode and action_type in ("delete", "compress"):
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning="Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
+                        dry_run=dry_run,
+                        original_path=path,
+                        new_path=None,
+                        backup_path=None,
+                        rollback_supported=False,
+                    )
+                )
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
+                )
+                continue
 
-    if rollback_should_trigger:
-        return Event(output=output_payload, actions=EventActions(route="rollback"))
-    else:
-        return Event(output=output_payload, actions=EventActions())
+            # Guard 6: Prevent overwrite guard for target destinations
+            dest_exists = False
+            if calc_new_path and not dry_run:
+                meta_res = test_tool("read_file_metadata", path=calc_new_path)
+                if "error" not in meta_res:
+                    dest_exists = True
+
+            if calc_new_path and not dry_run and dest_exists:
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning=f"Runtime Safety Check: Overwrite prevention. Target path '{os.path.basename(calc_new_path)}' is occupied.",
+                        dry_run=dry_run,
+                        original_path=path,
+                        new_path=calc_new_path,
+                        backup_path=calc_backup_path,
+                        rollback_supported=calc_rollback_supported,
+                    )
+                )
+                failure_count += 1
+                log_exec_action(
+                    "failure",
+                    "Runtime Safety Check: Overwrite prevention. Target path is occupied.",
+                )
+                continue
+
+            # File presence check (for dry-run=False)
+            file_exists = False
+            if not dry_run:
+                meta_res = test_tool("read_file_metadata", path=path)
+                if "error" not in meta_res:
+                    file_exists = True
+
+            if not dry_run and not file_exists:
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning="File not found on disk at time of execution.",
+                        dry_run=dry_run,
+                        original_path=path,
+                        new_path=calc_new_path,
+                        backup_path=calc_backup_path,
+                        rollback_supported=calc_rollback_supported,
+                    )
+                )
+                failure_count += 1
+                log_exec_action("failure", "File not found on disk at time of execution.")
+                continue
+
+            # Simulate execution in dry-run mode
+            if dry_run:
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="success",
+                        timestamp=now,
+                        reasoning=f"Dry-run simulation: Proposing {action_type} action successfully verified.",
+                        dry_run=True,
+                        original_path=path,
+                        new_path=calc_new_path,
+                        backup_path=calc_backup_path,
+                        rollback_supported=calc_rollback_supported,
+                    )
+                )
+                success_count += 1
+                estimated_recovery_sum += action.estimated_space_recovered
+                log_exec_action("skipped", "dry_run")
+                continue
+
+            # Real execution (dry_run=False)
+            try:
+                if action_type == "delete":
+                    if calc_backup_path:
+                        # Registry-based safe move to backup path (deletes original from directory)
+                        move_res = test_tool("move_file", source=path, destination=calc_backup_path)
+                        if "error" in move_res:
+                            raise ValueError(f"MoveToBackupFailed: {move_res['error']['message']}")
+                    else:
+                        # Permanent delete via MCP tool
+                        del_res = test_tool("delete_file", path=path, hitl_approved=True)
+                        if "error" in del_res:
+                            raise ValueError(f"DeleteFailed: {del_res['error']['message']}")
+                    log.append(
+                        ExecutionLogEntry(
+                            path=path,
+                            action_type="delete",
+                            status="success",
+                            timestamp=now,
+                            reasoning="File removed successfully from disk with backup copy saved for rollback.",
+                            dry_run=False,
+                            original_path=path,
+                            new_path=None,
+                            backup_path=calc_backup_path,
+                            rollback_supported=True,
+                        )
+                    )
+
+                elif action_type == "move":
+                    # Node already verified sensitivity and computed correct destination
+                    # (Authenticated/ for sensitive, Organized/ or WeeklyReview/ for others).
+                    # Use move_file uniformly — move_to_authenticated_folder's own
+                    # is_sensitive() heuristic can produce false negatives.
+                    move_res = test_tool("move_file", source=path, destination=calc_new_path)
+
+                    if "error" in move_res:
+                        raise ValueError(f"MoveFailed: {move_res['error']['message']}")
+
+                    log.append(
+                        ExecutionLogEntry(
+                            path=path,
+                            action_type="move",
+                            status="success",
+                            timestamp=now,
+                            reasoning=f"File moved successfully to '{calc_new_path}'.",
+                            dry_run=False,
+                            original_path=path,
+                            new_path=calc_new_path,
+                            backup_path=None,
+                            rollback_supported=True,
+                        )
+                    )
+
+                elif action_type == "compress":
+                    comp_res = test_tool("compress_files", files=[path], destination=calc_new_path)
+                    if "error" in comp_res:
+                        raise ValueError(f"CompressionFailed: {comp_res['error']['message']}")
+                    
+                    # Delete original file
+                    del_res = test_tool("delete_file", path=path, hitl_approved=True)
+                    if "error" in del_res:
+                        raise ValueError(f"OriginalDeleteFailed: {del_res['error']['message']}")
+
+                    log.append(
+                        ExecutionLogEntry(
+                            path=path,
+                            action_type="compress",
+                            status="success",
+                            timestamp=now,
+                            reasoning=f"File compressed successfully into '{calc_new_path}'.",
+                            dry_run=False,
+                            original_path=path,
+                            new_path=calc_new_path,
+                            backup_path=None,
+                            rollback_supported=False,
+                        )
+                    )
+
+                elif action_type == "archive":
+                    # Same rationale as move — use move_file uniformly.
+                    move_res = test_tool("move_file", source=path, destination=calc_new_path)
+
+                    if "error" in move_res:
+                        raise ValueError(f"ArchiveFailed: {move_res['error']['message']}")
+
+                    log.append(
+                        ExecutionLogEntry(
+                            path=path,
+                            action_type="archive",
+                            status="success",
+                            timestamp=now,
+                            reasoning=f"File archived successfully to '{calc_new_path}'.",
+                            dry_run=False,
+                            original_path=path,
+                            new_path=calc_new_path,
+                            backup_path=None,
+                            rollback_supported=True,
+                        )
+                    )
+                else:
+                    raise ValueError(f"Unknown action type: {action_type}")
+
+                success_count += 1
+                estimated_recovery_sum += action.estimated_space_recovered
+                log_exec_action(
+                    "success",
+                    f"Action {action_type} completed successfully.",
+                    backup=calc_backup_path,
+                )
+
+            except Exception as e:
+                log.append(
+                    ExecutionLogEntry(
+                        path=path,
+                        action_type=action_type,
+                        status="failure",
+                        timestamp=now,
+                        reasoning=f"Execution error: {e}",
+                        dry_run=False,
+                        original_path=path,
+                        new_path=calc_new_path,
+                        backup_path=calc_backup_path,
+                        rollback_supported=calc_rollback_supported,
+                    )
+                )
+                failure_count += 1
+                actual_failures_count += 1
+                log_exec_action("failure", f"Execution error: {e}", backup=calc_backup_path)
+
+        reasoning = (
+            f"Executed {len(approved_actions)} action(s). "
+            f"Status: {success_count} success(es), {failure_count} failure(s). "
+            f"Dry run mode: {dry_run}."
+        )
+
+        rollback_should_trigger = rollback_enabled_flag and (actual_failures_count > 0)
+
+        output_payload = ExecutionOutput(
+            execution_log=log,
+            reasoning=reasoning,
+            original_path="",
+            new_path=None,
+            backup_path=None,
+            rollback_supported=False,
+            dry_run=dry_run,
+            rollback_enabled=rollback_enabled_flag,
+            folder_scope_policy=policy,
+            sensitive_files=sensitive_files,
+            estimated_recovery=estimated_recovery_sum,
+        )
+
+        if rollback_should_trigger:
+            return Event(output=output_payload, actions=EventActions(route="rollback"))
+        else:
+            return Event(output=output_payload, actions=EventActions())
+    finally:
+        from app.config import set_policy_override
+        set_policy_override(None)

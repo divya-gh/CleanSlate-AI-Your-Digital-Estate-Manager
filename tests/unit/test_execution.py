@@ -7,8 +7,10 @@ from app.nodes.hitl_approval_node import CleanupAction, HITLApprovalOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 
 
-@patch("app.nodes.execution_node.log_action")
-def test_execution_dry_run(mock_log_action) -> None:
+@patch("app.nodes.execution_node.test_tool")
+def test_execution_dry_run(mock_test_tool) -> None:
+    mock_test_tool.return_value = {"result": {"sha256": "abc"}, "status": "success"}
+
     policy = FolderScopePolicy(
         allowed_paths=["/allowed"],
         blocked_paths=["/allowed/blocked"],
@@ -40,7 +42,7 @@ def test_execution_dry_run(mock_log_action) -> None:
     assert log.status == "success"
     assert log.dry_run is True
     assert "Dry-run simulation" in log.reasoning
-    assert mock_log_action.called
+    assert mock_test_tool.called
 
 
 def test_execution_real_run(tmp_path) -> None:

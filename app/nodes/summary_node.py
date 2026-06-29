@@ -8,6 +8,7 @@ Does not perform any file system modifications.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from app.nodes.file_discovery_node import FolderScopePolicy
 from app.nodes.my_pc_assistant_node import MyPCAssistantOutput
 from app.nodes.rollback_node import RollbackOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
-from app.security.audit_logger import log_action
+from app.mcp_tools.registry import test_tool
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -154,16 +155,18 @@ def summary_node(
             r_lower = report.lower()
             if "cancel" in r_lower or "abort" in r_lower:
                 session_id = hashlib.sha256(report.encode()).hexdigest()[:8]
-                log_action(
-                    node="SummaryNode",
-                    action_type="plan",
-                    path=None,
-                    is_sensitive=False,
-                    hitl_status="not_required",
-                    result="skipped",
-                    reason="Conversational cancel/abort request processed.",
-                    session_id=session_id,
-                )
+                entry_dict = {
+                    "node": "SummaryNode",
+                    "action_type": "plan",
+                    "path": None,
+                    "is_sensitive": False,
+                    "hitl_status": "not_required",
+                    "result": "skipped",
+                    "reason": "Conversational cancel/abort request processed.",
+                    "session_id": session_id,
+                    "tool_name": "write_log",
+                }
+                test_tool("write_log", entry=json.dumps(entry_dict))
         elif node_input.explanation_request:
             # Generate a secure conversational explanation via Gemini
             client = genai.Client()
@@ -318,17 +321,19 @@ def summary_node(
     # Audit log planning / safety overrides if any actions were skipped
     plan_id = hashlib.sha256(node_input.reasoning.encode()).hexdigest()[:8]
     if skipped_actions > 0:
-        log_action(
-            node="SummaryNode",
-            action_type="plan",
-            path=None,
-            is_sensitive=False,
-            hitl_status="not_required",
-            result="skipped",
-            reason="Safety overrides triggered. Some planned actions were prohibited and skipped.",
-            plan_id=plan_id,
-            safety_override_reason="Runtime safety checks blocked unsafe operations.",
-        )
+        entry_dict = {
+            "node": "SummaryNode",
+            "action_type": "plan",
+            "path": None,
+            "is_sensitive": False,
+            "hitl_status": "not_required",
+            "result": "skipped",
+            "reason": "Safety overrides triggered. Some planned actions were prohibited and skipped.",
+            "plan_id": plan_id,
+            "safety_override_reason": "Runtime safety checks blocked unsafe operations.",
+            "tool_name": "write_log",
+        }
+        test_tool("write_log", entry=json.dumps(entry_dict))
 
     return SummaryOutput(
         total_actions=total_actions,

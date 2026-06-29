@@ -271,6 +271,44 @@ rules:
     patterns:
       - pattern: $F.read()
 
+  # 24. Nodes must not open files directly
+  - id: no-direct-open
+    languages: [python]
+    message: "Nodes must never open files directly. Use MCP tools through the registry."
+    severity: ERROR
+    paths:
+      include: ["**/app/nodes/**"]
+    pattern: open(...)
+
+  # 25. Nodes must not walk directories directly
+  - id: no-direct-os-walk
+    languages: [python]
+    message: "Nodes must never walk directories directly. Use MCP list_files recursively through the registry."
+    severity: ERROR
+    paths:
+      include: ["**/app/nodes/**"]
+    pattern: os.walk(...)
+
+  # 26. Nodes must not directly touch/modify the filesystem
+  - id: no-direct-filesystem-access-in-nodes
+    languages: [python]
+    message: "Nodes must never directly manipulate the filesystem (e.g. rename, mkdir, remove, replace, move). Delegate to MCP tools."
+    severity: ERROR
+    paths:
+      include: ["**/app/nodes/**"]
+    pattern-either:
+      - pattern: os.rename(...)
+      - pattern: os.replace(...)
+      - pattern: os.remove(...)
+      - pattern: os.unlink(...)
+      - pattern: os.mkdir(...)
+      - pattern: os.makedirs(...)
+      - pattern: shutil.move(...)
+      - pattern: shutil.copy(...)
+      - pattern: shutil.copy2(...)
+      - pattern: zipfile.ZipFile(...)
+
+
 
 
 

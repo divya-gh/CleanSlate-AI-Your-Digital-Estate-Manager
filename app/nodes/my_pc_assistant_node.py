@@ -13,8 +13,10 @@ from datetime import datetime
 from typing import Any, Literal
 
 from google import genai
+from google.adk.agents.context import Context
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.events.request_input import RequestInput
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field, model_validator
 
@@ -97,6 +99,11 @@ class MyPCAssistantOutput(BaseModel):
     conversational_response: str | None = Field(
         default=None, description="Conversational response if intent is 'other'."
     )
+    # Pass through the user's raw query so downstream nodes (e.g. FolderScopeNode)
+    # can read it as node_input.user_query for HITL answer injection.
+    user_query: str | None = Field(
+        default=None, description="Raw user query passed through to downstream nodes."
+    )
 
     # SummaryOutput compatibility fields (so the UI can render conversational fallback)
     total_actions: int = Field(default=0, description="Summary compatibility.")
@@ -128,6 +135,61 @@ class GeminiIntentResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# UI Copy
+# ---------------------------------------------------------------------------
+
+UI_WELCOME_MESSAGE = (
+    "Hello! I'm CleanSlate AI \u2014 My PC Assistant.\n\n"
+    "I'm here to help you manage, organize, and optimize your computer safely.\n"
+    "I can:\n"
+    "  \U0001f4c2  Search your files\n"
+    "  \U0001f9f9  Declutter folders and remove duplicates\n"
+    "  \U0001f512  Detect and protect sensitive documents\n"
+    "  \U0001f4c5  Run your Weekly Organizer automatically\n\n"
+    "You can say: \"Organize my computer\" to get started.\n"
+    + "\u2500" * 60  # explicit + so * 60 applies only to the separator, not the whole message
+)
+
+
+# ---------------------------------------------------------------------------
+# Welcome Node — fires on session load, shows greeting, captures first query
+# ---------------------------------------------------------------------------
+
+
+class WelcomeInput(BaseModel):
+    """Accepts any dict/object as input (START sends raw user message)."""
+
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True, extra="allow")
+
+
+class WelcomeOutput(MyPCAssistantInput):
+    """Pass-through: WelcomeNode re-emits the user query as MyPCAssistantInput."""
+
+
+async def welcome_node(ctx: Context, node_input: WelcomeInput):
+    """Welcome Node — displays the greeting and captures the user's first query.
+
+    This is the first node in the workflow (wired START → welcome_node →
+    my_pc_assistant_node).  On the very first turn it yields a RequestInput
+    that causes the ADK playground to show the welcome banner immediately.
+    The user's response is forwarded as the query for intent classification.
+    """
+    ri = ctx.resume_inputs or {}
+
+    if "first_query" not in ri:
+        yield RequestInput(
+            interrupt_id="first_query",
+            message=UI_WELCOME_MESSAGE,
+        )
+        return
+
+    first_query = str(ri["first_query"]).strip()
+    output = WelcomeOutput(user_query=first_query or "hello")
+    yield Event(output=output, actions=EventActions(route=None))
+
+
+
+# ---------------------------------------------------------------------------
 # Prompt template
 # ---------------------------------------------------------------------------
 
@@ -136,7 +198,7 @@ Query: "{query}"
 
 Categorize the intent into exactly one of:
 1. "cleanup": The user is explicitly asking to start a cleanup, decluttering, optimization, or organization process on their PC.
-   - Explicit cleanup verbs: "clean", "organize my PC", "declutter", "optimize storage", "delete duplicates".
+   - Explicit cleanup verbs: "clean", "cleanup", "organize my PC", "organize my computer", "organize", "declutter", "optimize storage", "delete duplicates", "tidy up", "sort my files".
    - Safety rule: Do NOT classify as "cleanup" for ambiguous queries like "my PC is slow", "my disk is full", or "I want to find files". Those must be classified as "other".
 2. "search": The user is asking to find or search for specific files, patterns, or extensions.
    - Examples: "find my resume", "search for pdfs", "where is my tax document?".
@@ -172,12 +234,16 @@ def _regex_heuristics_fallback(query: str) -> GeminiIntentResult:
             reasoning="Fallback Regex Heuristic: Explanation pattern detected.",
         )
 
-    # Conservative cleanup check
+    # Conservative cleanup check — broad enough to catch common phrasings
     cleanup_keywords = [
         r"\bclean\b",
         r"\bcleanup\b",
-        r"\borganize my pc\b",
+        r"\borganize\b",      # matches "organize my computer", "organize my PC", etc.
         r"\bdeclutter\b",
+        r"\boptimize storage\b",
+        r"\bdelete duplicates\b",
+        r"\btidy up\b",
+        r"\bsort my files\b",
     ]
     if any(re.search(pat, q_clean) for pat in cleanup_keywords):
         return GeminiIntentResult(
@@ -250,9 +316,50 @@ def _sanitize_search_query(q: str | None) -> str | None:
 # ADK 2.0 Function Node
 # ---------------------------------------------------------------------------
 
+# Keys that indicate we are in the middle of an organize flow
+_ORGANIZE_RESUME_KEYS = {"allowed_paths", "blocked_paths", "cleanup_pin",
+                          "security_question_answer", "weekly_organizer_enabled"}
 
-def my_pc_assistant_node(node_input: MyPCAssistantInput) -> Event:
-    """MyPCAssistantNode — entry point node for intent classification."""
+async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
+    """MyPCAssistantNode — entry point node for intent classification.
+
+    Implemented as an async generator so ADK properly injects ``ctx`` and
+    ``ctx.resume_inputs``.  With rerun_on_resume=True, ADK replays this node
+    on every resume turn.  If resume_inputs contain organize-flow keys we
+    bypass Gemini and route directly to cleanup so FolderScopeNode can
+    continue the multi-turn conversation.
+    """
+    # ── Organize-flow resume detection via persistent session state ──────────
+    # With rerun_on_resume=True, ADK always replays from THIS entry node.
+    # ctx.resume_inputs here contains the user's latest HITL answer.
+    # We must capture it and persist it to session state, then route to
+    # cleanup so folder_scope_node can read all accumulated answers.
+    try:
+        _session_state = ctx.session.state
+    except AttributeError:
+        _session_state = {}
+
+    _ri = dict(getattr(ctx, "resume_inputs", None) or {})
+    _STEP_KEYS = {"allowed_paths", "blocked_paths", "user_pin",
+                  "security_question", "security_answer", "weekly_organizer"}
+    _new_answers = {k: v for k, v in _ri.items() if k in _STEP_KEYS}
+
+    if _session_state.get("organize_flow_active", False):
+        output = MyPCAssistantOutput(
+            intent="cleanup",
+            cleanup_intent_reasoning="Resuming organize flow (session state flag)",
+            # Pass through the user's raw query so folder_scope_node can read
+            # it as node_input.user_query to use as the HITL step answer.
+            user_query=node_input.user_query,
+        )
+        # Also persist the new answers so folder_scope_node can read them
+        _state_delta = {"organize_flow_active": True, **_new_answers}
+        yield Event(output=output, actions=EventActions(
+            route="cleanup",
+            state_delta=_state_delta,
+        ))
+        return
+
     query = node_input.user_query
 
     # Call Gemini model
@@ -278,7 +385,14 @@ def my_pc_assistant_node(node_input: MyPCAssistantInput) -> Event:
             intent="cleanup",
             cleanup_intent_reasoning="User explicitly requested cleanup",
         )
-        return Event(output=output, actions=EventActions(route="cleanup"))
+        # Set the session flag so mid-organize resumes short-circuit here
+        yield Event(
+            output=output,
+            actions=EventActions(
+                route="cleanup",
+                state_delta={"organize_flow_active": True},
+            ),
+        )
 
     elif result.intent == "search":
         sanitized = _sanitize_search_query(result.search_query)
@@ -286,32 +400,34 @@ def my_pc_assistant_node(node_input: MyPCAssistantInput) -> Event:
             intent="search",
             search_query=sanitized,
         )
-        return Event(output=output, actions=EventActions(route="search"))
+        yield Event(output=output, actions=EventActions(route="search"))
 
     elif result.intent == "explain":
         output = MyPCAssistantOutput(
             intent="explain",
             explanation_request=result.explanation_request,
         )
-        return Event(output=output, actions=EventActions(route="explain"))
+        yield Event(output=output, actions=EventActions(route="explain"))
 
     else:
-        # Intent is other — respond conversationally
-        reply = (
-            "Hello! I detected that you are looking for assistance, but I did not "
-            "recognize an explicit instruction to clean up, search, or explain a PC assistant feature. "
-            "How can I help you today?"
+        # Intent is other — detect greetings and show the welcome message
+        _greeting_patterns = [
+            r"\bhello\b", r"\bhi\b", r"\bhey\b", r"\bgreet\b",
+            r"\bwho are you\b", r"\bwhat can you do\b", r"\bhelp\b",
+        ]
+        is_greeting = any(
+            re.search(pat, query.lower()) for pat in _greeting_patterns
+        )
+        reply = UI_WELCOME_MESSAGE if is_greeting else (
+            "I didn't quite catch that. "
+            "Try: \"Organize my computer\", \"Find my resume\", or \"What is a duplicate file?\"\n\n"
+            + UI_WELCOME_MESSAGE
         )
         output = MyPCAssistantOutput(
             intent="other",
             conversational_response=reply,
             human_readable_report=reply,
         )
-        # Terminates the workflow
-        return Event(
-            output=output,
-            content=genai_types.Content(
-                role="model", parts=[genai_types.Part.from_text(text=reply)]
-            ),
-            actions=EventActions(route=None),
-        )
+        # route="other" → no matching edge → workflow terminates (does NOT loop)
+        yield Event(output=output, actions=EventActions(route="other"))
+

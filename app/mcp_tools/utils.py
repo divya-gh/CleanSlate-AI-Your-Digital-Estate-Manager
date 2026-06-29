@@ -3,11 +3,6 @@ import re
 from pathlib import Path
 
 from app.config import load_policy
-from app.nodes.file_discovery_node import FolderScopePolicy
-from app.nodes.sensitive_detection_node import (
-    _SENSITIVE_EXTENSIONS,
-    _SENSITIVE_KEYWORDS,
-)
 
 # Standard system directory pattern to match Semgrep no-system-folder-access
 SYSTEM_DIR_PATTERN = re.compile(
@@ -18,6 +13,8 @@ SYSTEM_DIR_PATTERN = re.compile(
 
 def is_path_allowed_by_policy(path: str | Path) -> bool:
     """Checks if a path is allowed under the current persistent policy and rejects system folders."""
+    from app.nodes.file_discovery_node import FolderScopePolicy
+
     path_str = str(path)
 
     # 1. Block system folders
@@ -58,6 +55,11 @@ def is_path_allowed_by_policy(path: str | Path) -> bool:
 
 def is_sensitive(path: str | Path) -> bool:
     """Detects if a file or directory path contains sensitive indicators."""
+    from app.nodes.sensitive_detection_node import (
+        _SENSITIVE_EXTENSIONS,
+        _SENSITIVE_KEYWORDS,
+    )
+
     path_str = str(path).lower()
     basename = os.path.basename(path_str)
 

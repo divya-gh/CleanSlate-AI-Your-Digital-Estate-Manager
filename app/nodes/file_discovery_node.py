@@ -18,6 +18,8 @@ from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
+from app.mcp_tools.registry import test_tool
+
 # ---------------------------------------------------------------------------
 # Global Path Registry for Masked Resolving
 # ---------------------------------------------------------------------------
@@ -226,6 +228,116 @@ def _is_blocked(candidate: str, blocked_paths: list[str]) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def _scan_directory_recursive(
+    dir_path: str,
+    base_depth: int,
+    effective_blocks: list[str],
+    search_query: str | None,
+    search_mode: bool,
+    safe_mode: bool,
+    inventory: list[FileMetadata],
+    stats: dict[str, int],
+) -> None:
+    if len(inventory) >= 5000:
+        return
+
+    current_depth = len(os.path.abspath(dir_path).replace("\\", "/").split("/"))
+    depth = current_depth - base_depth
+    if depth >= 10:
+        return
+
+    res = test_tool("list_files", path=dir_path)
+    if "error" in res:
+        stats["skipped_dirs"] += 1
+        return
+
+    stats["scanned_dirs"] += 1
+    files = res["result"]["files"]
+
+    for entry in files:
+        if len(inventory) >= 5000:
+            return
+
+        entry_name = entry["name"]
+        entry_abs_path = os.path.abspath(os.path.join(dir_path, entry_name))
+
+        if _is_blocked(entry_abs_path, effective_blocks):
+            stats["skipped_dirs"] += 1
+            continue
+
+        if entry["is_directory"]:
+            _scan_directory_recursive(
+                entry_abs_path,
+                base_depth,
+                effective_blocks,
+                search_query,
+                search_mode,
+                safe_mode,
+                inventory,
+                stats,
+            )
+        else:
+            meta_res = test_tool("read_file_metadata", path=entry_abs_path)
+            if "error" in meta_res:
+                # read_file_metadata rejects sensitive files. Fall back to
+                # the entry data from list_files which already has size/timestamps.
+                error_msg = meta_res.get("error", {}).get("message", "")
+                if "SensitiveFileError" in error_msg or _is_sensitive_filename(entry_name):
+                    meta_data = {
+                        "size": entry.get("size", 0),
+                        "modified_at": entry.get("modified_at", ""),
+                        "created_at": entry.get("created_at", ""),
+                    }
+                else:
+                    stats["skipped_dirs"] += 1
+                    continue
+            else:
+                meta_data = meta_res["result"]
+
+            if search_query and not fnmatch.fnmatch(
+                entry_name.lower(), search_query.lower()
+            ):
+                continue
+
+            display_path = entry_abs_path
+            if search_mode or safe_mode:
+                display_name = entry_name
+                if _is_sensitive_filename(entry_name):
+                    display_name = _mask_filename(entry_name)
+                display_path = f"[RESTRICTED]/{display_name}"
+            else:
+                if _is_sensitive_filename(entry_name):
+                    display_name = _mask_filename(entry_name)
+                    parent_dir = os.path.dirname(entry_abs_path)
+                    display_path = os.path.join(parent_dir, display_name)
+
+            _PATH_REGISTRY[display_path.replace("\\", "/").lower()] = entry_abs_path
+
+            ext = Path(entry_abs_path).suffix
+            try:
+                mod_dt = datetime.fromisoformat(meta_data["modified_at"].rstrip("Z"))
+                mod_ts = mod_dt.timestamp()
+            except Exception:
+                mod_ts = 0.0
+
+            try:
+                cre_dt = datetime.fromisoformat(meta_data["created_at"].rstrip("Z"))
+                cre_ts = cre_dt.timestamp()
+            except Exception:
+                cre_ts = 0.0
+
+            inventory.append(
+                FileMetadata(
+                    path=display_path,
+                    size=meta_data["size"],
+                    extension=ext,
+                    last_modified=mod_ts,
+                    last_accessed=cre_ts,
+                    real_path=entry_abs_path,
+                )
+            )
+
+
 def _scan_allowed_paths(
     allowed_paths: list[str],
     blocked_paths: list[str],
@@ -233,17 +345,15 @@ def _scan_allowed_paths(
     search_mode: bool,
     safe_mode: bool,
 ) -> tuple[list[FileMetadata], str]:
-    """Walk allowed paths under max depth, max count, symlink, and hardlink guards."""
+    """Walk allowed paths recursively using MCP list_files recursively through registry."""
     inventory: list[FileMetadata] = []
-    scanned_dirs = 0
-    skipped_dirs = 0
+    stats = {"scanned_dirs": 0, "skipped_dirs": 0}
 
     # Ensure system and agent folders are blocked in safe/search mode
     effective_blocks = list(blocked_paths)
     if safe_mode or search_mode:
         all_implicit = _get_default_system_paths() + _get_agent_internal_blocked_paths()
         for ib in all_implicit:
-            # Skip implicit blocking if it overlaps with/is parent of any allowed path
             is_parent_of_allowed = False
             for ap in allowed_paths:
                 ap_norm = ap.replace("\\", "/").rstrip("/").lower()
@@ -260,113 +370,34 @@ def _scan_allowed_paths(
             continue
 
         base_depth = len(allowed_abs.replace("\\", "/").split("/"))
-
-        for dirpath, dirnames, filenames in os.walk(allowed_abs, topdown=True):
-            # Enforce max file count limit
-            if len(inventory) >= 5000:
-                break
-
-            # Windows permission & OS resilience
-            try:
-                # Calculate current depth
-                current_depth = len(
-                    os.path.abspath(dirpath).replace("\\", "/").split("/")
-                )
-                depth = current_depth - base_depth
-
-                if depth >= 10:
-                    dirnames[:] = []  # Stop descending
-                    continue
-
-                # Prune symlinks & blocked folders in-place
-                dirnames[:] = [
-                    d
-                    for d in dirnames
-                    if not os.path.islink(os.path.join(dirpath, d))
-                    and not _is_blocked(os.path.join(dirpath, d), effective_blocks)
-                ]
-                scanned_dirs += 1
-            except (PermissionError, OSError):
-                skipped_dirs += 1
-                dirnames[:] = []  # Force skip traversal
-                continue
-
-            for fname in filenames:
-                if len(inventory) >= 5000:
-                    break
-
-                full_path = os.path.join(dirpath, fname)
-
-                # Skip file symlinks
-                if os.path.islink(full_path):
-                    continue
-
-                # Check blocked files
-                if _is_blocked(full_path, effective_blocks):
-                    continue
-
-                try:
-                    stat = os.stat(full_path)
-                    # Skip hardlinks
-                    if stat.st_nlink > 1:
-                        continue
-                except (PermissionError, OSError):
-                    skipped_dirs += 1
-                    continue
-
-                # Optional search filter (case-insensitive glob).
-                if search_query and not fnmatch.fnmatch(
-                    fname.lower(), search_query.lower()
-                ):
-                    continue
-
-                # Resolve path masking rules
-                real_p = os.path.abspath(full_path)
-                display_path = real_p
-
-                if search_mode or safe_mode:
-                    display_name = fname
-                    if _is_sensitive_filename(fname):
-                        display_name = _mask_filename(fname)
-                    display_path = f"[RESTRICTED]/{display_name}"
-                else:
-                    if _is_sensitive_filename(fname):
-                        display_name = _mask_filename(fname)
-                        parent_dir = os.path.dirname(real_p)
-                        display_path = os.path.join(parent_dir, display_name)
-
-                # Register mapping for downstream resolution
-                _PATH_REGISTRY[display_path.replace("\\", "/").lower()] = real_p
-
-                ext = Path(full_path).suffix
-                inventory.append(
-                    FileMetadata(
-                        path=display_path,
-                        size=stat.st_size,
-                        extension=ext,
-                        last_modified=stat.st_mtime,
-                        last_accessed=stat.st_atime,
-                        real_path=real_p,
-                    )
-                )
+        _scan_directory_recursive(
+            allowed_abs,
+            base_depth,
+            effective_blocks,
+            search_query,
+            search_mode,
+            safe_mode,
+            inventory,
+            stats,
+        )
 
         if len(inventory) >= 5000:
             break
 
-    # Build reasoning summary
     filter_note = (
         f"Applied search filter '{search_query}'."
         if search_query
         else "No search filter applied; all files included."
     )
     reasoning = (
-        f"Scanned {scanned_dirs} directories. "
-        f"Skipped {skipped_dirs} blocked or restricted entries. "
+        f"Scanned {stats['scanned_dirs']} directories. "
+        f"Skipped {stats['skipped_dirs']} blocked or restricted entries. "
         f"Discovered {len(inventory)} file(s). "
         f"{filter_note}"
     )
 
     return inventory, reasoning
+
 
 
 # ---------------------------------------------------------------------------
@@ -441,53 +472,60 @@ def file_discovery_node(
     if not policy.allowed_paths:
         raise ValueError("allowed_paths must not be empty.")
 
-    for ap in policy.allowed_paths:
-        # Check path existence without reading contents or following symlinks
-        if not os.path.exists(ap):
-            raise ValueError(f"Allowed path '{ap}' does not exist.")
-        if os.path.islink(ap):
-            raise ValueError(
-                f"Allowed path '{ap}' is a symbolic link, which is not supported."
-            )
-
-        # Check for overlaps with blocked paths
-        for bp in policy.blocked_paths:
-            if ap == bp or ap.startswith(bp + os.sep):
-                raise ValueError(
-                    f"Allowed path '{ap}' overlaps with or is inside blocked path '{bp}'."
-                )
+    from app.config import set_policy_override
+    set_policy_override(policy.model_dump())
 
     try:
-        inventory, reasoning = _scan_allowed_paths(
-            allowed_paths=policy.allowed_paths,
-            blocked_paths=policy.blocked_paths,
-            search_query=search_query,
+        for ap in policy.allowed_paths:
+            # Check path existence without reading contents or following symlinks
+            if not os.path.exists(ap):
+                raise ValueError(f"Allowed path '{ap}' does not exist.")
+            if os.path.islink(ap):
+                raise ValueError(
+                    f"Allowed path '{ap}' is a symbolic link, which is not supported."
+                )
+
+            # Check for overlaps with blocked paths
+            for bp in policy.blocked_paths:
+                if ap == bp or ap.startswith(bp + os.sep):
+                    raise ValueError(
+                        f"Allowed path '{ap}' overlaps with or is inside blocked path '{bp}'."
+                    )
+
+        try:
+            inventory, reasoning = _scan_allowed_paths(
+                allowed_paths=policy.allowed_paths,
+                blocked_paths=policy.blocked_paths,
+                search_query=search_query,
+                search_mode=search_mode,
+                safe_mode=safe_mode,
+            )
+        except Exception as e:
+            dummy_policy = FolderScopePolicy(allowed_paths=["."])
+            output = FileDiscoveryOutput(
+                file_inventory=[],
+                folder_scope_policy=dummy_policy,
+                search_mode=False,
+                safe_mode=False,
+                reasoning=f"Error occurred during file discovery: {e}",
+            )
+            return Event(output=output, actions=EventActions(route="error"))
+
+        output = FileDiscoveryOutput(
+            file_inventory=inventory,
+            folder_scope_policy=policy,
             search_mode=search_mode,
             safe_mode=safe_mode,
+            reasoning=reasoning,
         )
-    except Exception as e:
-        dummy_policy = FolderScopePolicy(allowed_paths=["."])
-        output = FileDiscoveryOutput(
-            file_inventory=[],
-            folder_scope_policy=dummy_policy,
-            search_mode=False,
-            safe_mode=False,
-            reasoning=f"Error occurred during file discovery: {e}",
-        )
-        return Event(output=output, actions=EventActions(route="error"))
 
-    output = FileDiscoveryOutput(
-        file_inventory=inventory,
-        folder_scope_policy=policy,
-        search_mode=search_mode,
-        safe_mode=safe_mode,
-        reasoning=reasoning,
-    )
+        route = "cleanup_scan"
+        if search_mode:
+            route = "search_return"
+        elif safe_mode:
+            route = "weekly_scan"
 
-    route = "cleanup_scan"
-    if search_mode:
-        route = "search_return"
-    elif safe_mode:
-        route = "weekly_scan"
-
-    return Event(output=output, actions=EventActions(route=route))
+        return Event(output=output, actions=EventActions(route=route))
+    finally:
+        from app.config import set_policy_override
+        set_policy_override(None)

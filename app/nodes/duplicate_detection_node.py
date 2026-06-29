@@ -23,6 +23,7 @@ from app.nodes.file_discovery_node import (
     FolderScopePolicy,
     resolve_real_path,
 )
+from app.mcp_tools.registry import test_tool
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -79,6 +80,14 @@ class DuplicateDetectionOutput(BaseModel):
         default=False,
         description="Whether search mode was active during duplicate detection.",
     )
+    file_too_large: bool = Field(
+        default=False,
+        description="Propagated flag indicating if hashing skipped large files.",
+    )
+    sensitive_file_blocked: bool = Field(
+        default=False,
+        description="Propagated flag indicating if hashing skipped sensitive files.",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -114,21 +123,24 @@ def _is_path_allowed(path: str, policy: FolderScopePolicy) -> bool:
     return any_allowed
 
 
-def _compute_sha256(path: str, policy: FolderScopePolicy) -> str:
-    """Compute SHA-256 hash of a file locally in chunks.
+def _compute_sha256(path: str, policy: FolderScopePolicy) -> tuple[str, bool, bool]:
+    """Compute SHA-256 hash of a file using MCP compute_hash tool.
 
-    Never uploads file contents.
+    Never opens files directly. Returns (hash, file_too_large, sensitive_file_blocked).
     """
-    sha256 = hashlib.sha256()
-    try:
-        if _is_path_allowed(path, policy):
-            with open(resolve_real_path(path), "rb") as f:  # nosemgrep
-                for chunk in iter(lambda: f.read(65536), b""):
-                    sha256.update(chunk)
-            return sha256.hexdigest()
-        return ""
-    except OSError:
-        return ""
+    if not _is_path_allowed(path, policy):
+        return "", False, False
+
+    real_p = resolve_real_path(path)
+    res = test_tool("compute_hash", path=real_p)
+    if "error" in res:
+        err = res["error"]
+        details = err.get("details", {})
+        file_too_large = details.get("file_too_large", False)
+        sensitive_blocked = details.get("blocked_by_sensitive", False)
+        return "", file_too_large, sensitive_blocked
+
+    return res["result"]["sha256"], False, False
 
 
 def _compute_near_duplicate_score(f1: FileMetadata, f2: FileMetadata) -> float:
@@ -183,115 +195,129 @@ def duplicate_detection_node(
     inventory = node_input.file_inventory
     policy = node_input.folder_scope_policy
 
-    # Filter files based on folder scope policy
-    allowed_files: list[FileMetadata] = []
-    skipped_count = 0
-    for file in inventory:
-        if _is_path_allowed(file.path, policy):
-            allowed_files.append(file)
-        else:
-            skipped_count += 1
+    from app.config import set_policy_override
+    set_policy_override(policy.model_dump())
+    try:
+        # Filter files based on folder scope policy
+        allowed_files: list[FileMetadata] = []
+        skipped_count = 0
+        for file in inventory:
+            if _is_path_allowed(file.path, policy):
+                allowed_files.append(file)
+            else:
+                skipped_count += 1
 
-    # 1. Exact duplicates: Compute hashes for allowed files
-    hashes: dict[str, str] = {}  # path -> hash
-    hash_groups: dict[str, list[FileMetadata]] = {}  # hash -> list of files
+        # 1. Exact duplicates: Compute hashes for allowed files
+        hashes: dict[str, str] = {}  # path -> hash
+        hash_groups: dict[str, list[FileMetadata]] = {}  # hash -> list of files
+        file_too_large = False
+        sensitive_file_blocked = False
 
-    for file in allowed_files:
-        h = _compute_sha256(file.path, policy)
-        if h:
-            hashes[file.path] = h
-            hash_groups.setdefault(h, []).append(file)
+        for file in allowed_files:
+            h, too_large, sens_blocked = _compute_sha256(file.path, policy)
+            if too_large:
+                file_too_large = True
+            if sens_blocked:
+                sensitive_file_blocked = True
+            if h:
+                hashes[file.path] = h
+                hash_groups.setdefault(h, []).append(file)
 
-    groups: list[DuplicateGroup] = []
-    processed_paths: set[str] = set()
+        groups: list[DuplicateGroup] = []
+        processed_paths: set[str] = set()
 
-    # Create exact duplicate groups
-    for h, files in hash_groups.items():
-        if len(files) > 1:
-            group_id = str(uuid.uuid4())
-            entries = [
-                DuplicateFileEntry(
-                    path=f.path,
-                    size=f.size,
-                    hash=h,
-                    similarity_score=1.0,
-                )
-                for f in files
-            ]
-            for f in files:
-                processed_paths.add(f.path)
-            groups.append(
-                DuplicateGroup(
-                    group_id=group_id,
-                    files=entries,
-                    reasoning=(
-                        f"Exact duplicates detected by identical SHA-256 hash: {h[:8]}..."
-                    ),
-                )
-            )
-
-    # 2. Near duplicates: Heuristic matching for remaining files
-    remaining_files = [f for f in allowed_files if f.path not in processed_paths]
-
-    # Simple transitive closure clustering for near duplicates
-    near_threshold = 0.80
-    used_in_near: set[str] = set()
-
-    for i, f1 in enumerate(remaining_files):
-        if f1.path in used_in_near:
-            continue
-
-        cluster: list[tuple[FileMetadata, float]] = [(f1, 1.0)]
-        for f2 in remaining_files[i + 1 :]:
-            if f2.path in used_in_near:
-                continue
-
-            score = _compute_near_duplicate_score(f1, f2)
-            if score >= near_threshold:
-                cluster.append((f2, score))
-
-        if len(cluster) > 1:
-            group_id = str(uuid.uuid4())
-            entries: list[DuplicateFileEntry] = []
-            for f, score in cluster:
-                h = hashes.get(f.path, "")
-                entries.append(
+        # Create exact duplicate groups
+        for h, files in hash_groups.items():
+            if len(files) > 1:
+                group_id = str(uuid.uuid4())
+                entries = [
                     DuplicateFileEntry(
                         path=f.path,
                         size=f.size,
                         hash=h,
-                        similarity_score=round(score, 3),
+                        similarity_score=1.0,
+                    )
+                    for f in files
+                ]
+                for f in files:
+                    processed_paths.add(f.path)
+                groups.append(
+                    DuplicateGroup(
+                        group_id=group_id,
+                        files=entries,
+                        reasoning=(
+                            f"Exact duplicates detected by identical SHA-256 hash: {h[:8]}..."
+                        ),
                     )
                 )
-                used_in_near.add(f.path)
 
-            paths_str = ", ".join(Path(f.path).name for f, _ in cluster)
-            groups.append(
-                DuplicateGroup(
-                    group_id=group_id,
-                    files=entries,
-                    reasoning=(
-                        f"Near duplicates detected based on similar metadata for "
-                        f"files [{paths_str}] (extension: {cluster[0][0].extension})."
-                    ),
+        # 2. Near duplicates: Heuristic matching for remaining files
+        remaining_files = [f for f in allowed_files if f.path not in processed_paths]
+
+        # Simple transitive closure clustering for near duplicates
+        near_threshold = 0.80
+        used_in_near: set[str] = set()
+
+        for i, f1 in enumerate(remaining_files):
+            if f1.path in used_in_near:
+                continue
+
+            cluster: list[tuple[FileMetadata, float]] = [(f1, 1.0)]
+            for f2 in remaining_files[i + 1 :]:
+                if f2.path in used_in_near:
+                    continue
+
+                score = _compute_near_duplicate_score(f1, f2)
+                if score >= near_threshold:
+                    cluster.append((f2, score))
+
+            if len(cluster) > 1:
+                group_id = str(uuid.uuid4())
+                entries: list[DuplicateFileEntry] = []
+                for f, score in cluster:
+                    h = hashes.get(f.path, "")
+                    entries.append(
+                        DuplicateFileEntry(
+                            path=f.path,
+                            size=f.size,
+                            hash=h,
+                            similarity_score=round(score, 3),
+                        )
+                    )
+                    used_in_near.add(f.path)
+
+                paths_str = ", ".join(Path(f.path).name for f, _ in cluster)
+                groups.append(
+                    DuplicateGroup(
+                        group_id=group_id,
+                        files=entries,
+                        reasoning=(
+                            f"Near duplicates detected based on similar metadata for "
+                            f"files [{paths_str}] (extension: {cluster[0][0].extension})."
+                        ),
+                    )
                 )
-            )
 
-    reasoning = (
-        f"Processed {len(allowed_files)} allowed file(s). "
-        f"Skipped {skipped_count} file(s) outside allowed scope. "
-        f"Identified {len(groups)} duplicate group(s) in total. "
-        f"No file contents were uploaded."
-    )
+        reasoning = (
+            f"Processed {len(allowed_files)} allowed file(s). "
+            f"Skipped {skipped_count} file(s) outside allowed scope. "
+            f"Identified {len(groups)} duplicate group(s) in total. "
+            f"No file contents were uploaded."
+        )
 
-    output = DuplicateDetectionOutput(
-        duplicate_groups=groups,
-        classified_files=node_input.classified_files,
-        file_inventory=inventory,
-        folder_scope_policy=policy,
-        safe_mode=node_input.safe_mode,
-        search_mode=node_input.search_mode,
-        reasoning=reasoning,
-    )
+        output = DuplicateDetectionOutput(
+            duplicate_groups=groups,
+            classified_files=node_input.classified_files,
+            file_inventory=inventory,
+            folder_scope_policy=policy,
+            safe_mode=node_input.safe_mode,
+            search_mode=node_input.search_mode,
+            reasoning=reasoning,
+            file_too_large=file_too_large,
+            sensitive_file_blocked=sensitive_file_blocked,
+        )
 
-    return Event(output=output, actions=EventActions(route="sensitive"))
+        return Event(output=output, actions=EventActions(route="sensitive"))
+    finally:
+        from app.config import set_policy_override
+        set_policy_override(None)

@@ -114,14 +114,20 @@ def test_scan_limits_and_guards(tmp_path) -> None:
         # Write a dummy file at each level
         (curr / "file.txt").write_text("content")
 
-    # Run scan
-    inventory, _reasoning = _scan_allowed_paths(
-        allowed_paths=[str(allowed)],
-        blocked_paths=[],
-        search_query=None,
-        search_mode=False,
-        safe_mode=False,
-    )
+    # Set policy override so MCP tools accept tmp_path
+    from app.config import set_policy_override
+    set_policy_override({"allowed_paths": [str(allowed)], "blocked_paths": []})
+    try:
+        # Run scan
+        inventory, _reasoning = _scan_allowed_paths(
+            allowed_paths=[str(allowed)],
+            blocked_paths=[],
+            search_query=None,
+            search_mode=False,
+            safe_mode=False,
+        )
+    finally:
+        set_policy_override(None)
 
     # We should have found files only up to depth < 10 (0 to 9)
     # Allowed root is base_depth. Level_0 is depth 1, Level_9 is depth 10 (which is skipped).
@@ -167,18 +173,19 @@ def test_permission_error_resilience(tmp_path) -> None:
     forbidden.mkdir()
     (forbidden / "file2.txt").write_text("content")
 
-    # Mock os.walk to raise PermissionError for forbidden folder
-    original_walk = os.walk
-
-    def mock_walk(top, *args, **kwargs):
-        if "forbidden" in str(top):
-            raise PermissionError("Access Denied")
-        return original_walk(top, *args, **kwargs)
-
-    with patch("os.walk", MagicMock(side_effect=mock_walk)):
+    # Set policy override so MCP tools accept tmp_path
+    from app.config import set_policy_override
+    set_policy_override({
+        "allowed_paths": [str(allowed)],
+        "blocked_paths": [str(forbidden)],
+    })
+    try:
+        # The node now uses test_tool("list_files") instead of os.walk.
+        # The forbidden directory is in blocked_paths, so list_files will
+        # return an error for it, and the scan will skip it gracefully.
         inventory, _reasoning = _scan_allowed_paths(
             allowed_paths=[str(allowed)],
-            blocked_paths=[],
+            blocked_paths=[str(forbidden)],
             search_query=None,
             search_mode=False,
             safe_mode=False,
@@ -186,6 +193,8 @@ def test_permission_error_resilience(tmp_path) -> None:
         # Should gracefully skip forbidden folder and find file1.txt
         assert len(inventory) >= 1
         assert any(Path(f.real_path).name == "file1.txt" for f in inventory)
+    finally:
+        set_policy_override(None)
 
 
 def test_sensitive_filename_masking_and_registry(tmp_path) -> None:
@@ -195,13 +204,19 @@ def test_sensitive_filename_masking_and_registry(tmp_path) -> None:
     (allowed / "my_tax_report.pdf").write_text("confidential")
     (allowed / "normal_photo.jpg").write_text("pixels")
 
-    inventory, _reasoning = _scan_allowed_paths(
-        allowed_paths=[str(allowed)],
-        blocked_paths=[],
-        search_query=None,
-        search_mode=False,
-        safe_mode=False,
-    )
+    # Set policy override so MCP tools accept tmp_path
+    from app.config import set_policy_override
+    set_policy_override({"allowed_paths": [str(allowed)], "blocked_paths": []})
+    try:
+        inventory, _reasoning = _scan_allowed_paths(
+            allowed_paths=[str(allowed)],
+            blocked_paths=[],
+            search_query=None,
+            search_mode=False,
+            safe_mode=False,
+        )
+    finally:
+        set_policy_override(None)
 
     tax_file = next(f for f in inventory if "sensitive_file" in f.path)
     normal_file = next(f for f in inventory if "normal_photo" in f.path)
@@ -224,13 +239,19 @@ def test_safe_mode_path_sanitization(tmp_path) -> None:
     allowed.mkdir()
     (allowed / "my_tax_report.pdf").write_text("confidential")
 
-    inventory, _reasoning = _scan_allowed_paths(
-        allowed_paths=[str(allowed)],
-        blocked_paths=[],
-        search_query=None,
-        search_mode=False,
-        safe_mode=True,  # safe_mode active
-    )
+    # Set policy override so MCP tools accept tmp_path
+    from app.config import set_policy_override
+    set_policy_override({"allowed_paths": [str(allowed)], "blocked_paths": []})
+    try:
+        inventory, _reasoning = _scan_allowed_paths(
+            allowed_paths=[str(allowed)],
+            blocked_paths=[],
+            search_query=None,
+            search_mode=False,
+            safe_mode=True,  # safe_mode active
+        )
+    finally:
+        set_policy_override(None)
 
     tax_file = inventory[0]
     # Under safe mode/search mode, absolute paths are completely hidden/replaced

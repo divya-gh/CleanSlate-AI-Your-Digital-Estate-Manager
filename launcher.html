@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CleanSlate AI — My PC Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3250;
+      --accent:    #6c8fff;
+      --accent2:   #a78bfa;
+      --text:      #e8eaf6;
+      --text-dim:  #7b82a8;
+      --user-bg:   #1e2a5e;
+      --agent-bg:  #1a1d27;
+      --success:   #34d399;
+      --radius:    14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .header-text h1 { font-size: 15px; font-weight: 600; }
+    .header-text p  { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+    .status-dot {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-dim);
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Chat area ── */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+    #chat::-webkit-scrollbar { width: 4px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .msg { display: flex; gap: 10px; max-width: 800px; width: 100%; }
+    .msg.user { flex-direction: row-reverse; margin-left: auto; }
+
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .msg.agent .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+    .msg.user  .avatar { background: var(--user-bg); border: 1px solid var(--border); }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.agent .bubble {
+      background: var(--agent-bg);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+    }
+    .msg.user .bubble {
+      background: var(--user-bg);
+      border: 1px solid rgba(108,143,255,.3);
+      border-top-right-radius: 4px;
+      color: #c7d2fe;
+    }
+
+    /* typing indicator */
+    .typing .bubble { display: flex; gap: 5px; align-items: center; padding: 14px 18px; }
+    .typing .bubble span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-dim);
+      animation: bounce .9s infinite;
+    }
+    .typing .bubble span:nth-child(2) { animation-delay: .15s; }
+    .typing .bubble span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+    /* ── Input bar ── */
+    footer {
+      padding: 14px 20px 18px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px 4px 4px 14px;
+      transition: border-color .2s;
+    }
+    .input-row:focus-within { border-color: var(--accent); }
+
+    #input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 0;
+      resize: none;
+      max-height: 120px;
+      line-height: 1.5;
+    }
+    #input::placeholder { color: var(--text-dim); }
+
+    #send {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .2s, transform .1s;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 2px;
+    }
+    #send:hover  { opacity: .85; }
+    #send:active { transform: scale(.93); }
+    #send svg    { width: 18px; height: 18px; fill: #fff; }
+    #send:disabled { opacity: .35; cursor: not-allowed; }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* links in agent bubbles */
+    .bubble a { color: var(--accent); text-decoration: none; }
+    .bubble a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🖥️</div>
+  <div class="header-text">
+    <h1>CleanSlate AI</h1>
+    <p>My PC Assistant</p>
+  </div>
+  <div class="status-dot"><span class="dot"></span> Online</div>
+</header>
+
+<div id="chat"></div>
+
+<footer>
+  <div class="input-row">
+    <textarea id="input" rows="1" placeholder='Say "Organize my computer" to get started…' disabled></textarea>
+    <button id="send" disabled>
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <p class="hint">CleanSlate AI never reads file contents · metadata only · all actions require your approval</p>
+</footer>
+
+<script>
+const ADK   = '';
+const APP   = 'cleanslate_ai_my_pc_assistant';
+const USER  = 'user';
+
+const chat  = document.getElementById('chat');
+const input = document.getElementById('input');
+const send  = document.getElementById('send');
+
+let sessionId  = null;
+let pendingIid = null;   // interrupt_id from last RequestInput
+let busy       = false;
+
+/* ── helpers ── */
+function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
+
+function addMsg(role, text) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+  const av  = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = role === 'agent' ? '🤖' : '👤';
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.textContent = text;
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  chat.appendChild(wrap);
+  scrollBottom();
+  return bub;
+}
+
+function showTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg agent typing';
+  wrap.id = 'typing';
+  wrap.innerHTML = `<div class="avatar">🤖</div>
+    <div class="bubble"><span></span><span></span><span></span></div>`;
+  chat.appendChild(wrap);
+  scrollBottom();
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+function setReady(ok) {
+  input.disabled  = !ok;
+  send.disabled   = !ok;
+  busy            = !ok;
+  if (ok) input.focus();
+}
+
+/* ── auto-resize textarea ── */
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+});
+send.addEventListener('click', handleSend);
+
+/* ── SSE runner ── */
+async function runSSE(message) {
+  if (busy) return;
+  busy = true;
+  setReady(false);
+  showTyping();
+
+  const body = pendingIid !== null
+    ? {
+        app_name: APP, user_id: USER, session_id: sessionId,
+        new_message:   { role: 'user', parts: [{ text: message }] },
+        resume_inputs: { [pendingIid]: message }
+      }
+    : {
+        app_name: APP, user_id: USER, session_id: sessionId,
+        new_message: { role: 'user', parts: [{ text: message }] }
+      };
+  pendingIid = null;
+
+  try {
+    const resp = await fetch(`${ADK}/run_sse`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    removeTyping();
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let   buf     = '';
+
+    // Collect the best response seen across ALL events
+    let bestResponse   = '';   // last output.* value seen
+    let requestMsg     = '';   // RequestInput message
+    let requestIid     = null; // RequestInput interrupt_id
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const json = line.slice(5).trim();
+        if (!json || json === '[DONE]') continue;
+
+        let ev;
+        try { ev = JSON.parse(json); } catch { continue; }
+
+        // RequestInput (HITL pause) — ADK sends as functionCall in content.parts
+        // Shape: { content: { parts: [{ functionCall: { id, args: { interruptId, message } } }] } }
+        const fc = ev?.content?.parts?.[0]?.functionCall;
+        if (fc) {
+          const iid = fc.id || fc.args?.interruptId;
+          const msg = fc.args?.message || '';
+          if (iid) {
+            requestIid = iid;
+            requestMsg = msg;
+          }
+          continue;
+        }
+
+        // Fallback: top-level interrupt_id field (older ADK versions)
+        if (ev.type === 'request_input' || ev.interrupt_id) {
+          requestMsg = ev.message || ev.interrupt_message || '';
+          requestIid = ev.interrupt_id || null;
+          continue;
+        }
+
+        // Extract text from ANY known location — always overwrite (never +=)
+        const out =
+          ev?.output?.human_readable_report   ||
+          ev?.output?.message                 ||
+          ev?.output?.conversational_response ||
+          ev?.output?.summary_report          ||
+          ev?.content?.parts?.[0]?.text;
+
+        // Fallback: scan all string fields in output for something substantial
+        if (!out && ev?.output && typeof ev.output === 'object') {
+          for (const val of Object.values(ev.output)) {
+            if (typeof val === 'string' && val.trim().length > 20) {
+              bestResponse = val;
+              break;
+            }
+          }
+        }
+
+        if (out) bestResponse = out;   // overwrite — last wins, no duplicates
+      }
+    }
+
+    // ── Show results once ──────────────────────────────────────────
+    if (requestIid !== null) {
+      // HITL: show the prompt, wait for user reply
+      if (requestMsg) addMsg('agent', requestMsg);
+      pendingIid = requestIid;
+    } else if (bestResponse) {
+      addMsg('agent', bestResponse);
+    } else {
+      // Nothing found — surface raw event dump for debugging
+      addMsg('agent', '(No response received. Please try again.)');
+    }
+
+  } catch (err) {
+    removeTyping();
+    addMsg('agent', '⚠️ Connection error: ' + err.message);
+  }
+
+  setReady(true);
+}
+
+/* ── send handler ── */
+async function handleSend() {
+  const text = input.value.trim();
+  if (!text || busy) return;
+  input.value = '';
+  input.style.height = 'auto';
+  addMsg('user', text);
+  await runSSE(text);
+}
+
+/* ── boot: create session + show static welcome (no agent call) ── */
+const WELCOME =
+`Hello! I'm CleanSlate AI \u2014 My PC Assistant.
+
+I'm here to help you manage, organize, and optimize your computer safely.
+I can:
+  \ud83d\udcc2  Search your files
+  \ud83e\uddf9  Declutter folders and remove duplicates
+  \ud83d\udd12  Detect and protect sensitive documents
+  \ud83d\udcc5  Run your Weekly Organizer automatically
+
+You can say: "Organize my computer" to get started.
+\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`;
+
+async function boot() {
+  // Show welcome immediately — no agent call needed
+  addMsg('agent', WELCOME);
+
+  try {
+    const sr = await fetch(`${ADK}/apps/${APP}/users/${USER}/sessions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    });
+    const sess = await sr.json();
+    sessionId  = sess.id || sess.session_id;
+    setReady(true);
+  } catch (err) {
+    addMsg('agent', '\u26a0\ufe0f Could not connect to CleanSlate AI backend.\nMake sure `python run.py` is running.\n\nError: ' + err.message);
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
+import json
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 from pydantic import BaseModel, Field
 
 from app.nodes.file_discovery_node import FileDiscoveryInput, FolderScopePolicy
-from app.security.audit_logger import log_action
+from app.mcp_tools.registry import test_tool
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -69,15 +70,17 @@ def weekly_organizer_node(node_input: WeeklyOrganizerInput) -> Event:
     """WeeklyOrganizerNode — conditionally runs weekly organization in safe mode."""
     try:
         if not node_input.weekly_automation_enabled:
-            log_action(
-                node="WeeklyOrganizerNode",
-                action_type="plan",
-                path=None,
-                is_sensitive=False,
-                hitl_status="not_required",
-                result="skipped",
-                reason="Weekly automation is disabled.",
-            )
+            entry_dict = {
+                "node": "WeeklyOrganizerNode",
+                "action_type": "plan",
+                "path": None,
+                "is_sensitive": False,
+                "hitl_status": "not_required",
+                "result": "skipped",
+                "reason": "Weekly automation is disabled.",
+                "tool_name": "write_log",
+            }
+            test_tool("write_log", entry=json.dumps(entry_dict))
             summary = WeeklySummary(
                 automation_ran=False,
                 actions_attempted=0,
@@ -100,15 +103,17 @@ def weekly_organizer_node(node_input: WeeklyOrganizerInput) -> Event:
         policy.allow_archives = True
         policy.allow_moves = True
 
-        log_action(
-            node="WeeklyOrganizerNode",
-            action_type="plan",
-            path=None,
-            is_sensitive=False,
-            hitl_status="not_required",
-            result="success",
-            reason="Weekly organizer triggered. Safe mode active: deletes and compressions are disabled.",
-        )
+        entry_dict = {
+            "node": "WeeklyOrganizerNode",
+            "action_type": "plan",
+            "path": None,
+            "is_sensitive": False,
+            "hitl_status": "not_required",
+            "result": "success",
+            "reason": "Weekly organizer triggered. Safe mode active: deletes and compressions are disabled.",
+            "tool_name": "write_log",
+        }
+        test_tool("write_log", entry=json.dumps(entry_dict))
 
         discovery_input = FileDiscoveryInput(
             folder_scope_policy=policy,
@@ -118,15 +123,17 @@ def weekly_organizer_node(node_input: WeeklyOrganizerInput) -> Event:
         return Event(output=discovery_input, actions=EventActions(route="run"))
 
     except Exception as e:
-        log_action(
-            node="WeeklyOrganizerNode",
-            action_type="plan",
-            path=None,
-            is_sensitive=False,
-            hitl_status="not_required",
-            result="failure",
-            reason=f"Weekly automation error: {e}",
-        )
+        entry_dict = {
+            "node": "WeeklyOrganizerNode",
+            "action_type": "plan",
+            "path": None,
+            "is_sensitive": False,
+            "hitl_status": "not_required",
+            "result": "failure",
+            "reason": f"Weekly automation error: {e}",
+            "tool_name": "write_log",
+        }
+        test_tool("write_log", entry=json.dumps(entry_dict))
         summary = WeeklySummary(
             automation_ran=False,
             actions_attempted=0,

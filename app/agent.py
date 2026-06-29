@@ -45,14 +45,13 @@ from app.nodes.weekly_organizer_node import (
 )
 from app.nodes.my_pc_assistant_node import (
     MyPCAssistantInput,
+    WelcomeInput,
     my_pc_assistant_node,
+    welcome_node,
 )
 
-# Set Google Cloud environment variables
-_, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+# Use Gemini API directly (not Vertex AI) with gemini-2.5-flash as the default model
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 
 from pydantic import BaseModel, model_validator
@@ -160,8 +159,9 @@ workflow = Workflow(
         Edge(
             from_node=n_assistant,
             to_node=n_summary,
-            route=["explain", "other"],
+            route=["explain"],          # only explain needs summarisation
         ),
+        # "other" (greetings, simple answers) terminates here — no further nodes
         # FolderScopeNode branching
         (
             n_scope,
@@ -228,6 +228,6 @@ weekly_organizer_agent = workflow
 # App wrapping the workflow agent with ResumabilityConfig enabled
 app = App(
     root_agent=workflow,
-    name="app",
+    name="cleanslate-ai-my-pc-assistant",
     resumability_config=ResumabilityConfig(is_resumable=True),
 )

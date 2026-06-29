@@ -7,16 +7,19 @@ and validated against strict safety boundaries without disk/OS access.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 from datetime import datetime
 from typing import Any
 
+from pydantic import model_validator
+
 from google.adk.agents.context import Context
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 from google.adk.events.request_input import RequestInput
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.nodes.file_discovery_node import FolderScopePolicy
 
@@ -26,9 +29,23 @@ from app.nodes.file_discovery_node import FolderScopePolicy
 
 
 class FolderScopeInput(BaseModel):
-    """Input payload consumed by FolderScopeNode."""
+    """Input payload consumed by FolderScopeNode.
 
+    This schema is a strict superset of MyPCAssistantOutput so that ADK's
+    internal TypeAdapter.validate_python() can coerce the upstream node's
+    output directly into this schema without a model_validator (which ADK
+    bypasses when validating model-instance-to-model-instance).
+
+    from_attributes=True (ORM mode) lets Pydantic read the MyPCAssistantOutput
+    instance's attributes directly instead of requiring exact type identity.
+    The node derives `cleanup_intent` from `intent` at runtime.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # --- Own fields (may be absent when coming from MyPCAssistantOutput) ---
     cleanup_intent: bool = Field(
+        default=False,
         description="Whether cleanup intent has been explicitly detected."
     )
     user_query: str | None = Field(
@@ -38,8 +55,29 @@ class FolderScopeInput(BaseModel):
         default=None, description="Optional session identifier."
     )
     timestamp: datetime | None = Field(
-        default_factory=datetime.utcnow, description="Timestamp of the query."
+        default=None, description="Timestamp of the query."
     )
+
+    # --- MyPCAssistantOutput passthrough fields (all optional with defaults) ---
+    intent: str | None = Field(
+        default=None,
+        description="Upstream intent from MyPCAssistantNode ('cleanup', 'search', etc.)."
+    )
+    search_query: str | None = Field(default=None)
+    explanation_request: str | None = Field(default=None)
+    cleanup_intent_reasoning: str | None = Field(default=None)
+    conversational_response: str | None = Field(default=None)
+    total_actions: int = Field(default=0)
+    successful_actions: int = Field(default=0)
+    failed_actions: int = Field(default=0)
+    skipped_actions: int = Field(default=0)
+    estimated_recovery: int = Field(default=0)
+    dry_run: bool = Field(default=False)
+    sensitive_files_protected: int = Field(default=0)
+    rollback_supported_actions: int = Field(default=0)
+    rollback_unsupported_actions: int = Field(default=0)
+    human_readable_report: str = Field(default="")
+    errors: list[str] | None = Field(default=None)
 
 
 class FolderScopeOutput(BaseModel):
@@ -235,68 +273,157 @@ def _parse_paths(input_val: Any) -> list[str]:
         return parts
     return []
 
+def _get_default_safe_suggestions() -> str:
+    """Returns OS-appropriate safe folder suggestions to show the user."""
+    if os.name == "nt":
+        username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
+        base = f"C:/Users/{username}"
+        return (
+            f"  \u2705  {base}/Desktop\n"
+            f"  \u2705  {base}/Documents\n"
+            f"  \u2705  {base}/Downloads\n"
+            f"  \u2705  {base}/Pictures\n"
+            f"  \u2705  {base}/Videos"
+        )
+    else:
+        username = os.environ.get("USER", "YourName")
+        base = f"/Users/{username}"
+        return (
+            f"  \u2705  {base}/Desktop\n"
+            f"  \u2705  {base}/Documents\n"
+            f"  \u2705  {base}/Downloads\n"
+            f"  \u2705  {base}/Pictures\n"
+            f"  \u2705  {base}/Videos"
+        )
 
-# ---------------------------------------------------------------------------
-# ADK 2.0 Function Node (HITL / Resumable Async Generator)
-# ---------------------------------------------------------------------------
+
+def _hash_secret(value: str) -> str:
+    """Returns a SHA-256 hex digest of a secret string (no file I/O)."""
+    return hashlib.sha256(value.strip().encode()).hexdigest()  # nosemgrep
+
 
 
 async def folder_scope_node(
     ctx: Context,
     node_input: FolderScopeInput,
 ) -> Any:
-    """FolderScopeNode — handles interactive allowed and blocked folder setup."""
-    if not node_input.cleanup_intent:
+    """FolderScopeNode — full guided organize flow with HITL path, PIN, and weekly organizer setup.
+
+    With rerun_on_resume=True, ADK replays from my_pc_assistant_node (the
+    entry node) on every turn.  My_pc_assistant_node captures ctx.resume_inputs
+    and stores them in session state via state_delta.  This node reads
+    answers from ctx.session.state so multi-turn HITL answers accumulate
+    correctly across replays.
+    """
+    # Read accumulated prior answers from session state.
+    # With rerun_on_resume=True, ADK replays from the entry node and passes
+    # new_message.text as node_input.user_query.  We use the user's text as
+    # the answer for whatever the CURRENT step expects, and persist it.
+    ri: dict = {}
+    try:
+        ri = dict(ctx.session.state)
+    except AttributeError:
+        pass
+
+    user_answer = (node_input.user_query or "").strip()
+    # _was_already_active = True means this is a RESUME turn (the flag existed BEFORE this turn).
+    # On the initial "organize my computer" turn, organize_flow_active is set by
+    # my_pc_assistant_node's state_delta WITHIN this same run, so it may appear
+    # in ri (from session state snapshot), but it shouldn't be treated as a resume.
+    # We detect a true resume by checking if any STEP key is still missing AND
+    # the flag was already set before this run started.
+    _was_already_active = bool(ri.get("organize_flow_active", False))
+
+    # Determine which step we are in and insert the user's latest answer.
+    # Only do this on resume turns (not when user first says "organize my computer").
+    _STEP_ORDER = ["allowed_paths", "blocked_paths", "user_pin",
+                   "security_question", "security_answer", "weekly_organizer"]
+    _any_step_missing = any(s not in ri for s in _STEP_ORDER)
+    _is_resume_turn = _was_already_active and _any_step_missing and user_answer
+    if _is_resume_turn:
+        for step in _STEP_ORDER:
+            if step not in ri:
+                ri[step] = user_answer
+                break
+
+    # Derive cleanup_intent from the upstream 'intent' field if not set directly.
+    is_cleanup = node_input.cleanup_intent or node_input.intent == "cleanup"
+
+    if not is_cleanup:
         msg = "Cleanup intent not detected. Folder scope not requested."
         output = FolderScopeOutput(
             folder_scope_policy=None,
             message=msg,
             human_readable_report=msg,
         )
-        yield Event(output=output, actions=EventActions(route=None))
+        yield Event(output=output, actions=EventActions(route="scope_invalid"))
         return
 
-    # Check for allowed_paths in resume_inputs
-    if not ctx.resume_inputs or "allowed_paths" not in ctx.resume_inputs:
+    # Persist the latest merged answer into session state so the next
+    # rerun_on_resume can read it.
+    _STEP_KEYS = {"allowed_paths", "blocked_paths", "user_pin",
+                  "security_question", "security_answer", "weekly_organizer"}
+    _answers_to_persist = {k: v for k, v in ri.items() if k in _STEP_KEYS}
+    if _answers_to_persist:
+        yield Event(actions=EventActions(state_delta=_answers_to_persist))
+
+    # ------------------------------------------------------------------ #
+    # STEP 1 — Ask which folders to organize (show suggestions first)     #
+    # ------------------------------------------------------------------ #
+    if "allowed_paths" not in ri:
+        suggestions = _get_default_safe_suggestions()
+        system_blocked = _get_default_system_paths()
+        blocked_preview = "\n".join(
+            f"  \u26d4  {p}" for p in system_blocked[:6]
+        ) + ("\n  ... (and more system folders)" if len(system_blocked) > 6 else "")
+
         msg = (
-            "Please enter the folders you allow the assistant to scan, separated by commas.\n"
-            "Examples of safe folders:\n"
-            "  Windows: C:\\Users\\YourName\\Desktop, C:\\Users\\YourName\\Documents, C:\\Users\\YourName\\Downloads\n"
-            "  Mac/Linux: /Users/YourName/Desktop, /Users/YourName/Documents\n"
-            "WARNING: Do not include system folders (e.g., C:\\Windows or C:\\Program Files) as they are protected."
+            "\U0001f9f9 Great! Let's get your computer organized safely.\n"
+            + "\u2500" * 60 + "\n\n"
+            "\U0001f4c2 Suggested safe folders you can organize:\n"
+            + suggestions + "\n\n"
+            "\u26d4 Automatically blocked (system folders \u2014 never touched):\n"
+            + blocked_preview + "\n\n"
+            "\U0001f512 Sensitive files found during cleanup will be moved to\n"
+            "   your secure Authenticated folder automatically.\n\n"
+            + "\u2500" * 60 + "\n"
+            + "Please type the folder(s) you want me to organize\n"
+            "(comma-separated absolute paths, e.g. C:/Users/YourName/Downloads):"
         )
-        yield RequestInput(
-            interrupt_id="allowed_paths",
-            message=msg,
-        )
+        yield RequestInput(interrupt_id="allowed_paths", message=msg)
         return
 
-    # Check for blocked_paths in resume_inputs
-    if "blocked_paths" not in ctx.resume_inputs:
+    # ------------------------------------------------------------------ #
+    # STEP 2 — Ask which folders to never touch (optional)               #
+    # ------------------------------------------------------------------ #
+    if "blocked_paths" not in ri:
+        allowed_preview = "\n".join(
+            f"  \u2705  {p}" for p in _parse_paths(ri["allowed_paths"])[:5]
+        )
         msg = (
-            "Please enter any folders the assistant must never touch (comma-separated).\n"
-            "Note: System folders and agent internal folders are blocked automatically."
+            "\u2705 Folders to organize:\n" + allowed_preview + "\n\n"
+            "Are there any additional folders I should NEVER touch?\n"
+            "(comma-separated absolute paths, or type \"none\" to skip)"
         )
-        yield RequestInput(
-            interrupt_id="blocked_paths",
-            message=msg,
-        )
+        yield RequestInput(interrupt_id="blocked_paths", message=msg)
         return
 
-    # Extract raw inputs
-    raw_allowed = ctx.resume_inputs["allowed_paths"]
-    raw_blocked = ctx.resume_inputs["blocked_paths"]
+    # ------------------------------------------------------------------ #
+    # Validate paths before moving to PIN setup                          #
+    # ------------------------------------------------------------------ #
+    raw_allowed = ri["allowed_paths"]
+    raw_blocked = ri["blocked_paths"]
 
     allowed_list = _parse_paths(raw_allowed)
-    blocked_list = _parse_paths(raw_blocked)
+    raw_blocked_str = str(raw_blocked).strip().lower()
+    blocked_list = [] if raw_blocked_str in ("none", "", "skip") else _parse_paths(raw_blocked)
 
     errors: list[str] = []
     norm_allowed: list[str] = []
     norm_blocked: list[str] = []
 
-    # Validate allowed paths
     if not allowed_list:
-        errors.append("You must specify at least one allowed path.")
+        errors.append("You must specify at least one folder to organize.")
     else:
         for ap in allowed_list:
             try:
@@ -304,42 +431,33 @@ async def folder_scope_node(
                 if cleaned not in norm_allowed:
                     norm_allowed.append(cleaned)
             except ValueError as e:
-                errors.append(f"Allowed path '{ap}' is invalid: {e!s}")
+                errors.append(f"Folder '{ap}' is invalid: {e!s}")
 
-    # Validate blocked paths
     for bp in blocked_list:
         try:
             cleaned = _validate_single_path(bp, is_allowed=False)
             if cleaned not in norm_blocked:
                 norm_blocked.append(cleaned)
         except ValueError as e:
-            errors.append(f"Blocked path '{bp}' is invalid: {e!s}")
+            errors.append(f"Blocked folder '{bp}' is invalid: {e!s}")
 
-    # Handle duplicates/overlap checks
     if not errors:
-        # Populate implicit system blocked paths & internal folders
         default_system = _get_default_system_paths()
         agent_internal = _get_agent_internal_blocked_paths()
-        all_implicit_blocks = default_system + agent_internal
-
-        for ib in all_implicit_blocks:
+        for ib in default_system + agent_internal:
             if ib not in norm_blocked:
                 norm_blocked.append(ib)
-
-        # Check allowed path overlap with blocked paths
         for ap in norm_allowed:
             for bp in norm_blocked:
                 if ap == bp or ap.startswith(bp + "/"):
                     errors.append(
-                        f"Allowed path '{ap}' overlaps with or is inside blocked/system path '{bp}'."
+                        f"Folder '{ap}' overlaps with blocked/system path '{bp}'."
                     )
 
-    # If validation errors occur, clear the invalid fields and re-prompt
     if errors:
-        # Human-friendly prefix
         hr_message = (
-            "We found some issues with your configured folders. Please fix the following errors:\n"
-            + "\n".join(f" - {err}" for err in errors)
+            "\u26a0\ufe0f  We found some issues. Please fix the following:\n"
+            + "\n".join(f"  \u2022 {err}" for err in errors)
         )
         output = FolderScopeOutput(
             folder_scope_policy=None,
@@ -347,23 +465,132 @@ async def folder_scope_node(
             validation_errors=errors,
             human_readable_report=hr_message,
         )
-
-        # Clear only invalid fields in ctx.resume_inputs to support correction
-        # If allowed_list had errors, clear it.
-        has_allowed_errors = any(
-            "Allowed path" in err or "allowed path" in err for err in errors
-        )
-        has_blocked_errors = any("Blocked path" in err for err in errors)
-
+        has_allowed_errors = any("Folder '" in err and "is invalid" in err for err in errors)
+        clear_delta = {"blocked_paths": None}
         if has_allowed_errors:
-            ctx.resume_inputs.pop("allowed_paths", None)
-        if has_blocked_errors:
-            ctx.resume_inputs.pop("blocked_paths", None)
-
-        yield Event(output=output, actions=EventActions(route="scope_invalid"))
+            clear_delta["allowed_paths"] = None
+        yield Event(output=output, actions=EventActions(
+            route="scope_invalid",
+            state_delta=clear_delta,
+        ))
         return
 
-    # Construct the validated policy
+    # ------------------------------------------------------------------ #
+    # STEP 3 — Create a 4-digit PIN                                      #
+    # ------------------------------------------------------------------ #
+    if "user_pin" not in ri:
+        msg = (
+            "\U0001f511 Security Setup\n"
+            "\u2500" * 60 + "\n\n"
+            "Please create a 4-digit PIN to protect access to your\n"
+            "authenticated secure folder.\n\n"
+            "Your PIN will be stored securely (hashed) and never shown again.\n\n"
+            "Enter your 4-digit PIN (digits only, e.g. 1234):"
+        )
+        yield RequestInput(interrupt_id="user_pin", message=msg)
+        return
+
+    # Validate PIN
+    pin_raw = str(ri["user_pin"]).strip()
+    if not re.fullmatch(r"\d{4}", pin_raw):
+        yield Event(
+            output=FolderScopeOutput(
+                folder_scope_policy=None,
+                message="Invalid PIN.",
+                human_readable_report="⚠️  Invalid PIN. A PIN must be exactly 4 digits (0–9).",
+            ),
+            actions=EventActions(
+                route="scope_invalid",
+                state_delta={"user_pin": None},
+            ),
+        )
+        yield RequestInput(
+            interrupt_id="user_pin",
+            message="⚠️  Invalid PIN. A PIN must be exactly 4 digits (0–9).\nPlease try again:",
+        )
+        return
+
+    # ------------------------------------------------------------------ #
+    # STEP 4 — Security question                                          #
+    # ------------------------------------------------------------------ #
+    _security_questions = [
+        "What is the name of your first pet?",
+        "What was the name of your elementary school?",
+        "What is your mother's maiden name?",
+        "What city were you born in?",
+        "What was the make of your first car?",
+    ]
+
+    if "security_question" not in ri:
+        numbered = "\n".join(f"  {i + 1}. {q}" for i, q in enumerate(_security_questions))
+        msg = (
+            "\U0001f513 Security Question\n"
+            "\u2500" * 60 + "\n\n"
+            "Choose a security question so you can recover your PIN later:\n\n"
+            + numbered + "\n\n"
+            "Type the NUMBER of your chosen question (1\u20135):"
+        )
+        yield RequestInput(interrupt_id="security_question", message=msg)
+        return
+
+    sq_raw = str(ri["security_question"]).strip()
+    sq_index: int | None = None
+    for i in range(1, 6):
+        if sq_raw.startswith(str(i)):
+            sq_index = i - 1
+            break
+    if sq_index is None:
+        yield Event(
+            output=FolderScopeOutput(
+                folder_scope_policy=None,
+                message="Invalid security question selection.",
+                human_readable_report="⚠️  Please enter a number 1–5.",
+            ),
+            actions=EventActions(
+                route="scope_invalid",
+                state_delta={"security_question": None},
+            ),
+        )
+        yield RequestInput(
+            interrupt_id="security_question",
+            message="⚠️  Please enter a number 1–5 to choose your security question:",
+        )
+        return
+
+    chosen_question = _security_questions[sq_index]
+
+    if "security_answer" not in ri:
+        msg = (
+            f"\U0001f4dd Your security question:\n   \"{chosen_question}\"\n\n"
+            "Please type your answer (case-insensitive, stored securely):"
+        )
+        yield RequestInput(interrupt_id="security_answer", message=msg)
+        return
+
+    # ------------------------------------------------------------------ #
+    # STEP 5 — Weekly Organizer preference                               #
+    # ------------------------------------------------------------------ #
+    if "weekly_organizer" not in ri:
+        msg = (
+            "\U0001f4c5 Weekly Organizer\n"
+            "\u2500" * 60 + "\n\n"
+            "Would you like to enable the Weekly Organizer?\n"
+            "It will automatically clean up your chosen folders once a week.\n\n"
+            "  \u2705  Type \"enable\"  \u2014 turn on weekly cleanup\n"
+            "  \u274c  Type \"disable\" \u2014 keep weekly cleanup off for now"
+        )
+        yield RequestInput(interrupt_id="weekly_organizer", message=msg)
+        return
+
+    weekly_raw = str(ri["weekly_organizer"]).strip().lower()
+    weekly_enabled = weekly_raw in ("enable", "yes", "y", "on", "true", "1")
+
+    # ------------------------------------------------------------------ #
+    # All steps complete — build policy and store session state          #
+    # ------------------------------------------------------------------ #
+    pin_hash = _hash_secret(pin_raw)
+    answer_hash = _hash_secret(str(ri["security_answer"]))
+
     now = datetime.utcnow()
     policy = FolderScopePolicy(
         allowed_paths=norm_allowed,
@@ -380,11 +607,34 @@ async def folder_scope_node(
         source="interactive_cleanup",
     )
 
-    success_msg = f"Folder scope successfully configured. Allowed: {len(norm_allowed)} | Blocked: {len(norm_blocked)}"
+    weekly_status = "\U0001f7e2 Enabled" if weekly_enabled else "\U0001f534 Disabled"
+    success_msg = (
+        "\u2705 Setup complete! Here's your configuration summary:\n"
+        "\u2500" * 60 + "\n\n"
+        f"\U0001f4c2 Folders to organize ({len(norm_allowed)}):\n"
+        + "\n".join(f"  \u2022 {p}" for p in norm_allowed) + "\n\n"
+        f"\U0001f511 PIN protected: Yes (stored securely)\n"
+        f"\U0001f513 Security question: {chosen_question}\n"
+        f"\U0001f4c5 Weekly Organizer: {weekly_status}\n\n"
+        "Starting scan now\u2026"
+    )
+
     output = FolderScopeOutput(
         folder_scope_policy=policy,
         message=success_msg,
         human_readable_report=success_msg,
     )
 
-    yield Event(output=output, actions=EventActions(route="scope_ok"))
+    yield Event(
+        output=output,
+        actions=EventActions(
+            route="scope_ok",
+            state_delta={
+                "pin_hash": pin_hash,
+                "security_question": chosen_question,
+                "security_answer_hash": answer_hash,
+                "weekly_organizer_enabled": weekly_enabled,
+                "organize_flow_active": False,  # clear flag — flow complete
+            },
+        ),
+    )

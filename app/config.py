@@ -79,8 +79,20 @@ def save_config(config: dict) -> None:
         pass
 
 
+_POLICY_OVERRIDE: dict | None = None
+
+
+def set_policy_override(policy_dict: dict | None) -> None:
+    """Sets a temporary in-memory policy override, useful for testing and node operations."""
+    global _POLICY_OVERRIDE
+    _POLICY_OVERRIDE = policy_dict
+
+
 def load_policy() -> dict | None:
     """Loads the stored folder scope policy. Returns None if not configured."""
+    global _POLICY_OVERRIDE
+    if _POLICY_OVERRIDE is not None:
+        return _POLICY_OVERRIDE
     ensure_config_dir()
     if not POLICY_FILE.exists():
         return None
