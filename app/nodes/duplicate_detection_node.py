@@ -207,21 +207,28 @@ def duplicate_detection_node(
             else:
                 skipped_count += 1
 
-        # 1. Exact duplicates: Compute hashes for allowed files
+        # 1. Exact duplicates: Compute hashes ONLY for files that share sizes (size collisions)
+        size_groups: dict[int, list[FileMetadata]] = {}
+        for file in allowed_files:
+            size_groups.setdefault(file.size, []).append(file)
+
         hashes: dict[str, str] = {}  # path -> hash
         hash_groups: dict[str, list[FileMetadata]] = {}  # hash -> list of files
         file_too_large = False
         sensitive_file_blocked = False
 
-        for file in allowed_files:
-            h, too_large, sens_blocked = _compute_sha256(file.path, policy)
-            if too_large:
-                file_too_large = True
-            if sens_blocked:
-                sensitive_file_blocked = True
-            if h:
-                hashes[file.path] = h
-                hash_groups.setdefault(h, []).append(file)
+        for size, files_with_size in size_groups.items():
+            if len(files_with_size) > 1:
+                # Size collision exists! Compute hashes to verify if they are duplicates
+                for file in files_with_size:
+                    h, too_large, sens_blocked = _compute_sha256(file.path, policy)
+                    if too_large:
+                        file_too_large = True
+                    if sens_blocked:
+                        sensitive_file_blocked = True
+                    if h:
+                        hashes[file.path] = h
+                        hash_groups.setdefault(h, []).append(file)
 
         groups: list[DuplicateGroup] = []
         processed_paths: set[str] = set()

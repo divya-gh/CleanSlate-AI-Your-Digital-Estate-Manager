@@ -277,22 +277,13 @@ def _scan_directory_recursive(
                 stats,
             )
         else:
-            meta_res = test_tool("read_file_metadata", path=entry_abs_path)
-            if "error" in meta_res:
-                # read_file_metadata rejects sensitive files. Fall back to
-                # the entry data from list_files which already has size/timestamps.
-                error_msg = meta_res.get("error", {}).get("message", "")
-                if "SensitiveFileError" in error_msg or _is_sensitive_filename(entry_name):
-                    meta_data = {
-                        "size": entry.get("size", 0),
-                        "modified_at": entry.get("modified_at", ""),
-                        "created_at": entry.get("created_at", ""),
-                    }
-                else:
-                    stats["skipped_dirs"] += 1
-                    continue
-            else:
-                meta_data = meta_res["result"]
+            # list_files already retrieves size and timestamps in its directory scan.
+            # We directly use these values to avoid sequential MCP tool calls for every single file.
+            meta_data = {
+                "size": entry.get("size", 0),
+                "modified_at": entry.get("modified_at", ""),
+                "created_at": entry.get("created_at", ""),
+            }
 
             if search_query and not fnmatch.fnmatch(
                 entry_name.lower(), search_query.lower()
