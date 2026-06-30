@@ -300,33 +300,42 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
             )
             continue
 
-        # 2. Archive bypass
-        if ext in (".zip", ".tar", ".gz", ".rar", ".7z", ".cab", ".iso"):
+        # 2. Non-standard extension bypass (only analyze standard documents and media)
+        standard_extensions = {
+            ".pdf", ".docx", ".doc", ".xls", ".xlsx", ".pptx", ".ppt", ".txt", ".csv", ".rtf", ".odt",
+            ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".heic", ".tiff"
+        }
+        if ext not in standard_extensions:
             classified.append(
                 ClassifiedFile(
                     path=file.path,
                     category=FileCategory.MISC,
                     confidence=0.95,
-                    reasoning="Classified locally as misc based on archive extension.",
+                    reasoning=f"Classified locally as misc based on non-standard extension.",
                     classification_method="metadata_only",
                 )
             )
             continue
 
-        # 3. Media bypass (only if filename doesn't contain ambiguous/sensitive keywords)
-        ambiguous_keywords = [
+        # 3. Unambiguous keyword bypass (if filename and parent folder contain no category keywords, classify locally)
+        category_keywords = [
             "screenshot", "ss", "invoice", "bill", "receipt", "payment",
             "resume", "cv", "tax", "w2", "1099", "1040", "medical", "health",
             "prescription", "diagnosis", "ssn", "passport", "bank", "password",
-            "social_security", "api_key", "secret", "driver", "license", "card", "id"
+            "social_security", "api_key", "secret", "driver", "license", "card", "id",
+            "school", "homework", "assignment", "grade", "course", "class"
         ]
-        if type_guess == FileCategory.MEDIA and not any(kw in basename_lower for kw in ambiguous_keywords):
+        parent_folder_lower = parent_folder.lower()
+        has_keyword = any(kw in basename_lower for kw in category_keywords) or any(kw in parent_folder_lower for kw in category_keywords)
+
+        if not has_keyword:
+            local_cat = FileCategory.MEDIA if type_guess == FileCategory.MEDIA else FileCategory.MISC
             classified.append(
                 ClassifiedFile(
                     path=file.path,
-                    category=FileCategory.MEDIA,
+                    category=local_cat,
                     confidence=0.95,
-                    reasoning="Classified locally as media based on extension and name.",
+                    reasoning=f"Classified locally as {local_cat} due to lack of category keywords in name or folder.",
                     classification_method="metadata_only",
                 )
             )

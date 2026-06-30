@@ -177,7 +177,7 @@ sensitive_files[]
 Creates the cleanup plan.
 #### Responsibilities
 •	Suggests actions (move, archive, compress, delete safe items)
-•	Excludes sensitive files
+•	Move sensitive files to authenticated folder
 •	Excludes blocked paths
 •	Estimates storage recovery
 •	Generates reasoning
