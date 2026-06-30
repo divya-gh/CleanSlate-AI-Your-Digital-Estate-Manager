@@ -83,28 +83,66 @@ async def hitl_approval_node(
 
     # Step 1: Interrupt if we don't have the user's input yet
     if not ctx.resume_inputs or "hitl_approved" not in ctx.resume_inputs:
-        msg_parts = [
-            "=== CleanSlate AI PC Assistant Optimization Action Plan ===",
-            f"Total Estimated Storage Space Recovered: {plan.estimated_recovery} bytes",
-            "Suggested Actions:",
-        ]
+        import json as _json
+        import os as _os
 
-        for i, action in enumerate(plan.actions):
-            msg_parts.append(
-                f"  [{i + 1}] {action.action_type.upper()}: {action.path}\n"
-                f"      Reasoning: {action.reasoning}\n"
-                f"      Safe to delete: {action.safe_to_delete} | Confidence: {action.confidence} | Space: {action.estimated_space_recovered} bytes"
-            )
+        columns = ["Action", "Category", "File Path", "Space Saved", "Confidence"]
+        rows = []
+        for action in plan.actions:
+            # Derive Category
+            reason_lower = action.reasoning.lower()
+            if "exact duplicate" in reason_lower or "duplicate" in reason_lower:
+                category = "duplicate"
+            elif any(k in reason_lower for k in ["sensitive", "ssn", "tax", "banking", "identity"]):
+                category = "sensitive"
+            else:
+                ext = _os.path.splitext(action.path)[1].lower()
+                if ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"]:
+                    category = "image"
+                elif ext in [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".pptx"]:
+                    category = "document"
+                elif ext in [".zip", ".tar", ".gz", ".rar", ".7z"]:
+                    category = "archive"
+                else:
+                    category = "other"
 
-        msg_parts.append(
-            "\nDo you approve executing this plan? Reply with 'yes' to proceed, or 'no' to cancel:"
-        )
+            # Derive Action display
+            if category == "sensitive":
+                action_display = "SENSITIVE"
+            elif "near duplicate" in reason_lower:
+                action_display = "NEAR_DUPLICATE"
+            elif category == "duplicate":
+                action_display = "DELETE"
+            else:
+                action_display = action.action_type.upper()
 
-        message = "\n".join(msg_parts)
+            rows.append([
+                action_display,
+                category,
+                action.path.replace("\\", "/"),
+                str(action.estimated_space_recovered),
+                f"{action.confidence:.2f}",
+            ])
+
+        table_json = _json.dumps({
+            "columns": columns,
+            "rows": rows
+        })
+
+        toggle_json = _json.dumps({
+            "question": "Would you like me to execute these actions?",
+            "options": [
+                {"label": "Confirm Cleanup", "value": "yes"},
+                {"label": "Cancel", "value": "no"}
+            ]
+        })
+
+        # Combine both widgets into the message using their respective prefixes
+        msg = f"__TABLE__\n{table_json}\n__TOGGLE_SELECT__\n{toggle_json}"
 
         yield RequestInput(
             interrupt_id="hitl_approved",
-            message=message,
+            message=msg,
         )
         return
 

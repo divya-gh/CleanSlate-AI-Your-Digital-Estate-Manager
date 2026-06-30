@@ -20,6 +20,8 @@ from google.adk.events.request_input import RequestInput
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field, model_validator
 
+from app.nodes.organize_state import OrganizerSessionStore
+
 # ---------------------------------------------------------------------------
 # Input / Output schemas
 # ---------------------------------------------------------------------------
@@ -316,48 +318,40 @@ def _sanitize_search_query(q: str | None) -> str | None:
 # ADK 2.0 Function Node
 # ---------------------------------------------------------------------------
 
-# Keys that indicate we are in the middle of an organize flow
-_ORGANIZE_RESUME_KEYS = {"allowed_paths", "blocked_paths", "cleanup_pin",
-                          "security_question_answer", "weekly_organizer_enabled"}
-
 async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
     """MyPCAssistantNode — entry point node for intent classification.
 
     Implemented as an async generator so ADK properly injects ``ctx`` and
     ``ctx.resume_inputs``.  With rerun_on_resume=True, ADK replays this node
-    on every resume turn.  If resume_inputs contain organize-flow keys we
-    bypass Gemini and route directly to cleanup so FolderScopeNode can
-    continue the multi-turn conversation.
+    on every resume turn.  We use OrganizerSessionStore (a plain module-level
+    Python dict) to detect whether we are mid-flow and route to cleanup.
+
+    IMPORTANT — NO state_delta events are yielded here.
+    state_delta triggers a workflow replay within the SAME SSE response.
+    Replays accumulate: each one appends the RequestInput message to the SSE
+    buffer, producing N copies of '🔑 Security Setup' in a single reply.
+    The module-level dict persists across HTTP requests without any ADK
+    events, so zero replays are triggered.
     """
-    # ── Organize-flow resume detection via persistent session state ──────────
-    # With rerun_on_resume=True, ADK always replays from THIS entry node.
-    # ctx.resume_inputs here contains the user's latest HITL answer.
-    # We must capture it and persist it to session state, then route to
-    # cleanup so folder_scope_node can read all accumulated answers.
-    try:
-        _session_state = ctx.session.state
-    except AttributeError:
-        _session_state = {}
+    # ── Resolve session ID ─────────────────────────────────────────────────
+    session_id = (
+        getattr(ctx.session, "id", None)
+        or getattr(ctx.session, "session_id", None)
+        or str(id(ctx.session))  # fallback: stable for the lifetime of the object
+    )
+    store = OrganizerSessionStore.for_session(session_id)
 
-    _ri = dict(getattr(ctx, "resume_inputs", None) or {})
-    _STEP_KEYS = {"parent_folder", "subfolder_selections", "user_pin",
-                  "security_question", "security_answer", "weekly_organizer"}
-    _new_answers = {k: v for k, v in _ri.items() if k in _STEP_KEYS}
-
-    if _session_state.get("organize_flow_active", False):
+    # ── Resume detection ───────────────────────────────────────────────────
+    if store.is_active():
         output = MyPCAssistantOutput(
             intent="cleanup",
-            cleanup_intent_reasoning="Resuming organize flow (session state flag)",
+            cleanup_intent_reasoning="Resuming organize flow (OrganizerSessionStore)",
             # Pass through the user's raw query so folder_scope_node can read
             # it as node_input.user_query to use as the HITL step answer.
             user_query=node_input.user_query,
         )
-        # Do NOT include _new_answers in state_delta here — folder_scope_node
-        # persists each answer individually to avoid state_delta cascade reruns.
-        yield Event(output=output, actions=EventActions(
-            route="cleanup",
-            state_delta={"organize_flow_active": True},
-        ))
+        # NO state_delta — store.is_active() already persists without ADK events.
+        yield Event(output=output, actions=EventActions(route="cleanup"))
         return
 
     query = node_input.user_query
@@ -381,18 +375,18 @@ async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
 
     # Route and output construction
     if result.intent == "cleanup":
+        # Clear any prior answers to start a fresh cleanup session
+        store.clear()
+        # Mark the organize flow as active in the module-level store.
+        # This persists across HTTP requests without any ADK state_delta event,
+        # so NO workflow replay is triggered and NO message cascade occurs.
+        store.set_active()
         output = MyPCAssistantOutput(
             intent="cleanup",
             cleanup_intent_reasoning="User explicitly requested cleanup",
         )
-        # Set the session flag so mid-organize resumes short-circuit here
-        yield Event(
-            output=output,
-            actions=EventActions(
-                route="cleanup",
-                state_delta={"organize_flow_active": True},
-            ),
-        )
+        # NO state_delta — use plain EventActions with just the route.
+        yield Event(output=output, actions=EventActions(route="cleanup"))
 
     elif result.intent == "search":
         sanitized = _sanitize_search_query(result.search_query)

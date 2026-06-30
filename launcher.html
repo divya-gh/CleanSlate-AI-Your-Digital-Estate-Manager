@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -313,6 +313,45 @@
       margin-bottom: 14px;
       line-height: 1.5;
     }
+
+    /* Table Widget Styling */
+    .widget-table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+    }
+    .widget-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+      min-width: 500px;
+    }
+    .widget-table th {
+      background: var(--surface3);
+      padding: 10px 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+    .widget-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      white-space: nowrap;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .widget-table tr:last-child td {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -362,7 +401,78 @@ function addMsg(role, text) {
   av.textContent = role === 'agent' ? String.fromCodePoint(0x1F916) : String.fromCodePoint(0x1F464);
   const bub = document.createElement('div');
   bub.className = 'bubble';
-  bub.textContent = text;
+  
+  if (role === 'agent' && text && text.includes('__TABLE__\n')) {
+    const parts = text.split('__TABLE__\n');
+    
+    // 1. Text before table
+    if (parts[0].trim()) {
+      const p = document.createElement('div');
+      p.style.whiteSpace = 'pre-wrap';
+      p.textContent = parts[0];
+      bub.appendChild(p);
+    }
+    
+    // 2. Parse and render table
+    const rest = parts[1];
+    const nl = rest.indexOf('\n');
+    const jsonStr = nl >= 0 ? rest.slice(0, nl) : rest;
+    const postText = nl >= 0 ? rest.slice(nl + 1) : '';
+    
+    try {
+      const tableData = JSON.parse(jsonStr);
+      const tableContainer = document.createElement('div');
+      tableContainer.className = 'widget-table-container';
+      
+      const table = document.createElement('table');
+      table.className = 'widget-table';
+      
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      (tableData.columns || []).forEach(col => {
+        const th = document.createElement('th');
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      const tbody = document.createElement('tbody');
+      (tableData.rows || []).forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          if (typeof val === 'string' && (val.includes('/') || val.includes('\\'))) {
+            td.title = val;
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+      bub.appendChild(tableContainer);
+    } catch(e) {
+      // Fallback if parsing fails
+      const fallbackDiv = document.createElement('div');
+      fallbackDiv.style.whiteSpace = 'pre-wrap';
+      fallbackDiv.textContent = text;
+      bub.appendChild(fallbackDiv);
+    }
+    
+    // 3. Text after table
+    if (postText.trim()) {
+      const p = document.createElement('div');
+      p.style.whiteSpace = 'pre-wrap';
+      p.style.marginTop = '10px';
+      p.textContent = postText;
+      bub.appendChild(p);
+    }
+  } else {
+    bub.textContent = text;
+  }
+  
   wrap.appendChild(av);
   wrap.appendChild(bub);
   chat.appendChild(wrap);
@@ -412,18 +522,39 @@ send.addEventListener('click', handleSend);
 
 function parseInterruptMsg(msg) {
   if (!msg) return null;
-  const CB_PREFIX = '__CHECKBOX_SELECT__\n';
-  const TG_PREFIX = '__TOGGLE_SELECT__\n';
-  if (msg.startsWith(CB_PREFIX)) {
-    const rest = msg.slice(CB_PREFIX.length);
-    const nl = rest.indexOf('\n');
-    const json  = nl >= 0 ? rest.slice(0, nl) : rest;
-    const label = nl >= 0 ? rest.slice(nl + 1) : '';
-    try { return { type: 'checkbox', data: JSON.parse(json), label }; } catch { return null; }
+
+  const segments = msg.split('\n');
+  let tableData = null;
+  let toggleData = null;
+  let checkboxData = null;
+  let checkboxLabel = '';
+
+  for (let i = 0; i < segments.length; i++) {
+    const line = segments[i];
+    if (line.startsWith('__TABLE__')) {
+      try {
+        tableData = JSON.parse(segments[i + 1]);
+      } catch (e) {}
+    } else if (line.startsWith('__TOGGLE_SELECT__')) {
+      try {
+        toggleData = JSON.parse(segments[i + 1]);
+      } catch (e) {}
+    } else if (line.startsWith('__CHECKBOX_SELECT__')) {
+      try {
+        checkboxData = JSON.parse(segments[i + 1]);
+        checkboxLabel = segments.slice(i + 2).join('\n');
+      } catch (e) {}
+    }
   }
-  if (msg.startsWith(TG_PREFIX)) {
-    const json = msg.slice(TG_PREFIX.length);
-    try { return { type: 'toggle', data: JSON.parse(json) }; } catch { return null; }
+
+  if (checkboxData) {
+    return { type: 'checkbox', data: checkboxData, label: checkboxLabel };
+  }
+  if (tableData) {
+    return { type: 'table_with_toggle', table: tableData, toggle: toggleData };
+  }
+  if (toggleData) {
+    return { type: 'toggle', data: toggleData };
   }
   return null;
 }
@@ -607,6 +738,89 @@ function renderToggleWidget(data, iid) {
   scrollBottom();
 }
 
+function renderTableWithToggleWidget(tableData, toggleData, iid) {
+  widgetActive = true;
+  setReady(false);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'widget-wrap';
+  wrap.id = 'active-widget';
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = String.fromCodePoint(0x1F916);
+
+  const card = document.createElement('div');
+  card.className = 'widget-card';
+
+  // 1. Render Table
+  const tableContainer = document.createElement('div');
+  tableContainer.className = 'widget-table-container';
+
+  const table = document.createElement('table');
+  table.className = 'widget-table';
+
+  // Thead
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  (tableData.columns || []).forEach(col => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // Tbody
+  const tbody = document.createElement('tbody');
+  (tableData.rows || []).forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(val => {
+      const td = document.createElement('td');
+      td.textContent = val;
+      if (typeof val === 'string' && (val.includes('/') || val.includes('\\'))) {
+        td.title = val;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableContainer.appendChild(table);
+  card.appendChild(tableContainer);
+
+  // 2. Render Toggle buttons if present
+  if (toggleData) {
+    const title = document.createElement('div');
+    title.className = 'widget-title';
+    title.style.marginTop = '15px';
+    title.textContent = toggleData.question || 'Choose an option';
+    card.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'toggle-grid';
+
+    (toggleData.options || []).forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'toggle-btn ' + (idx === 0 ? 'primary' : 'secondary');
+      btn.textContent = opt.label;
+      btn.addEventListener('click', () => {
+        grid.querySelectorAll('.toggle-btn').forEach(b => b.disabled = true);
+        dismissWidget();
+        addMsg('user', opt.label);
+        runSSE(opt.value);
+      });
+      grid.appendChild(btn);
+    });
+    card.appendChild(grid);
+  }
+
+  wrap.appendChild(av);
+  wrap.appendChild(card);
+  chat.appendChild(wrap);
+  scrollBottom();
+}
+
 /* SSE runner */
 async function runSSE(message) {
   if (busy) return;
@@ -714,6 +928,8 @@ async function runSSE(message) {
         renderCheckboxWidget(parsed.data, parsed.label, requestIid);
       } else if (parsed && parsed.type === 'toggle') {
         renderToggleWidget(parsed.data, requestIid);
+      } else if (parsed && parsed.type === 'table_with_toggle') {
+        renderTableWithToggleWidget(parsed.table, parsed.toggle, requestIid);
       } else {
         if (requestMsg) addMsg('agent', requestMsg);
         setReady(true);

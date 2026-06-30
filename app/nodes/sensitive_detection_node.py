@@ -157,6 +157,11 @@ _SENSITIVE_KEYWORDS = [
     "social_security",
     "api_key",
     "secret",
+    "resume",
+    "driver",
+    "license",
+    "card",
+    "id",
 ]
 _SENSITIVE_EXTENSIONS = {".tax", ".w2", ".1040", ".med", ".medical", ".key", ".pem"}
 
@@ -181,7 +186,7 @@ def _detect_signals(
         signals.append("sensitive_extension")
 
     # 3. Predecessor classification category
-    if cf_category in (FileCategory.TAX, FileCategory.MEDICAL):
+    if cf_category in (FileCategory.TAX, FileCategory.MEDICAL, FileCategory.RESUME):
         signals.append("classification_category")
 
     # 4. Folder keyword (parent directory name contains keywords)
@@ -197,6 +202,25 @@ def _detect_signals(
 # ---------------------------------------------------------------------------
 
 
+def _generate_with_retry(client, model, contents, config, max_retries=3, initial_delay=3.0):
+    import time
+    delay = initial_delay
+    for attempt in range(max_retries):
+        try:
+            return client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+        except Exception as e:
+            if "429" in str(e) or "exhausted" in str(e).lower() or "limit" in str(e).lower():
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
+            raise e
+
+
 def sensitive_detection_node(
     node_input: DuplicateDetectionOutput,
 ) -> Event:
@@ -209,6 +233,7 @@ def sensitive_detection_node(
 
     # Initialize Gemini client
     client = genai.Client()
+
 
     checked: list[SensitiveFileEntry] = []
     non_sensitive_paths: list[str] = []
@@ -237,8 +262,12 @@ def sensitive_detection_node(
         # Detect safety signals (metadata only)
         signals = _detect_signals(file, category)
 
-        # Optimization: Zero signals or single signal skips Gemini
-        if len(signals) < 2:
+        # Check if the filename contains high-risk keywords to bypass optimization limits
+        basename_lower = Path(file.path).name.lower()
+        has_high_risk_keyword = any(kw in basename_lower for kw in _SENSITIVE_KEYWORDS)
+
+        # Optimization: Zero signals or single signal skips Gemini (exempt high-risk keywords)
+        if len(signals) < 2 and not has_high_risk_keyword:
             checked.append(
                 SensitiveFileEntry(
                     path=file.path,
@@ -253,6 +282,7 @@ def sensitive_detection_node(
             )
             non_sensitive_paths.append(file.path)
             continue
+
 
         # Build prompt for safety biased Gemini using metadata only
         basename = Path(file.path).name
@@ -286,7 +316,8 @@ def sensitive_detection_node(
         prompt = "\n".join(prompt_parts)
 
         try:
-            response = client.models.generate_content(  # nosemgrep
+            response = _generate_with_retry(
+                client=client,
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
@@ -302,8 +333,8 @@ def sensitive_detection_node(
             conf = result.confidence
             reason = result.reasoning
 
-            # Extra check: double-signal rule enforce
-            if file_is_sensitive and len(signals) < 2:
+            # Extra check: double-signal rule enforce (exempt high-risk keywords)
+            if file_is_sensitive and len(signals) < 2 and not has_high_risk_keyword:
                 file_is_sensitive = False
                 sens_type = "none"
                 conf = min(conf, 0.40)
@@ -312,8 +343,8 @@ def sensitive_detection_node(
                     f"but only {len(signals)} were detected."
                 )
 
-            # Cap confidence at 0.40 if two signals are not present
-            if len(signals) < 2 and conf > 0.40:
+            # Cap confidence at 0.40 if two signals are not present (exempt high-risk keywords)
+            if len(signals) < 2 and not has_high_risk_keyword and conf > 0.40:
                 conf = 0.40
 
             if file_is_sensitive:
@@ -339,16 +370,50 @@ def sensitive_detection_node(
                 non_sensitive_paths.append(file.path)
 
         except Exception as e:
-            checked.append(
-                SensitiveFileEntry(
-                    path=file.path,
-                    sensitive=False,
-                    sensitivity_type="none",
-                    confidence=0.5,
-                    reasoning=f"Failed to analyze sensitivity using Gemini: {e}",
+            if has_high_risk_keyword:
+                # Determine sensitive category based on keywords
+                basename_lower = Path(file.path).name.lower()
+                sens_type = "none"
+                for kw, st in [
+                    ("ssn", "SSN"),
+                    ("passport", "identity"),
+                    ("bank", "banking"),
+                    ("medical", "medical"),
+                    ("tax", "tax"),
+                    ("password", "password"),
+                    ("social_security", "SSN"),
+                    ("api_key", "api_key"),
+                    ("secret", "api_key"),
+                    ("resume", "identity"),
+                    ("driver", "identity"),
+                    ("license", "identity"),
+                    ("card", "identity"),
+                    ("id", "identity"),
+                ]:
+                    if kw in basename_lower:
+                        sens_type = st
+                        break
+                
+                checked.append(
+                    SensitiveFileEntry(
+                        path=file.path,
+                        sensitive=True,
+                        sensitivity_type=sens_type,
+                        confidence=0.90,
+                        reasoning=f"Local fallback: Detected high-risk keyword in file name. (Gemini error: {e})",
+                    )
                 )
-            )
-            non_sensitive_paths.append(file.path)
+            else:
+                checked.append(
+                    SensitiveFileEntry(
+                        path=file.path,
+                        sensitive=False,
+                        sensitivity_type="none",
+                        confidence=0.5,
+                        reasoning=f"Failed to analyze sensitivity using Gemini: {e}",
+                    )
+                )
+                non_sensitive_paths.append(file.path)
 
     sensitive_count = sum(1 for entry in checked if entry.sensitive)
     reasoning = (

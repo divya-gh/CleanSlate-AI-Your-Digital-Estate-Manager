@@ -302,26 +302,27 @@ def optimization_planner_node(
         sf = sensitive_lookup.get(path_str)
         is_sensitive = sf.sensitive if sf else False
 
+        # If the file is sensitive, we ALWAYS suggest moving it to Authenticated (never delete, compress, or archive it)
+        if is_sensitive:
+            if is_allowed:
+                actions.append(
+                    CleanupAction(
+                        path=path_str,
+                        action_type="move",
+                        reasoning="Sensitive file moved to Authenticated",
+                        action_reason="Safe isolation of sensitive file.",
+                        requires_user_confirmation=True,
+                        risk_level="low",
+                        estimated_space_recovered=0,
+                        safe_to_delete=False,
+                        confidence=1.0,
+                        rollback_supported=True,
+                    )
+                )
+            continue
+
         # In safe mode, we ONLY suggest moves to Authenticated or WeeklyReview
         if safe_mode:
-            if is_sensitive:
-                if is_allowed:
-                    actions.append(
-                        CleanupAction(
-                            path=path_str,
-                            action_type="move",
-                            reasoning="Sensitive file moved to Authenticated",
-                            action_reason="Safe isolation of sensitive file.",
-                            requires_user_confirmation=True,
-                            risk_level="low",
-                            estimated_space_recovered=0,
-                            safe_to_delete=False,
-                            confidence=1.0,
-                            rollback_supported=True,
-                        )
-                    )
-                continue
-
             if path_str in paths_to_delete:
                 if is_allowed:
                     actions.append(

@@ -244,6 +244,25 @@ def _post_process_classification(
 # ---------------------------------------------------------------------------
 
 
+def _generate_with_retry(client, model, contents, config, max_retries=3, initial_delay=3.0):
+    import time
+    delay = initial_delay
+    for attempt in range(max_retries):
+        try:
+            return client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=config,
+            )
+        except Exception as e:
+            if "429" in str(e) or "exhausted" in str(e).lower() or "limit" in str(e).lower():
+                if attempt < max_retries - 1:
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
+            raise e
+
+
 def classification_node(node_input: FileDiscoveryOutput) -> Event:
     """ClassificationNode — classifies each file in the inventory using safety-biased Gemini (metadata only)."""
     safe_mode = node_input.safe_mode
@@ -264,6 +283,54 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
 
         # Basic type guess based on extension hints helper mapping
         type_guess = _EXTENSION_HINTS.get(ext, FileCategory.MISC)
+
+        # Local bypass checks to avoid unnecessary Gemini API calls on large inventories
+        basename_lower = basename.lower()
+
+        # 1. Source code bypass
+        if type_guess == FileCategory.SOURCE_CODE:
+            classified.append(
+                ClassifiedFile(
+                    path=file.path,
+                    category=FileCategory.SOURCE_CODE,
+                    confidence=0.95,
+                    reasoning="Classified locally as source code based on extension.",
+                    classification_method="metadata_only",
+                )
+            )
+            continue
+
+        # 2. Archive bypass
+        if ext in (".zip", ".tar", ".gz", ".rar", ".7z", ".cab", ".iso"):
+            classified.append(
+                ClassifiedFile(
+                    path=file.path,
+                    category=FileCategory.MISC,
+                    confidence=0.95,
+                    reasoning="Classified locally as misc based on archive extension.",
+                    classification_method="metadata_only",
+                )
+            )
+            continue
+
+        # 3. Media bypass (only if filename doesn't contain ambiguous/sensitive keywords)
+        ambiguous_keywords = [
+            "screenshot", "ss", "invoice", "bill", "receipt", "payment",
+            "resume", "cv", "tax", "w2", "1099", "1040", "medical", "health",
+            "prescription", "diagnosis", "ssn", "passport", "bank", "password",
+            "social_security", "api_key", "secret", "driver", "license", "card", "id"
+        ]
+        if type_guess == FileCategory.MEDIA and not any(kw in basename_lower for kw in ambiguous_keywords):
+            classified.append(
+                ClassifiedFile(
+                    path=file.path,
+                    category=FileCategory.MEDIA,
+                    confidence=0.95,
+                    reasoning="Classified locally as media based on extension and name.",
+                    classification_method="metadata_only",
+                )
+            )
+            continue
 
         # Build prompt for safety biased Gemini classification using metadata elements only
         is_masked = "sensitive_file_" in basename.lower()
@@ -298,7 +365,8 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
         prompt = "\n".join(prompt_parts)
 
         try:
-            response = client.models.generate_content(  # nosemgrep
+            response = _generate_with_retry(
+                client=client,
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
@@ -325,10 +393,32 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
             )
 
         except Exception as e:
-            # Safe local fallback on API failure
-            cat = FileCategory.MISC
-            conf = 0.30
-            reason = f"Gemini API failure, fell back to misc. Error: {e}"
+            # Smart local fallback on API failure
+            basename_lower = basename.lower()
+            if any(kw in basename_lower for kw in ["resume", "cv"]):
+                cat = FileCategory.RESUME
+                conf = 0.85
+                reason = f"Local fallback: Classified as resume based on filename pattern. (Gemini error: {e})"
+            elif any(kw in basename_lower for kw in ["tax", "w2", "1099", "1040"]) or ext in (".tax", ".w2", ".1099", ".1040"):
+                cat = FileCategory.TAX
+                conf = 0.85
+                reason = f"Local fallback: Classified as tax based on filename pattern. (Gemini error: {e})"
+            elif any(kw in basename_lower for kw in ["medical", "health", "prescription", "diagnosis"]) or ext in (".med", ".medical"):
+                cat = FileCategory.MEDICAL
+                conf = 0.85
+                reason = f"Local fallback: Classified as medical based on filename pattern. (Gemini error: {e})"
+            elif any(kw in basename_lower for kw in ["screenshot", "ss"]):
+                cat = FileCategory.SCREENSHOT
+                conf = 0.85
+                reason = f"Local fallback: Classified as screenshot based on filename pattern. (Gemini error: {e})"
+            elif any(kw in basename_lower for kw in ["invoice", "bill", "receipt"]):
+                cat = FileCategory.INVOICE
+                conf = 0.85
+                reason = f"Local fallback: Classified as invoice based on filename pattern. (Gemini error: {e})"
+            else:
+                cat = type_guess
+                conf = 0.60
+                reason = f"Local fallback: Classified based on extension guess {type_guess}. (Gemini error: {e})"
 
         classified.append(
             ClassifiedFile(

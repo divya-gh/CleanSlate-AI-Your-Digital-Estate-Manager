@@ -43,7 +43,7 @@ CleanSlate AI is an autonomous, multi agent system that intelligently manages di
 
 ## 4. Goal and Vision (What This Agent Should Achieve)
 ### Build an autonomous, safe, human approved digital organization agent that:
-•	Scans local + cloud storage
+•	Scans local + cloud storage`(Future)`
 •	Classifies files intelligently
 •	Detects sensitive information
 •	Identifies duplicates
@@ -99,7 +99,9 @@ CleanSlate AI is an autonomous, multi agent system that intelligently manages di
 #### Use LLM reasoning to classify files into categories:
 •	Resume
 •	Tax document
+•	Bank Statemnet
 •	Medical record
+•	DL & SSN
 •	Screenshot
 •	Invoice
 •	School file
@@ -116,6 +118,7 @@ CleanSlate AI is an autonomous, multi agent system that intelligently manages di
 #### Detect:
 •	SSNs
 •	Banking documents
+•	Credit Card
 •	Password files
 •	API keys
 •	Legal/medical/ID documents

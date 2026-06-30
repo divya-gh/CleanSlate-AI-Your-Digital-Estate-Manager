@@ -22,6 +22,7 @@ from google.adk.events.request_input import RequestInput
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.nodes.file_discovery_node import FolderScopePolicy
+from app.nodes.organize_state import OrganizerSessionStore
 
 # ---------------------------------------------------------------------------
 # Input / Output schemas
@@ -339,97 +340,77 @@ async def folder_scope_node(
 ) -> Any:
     """FolderScopeNode — full guided organize flow with HITL path, PIN, and weekly organizer setup.
 
-    With rerun_on_resume=True, ADK replays from my_pc_assistant_node (the
-    entry node) on every turn.  My_pc_assistant_node captures ctx.resume_inputs
-    and stores them in session state via state_delta.  This node reads
-    answers from ctx.session.state so multi-turn HITL answers accumulate
-    correctly across replays.
+    STATE PERSISTENCE (no state_delta events):
+    ─────────────────────────────────────────
+    All multi-turn HITL answers are stored in OrganizerSessionStore — a
+    plain Python module-level dict keyed by session_id.  It persists across
+    HTTP requests within the same server process without ANY ADK state_delta
+    events.
+
+    Why no state_delta:
+      With rerun_on_resume=True, every state_delta event causes ADK to replay
+      the entire workflow from the beginning *within the same SSE response*.
+      Each replay appends the current RequestInput message to the SSE buffer,
+      so after N replays the frontend receives N concatenated copies of the
+      "🔑 Security Setup" (or any other) prompt — the visible cascade.
+
+      OrganizerSessionStore fixes this permanently: zero state_delta →
+      zero replays → zero cascade, regardless of session history length.
     """
-    # Read accumulated prior answers from session state.
-    # With rerun_on_resume=True, ADK replays from the entry node and passes
-    # new_message.text as node_input.user_query.  We use the user's text as
-    # the answer for whatever the CURRENT step expects, and persist it.
-    ri: dict = {}
+    # ── Resolve session ID ─────────────────────────────────────────────────
+    session_id = (
+        getattr(ctx.session, "id", None)
+        or getattr(ctx.session, "session_id", None)
+        or str(id(ctx.session))
+    )
+    store = OrganizerSessionStore.for_session(session_id)
+
+    # Log execution for debugging
+    import datetime as _dt
     try:
-        ri = dict(ctx.session.state)
-    except AttributeError:
+        os.makedirs("C:/Users/divya/OneDrive/Desktop/Learn/AI/Google Vibe Coding/Capstone Project/cleanslate-ai-my-pc-assistant/cleanslate-pc-assistant/scratch", exist_ok=True)
+        with open("C:/Users/divya/OneDrive/Desktop/Learn/AI/Google Vibe Coding/Capstone Project/cleanslate-ai-my-pc-assistant/cleanslate-pc-assistant/scratch/run_log.txt", "a", encoding="utf-8") as f:
+            f.write(f"[{_dt.datetime.now().isoformat()}] session={session_id} query={node_input.user_query!r} store={store.as_dict()!r}\n")
+    except Exception as e:
         pass
 
-    user_answer = (node_input.user_query or "").strip()
-    # _was_already_active = True means this is a RESUME turn (the flag existed BEFORE this turn).
-    # On the initial "organize my computer" turn, organize_flow_active is set by
-    # my_pc_assistant_node's state_delta WITHIN this same run, so it may appear
-    # in ri (from session state snapshot), but it shouldn't be treated as a resume.
-    # We detect a true resume by checking if any STEP key is still missing AND
-    # the flag was already set before this run started.
-    _was_already_active = bool(ri.get("organize_flow_active", False))
-
-    # New step order for ORGANIZE_MODE:
+    # ── Step order for ORGANIZE_MODE ────────────────────────────────────────
     #   parent_folder → subfolder_selections → user_pin →
     #   security_question → security_answer → weekly_organizer
     _STEP_ORDER = ["parent_folder", "subfolder_selections", "user_pin",
                    "security_question", "security_answer", "weekly_organizer"]
-    _any_step_missing = any(s not in ri for s in _STEP_ORDER)
-    _is_resume_turn = _was_already_active and _any_step_missing and user_answer
 
-    # ------------------------------------------------------------------ #
-    # CASCADE GUARD — prevent state_delta reruns from re-saving           #
-    # ------------------------------------------------------------------ #
-    # When we save answer X to step N via state_delta, ADK triggers an
-    # immediate rerun with user_answer still == X. Without a guard the
-    # loop would save X to step N+1, N+2, … cascading infinitely.
-    #
-    # Guard rule: if user_answer is already the stored value for ANY step
-    # that is already in ri, this run is a post-save cascade rerun — skip
-    # the save phase entirely and proceed straight to the next RequestInput.
-    if _is_resume_turn and user_answer not in ("__RESCAN__",):
-        _already_saved_to = [
-            s for s in _STEP_ORDER
-            if s in ri and str(ri.get(s, "")).strip() == user_answer.strip()
-        ]
-        if _already_saved_to:
-            # Cascade rerun detected — user_answer is already stored.
-            # Do NOT save again; just let the node reach the next step prompt.
-            _is_resume_turn = False
+    # ── Save the current HITL answer (if this is a resume turn) ────────────
+    # node_input.user_query contains the user's message text.
+    # store.is_active() is True on all turns after the first cleanup route.
+    user_answer = (node_input.user_query or "").strip()
 
-    # ------------------------------------------------------------------ #
-    # Handle special signals from the UI                                   #
-    # ------------------------------------------------------------------ #
-    # __RESCAN__ — user clicked "Scan a different folder" in the checkbox widget.
-    # Clear path state so step 1 re-asks for a new parent folder.
-    if _is_resume_turn and user_answer == "__RESCAN__":
-        yield Event(actions=EventActions(state_delta={
-            "parent_folder": None,
-            "subfolder_selections": None,
-        }))
-        ri.pop("parent_folder", None)
-        ri.pop("subfolder_selections", None)
-        _is_resume_turn = False
+    if store.is_active() and user_answer:
+        if user_answer == "__RESCAN__":
+            # User clicked "Scan a different folder" — clear path answers
+            store.pop("parent_folder")
+            store.pop("subfolder_selections")
 
-    # "use this folder" — user wants to organize the parent folder directly
-    # when no subfolders were found; inject a synthetic selection.
-    if _is_resume_turn and user_answer.strip().lower() == "use this folder":
-        import json as _json_uf
-        parent_val = ri.get("parent_folder", "")
-        if parent_val and "subfolder_selections" not in ri:
-            synth = _json_uf.dumps({"organized": [parent_val], "never_touch": []})
-            ri["subfolder_selections"] = synth
-            yield Event(actions=EventActions(state_delta={"subfolder_selections": synth}))
-            _is_resume_turn = False
+        elif user_answer.lower() == "use this folder":
+            # Organize the parent folder directly (no subfolders found)
+            import json as _json_uf
+            parent_val = store.get("parent_folder", "")
+            if parent_val and not store.has("subfolder_selections"):
+                synth = _json_uf.dumps({"organized": [parent_val], "never_touch": []})
+                store.set("subfolder_selections", synth)
 
-    # ------------------------------------------------------------------ #
-    # Save the ONE newly-answered step (only on a real user turn).        #
-    # ------------------------------------------------------------------ #
-    if _is_resume_turn:
-        for step in _STEP_ORDER:
-            if step not in ri:
-                ri[step] = user_answer
-                yield Event(actions=EventActions(state_delta={step: user_answer}))
-                # After saving, mark _is_resume_turn=False so that IF the
-                # node continues (fall-through for synthetic steps) it doesn't
-                # try to save again in the same execution pass.
-                _is_resume_turn = False
-                break
+        else:
+            # Normal HITL: save the answer for the first missing step.
+            # Already-saved steps are skipped so replayed turns (from ADK's
+            # rerun_on_resume mechanics) don't overwrite existing answers.
+            for step in _STEP_ORDER:
+                if not store.has(step):
+                    store.set(step, user_answer)
+                    break
+
+    # Build a read-only snapshot dict — used throughout the node below
+    # (same variable name 'ri' for minimal diff with the original logic).
+    ri: dict = store.as_dict()
 
     # Derive cleanup_intent from the upstream 'intent' field if not set directly.
     is_cleanup = node_input.cleanup_intent or node_input.intent == "cleanup"
@@ -484,13 +465,15 @@ async def folder_scope_node(
         try:
             _validate_single_path(parent, is_allowed=True)
         except ValueError as e:
+            # Clear the invalid path from the store so user must re-enter
+            store.pop("parent_folder")
             yield Event(
                 output=FolderScopeOutput(
                     folder_scope_policy=None,
                     message="Invalid folder path.",
                     human_readable_report=f"\u26a0\ufe0f  Invalid path: {e}\nPlease enter a valid absolute path.",
                 ),
-                actions=EventActions(route="scope_invalid", state_delta={"parent_folder": None}),
+                actions=EventActions(route="scope_invalid"),
             )
             yield RequestInput(
                 interrupt_id="parent_folder",
@@ -521,7 +504,7 @@ async def folder_scope_node(
                 f"  \u2022 Or type \"use this folder\" to organize {parent} directly"
             )
             # Clear parent_folder so the user can re-enter
-            yield Event(actions=EventActions(state_delta={"parent_folder": None}))
+            store.pop("parent_folder")
             yield RequestInput(interrupt_id="parent_folder", message=retry_msg)
             return
         else:
@@ -588,7 +571,7 @@ async def folder_scope_node(
                 validation_errors=errors,
                 human_readable_report=hr_message,
             ),
-            actions=EventActions(route="scope_invalid", state_delta={"subfolder_selections": None}),
+            actions=EventActions(route="scope_invalid"),
         )
         return
 
@@ -605,7 +588,7 @@ async def folder_scope_node(
     if "user_pin" not in ri:
         msg = (
             "\U0001f511 Security Setup\n"
-            "\u2500" * 60 + "\n\n"
+            + "\u2500" * 60 + "\n\n"
             "Please create a 4-digit PIN to protect access to your\n"
             "authenticated secure folder.\n\n"
             "Your PIN will be stored securely (hashed) and never shown again.\n\n"
@@ -617,16 +600,15 @@ async def folder_scope_node(
     # Validate PIN
     pin_raw = str(ri["user_pin"]).strip()
     if not re.fullmatch(r"\d{4}", pin_raw):
+        # Clear the invalid pin so user must re-enter
+        store.pop("user_pin")
         yield Event(
             output=FolderScopeOutput(
                 folder_scope_policy=None,
                 message="Invalid PIN.",
                 human_readable_report="\u26a0\ufe0f  Invalid PIN. A PIN must be exactly 4 digits (0\u20139).",
             ),
-            actions=EventActions(
-                route="scope_invalid",
-                state_delta={"user_pin": None},
-            ),
+            actions=EventActions(route="scope_invalid"),
         )
         yield RequestInput(
             interrupt_id="user_pin",
@@ -649,7 +631,7 @@ async def folder_scope_node(
         numbered = "\n".join(f"  {i + 1}. {q}" for i, q in enumerate(_security_questions))
         msg = (
             "\U0001f513 Security Question\n"
-            "\u2500" * 60 + "\n\n"
+            + "\u2500" * 60 + "\n\n"
             "Choose a security question so you can recover your PIN later:\n\n"
             + numbered + "\n\n"
             "Type the NUMBER of your chosen question (1\u20135):"
@@ -664,16 +646,15 @@ async def folder_scope_node(
             sq_index = i - 1
             break
     if sq_index is None:
+        # Clear the invalid answer so user must re-enter
+        store.pop("security_question")
         yield Event(
             output=FolderScopeOutput(
                 folder_scope_policy=None,
                 message="Invalid security question selection.",
                 human_readable_report="\u26a0\ufe0f  Please enter a number 1\u20135.",
             ),
-            actions=EventActions(
-                route="scope_invalid",
-                state_delta={"security_question": None},
-            ),
+            actions=EventActions(route="scope_invalid"),
         )
         yield RequestInput(
             interrupt_id="security_question",
@@ -736,7 +717,7 @@ async def folder_scope_node(
     weekly_status = "\U0001f7e2 Enabled" if weekly_enabled else "\U0001f534 Disabled"
     success_msg = (
         "\u2705 Setup complete! Here\u2019s your configuration summary:\n"
-        "\u2500" * 60 + "\n\n"
+        + "\u2500" * 60 + "\n\n"
         f"\U0001f4c2 Folders to organize ({len(norm_allowed)}):\n"
         + "\n".join(f"  \u2022 {p}" for p in norm_allowed) + "\n\n"
         f"\U0001f511 PIN protected: Yes (stored securely)\n"
@@ -753,14 +734,6 @@ async def folder_scope_node(
 
     yield Event(
         output=output,
-        actions=EventActions(
-            route="scope_ok",
-            state_delta={
-                "pin_hash": pin_hash,
-                "security_question": chosen_question,
-                "security_answer_hash": answer_hash,
-                "weekly_organizer_enabled": weekly_enabled,
-                "organize_flow_active": False,  # clear flag — flow complete
-            },
-        ),
+        actions=EventActions(route="scope_ok"),
     )
+

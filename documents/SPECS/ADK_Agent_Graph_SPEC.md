@@ -123,7 +123,7 @@ file_inventory[]
 LLM classification is required for intelligent cleanup.
 #### What it does
 •	Classifies each file into categories
-•	Uses metadata + optional content preview
+•	Uses metadata + size + description
 #### Inputs
 ```
 file_inventory

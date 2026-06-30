@@ -302,19 +302,57 @@ def summary_node(
 
     # Detail logs
     if execution_log:
-        report_lines.append("### Action Log Details")
+        import json as _json3
+        columns = ["Action", "Category", "File Path", "Status", "Details"]
+        rows = []
         for entry in execution_log:
             file_is_sensitive = _is_sensitive_file(entry.path, sensitive_files)
+
+            # Category
+            reason_lower = entry.reasoning.lower()
             if file_is_sensitive:
-                report_lines.append(
-                    f"- [Protected Sensitive File] {entry.action_type.upper()}: {entry.status.upper()} (details hidden for privacy)"
-                )
+                category = "sensitive"
+            elif "exact duplicate" in reason_lower or "duplicate" in reason_lower:
+                category = "duplicate"
             else:
-                clean_p = _clean_path(entry.path, policy)
-                clean_reason = _clean_reasoning(entry.reasoning)
-                report_lines.append(
-                    f"- {clean_p} - {entry.action_type.upper()}: {entry.status.upper()} ({clean_reason})"
-                )
+                ext = os.path.splitext(entry.path)[1].lower()
+                if ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"]:
+                    category = "image"
+                elif ext in [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".pptx"]:
+                    category = "document"
+                else:
+                    category = "other"
+
+            # Action Display
+            if file_is_sensitive:
+                action_display = "SENSITIVE"
+            elif "near duplicate" in reason_lower:
+                action_display = "NEAR_DUPLICATE"
+            elif category == "duplicate":
+                action_display = "DELETE"
+            else:
+                action_display = entry.action_type.upper()
+
+            # Path
+            clean_p = "[Protected Sensitive File]" if file_is_sensitive else _clean_path(entry.path, policy)
+            # Details
+            clean_reason = "Runtime Safety Check: Sensitive file protection." if file_is_sensitive else _clean_reasoning(entry.reasoning)
+
+            rows.append([
+                action_display,
+                category,
+                clean_p.replace("\\", "/"),
+                entry.status.upper(),
+                clean_reason
+            ])
+
+        table_json = _json3.dumps({
+            "columns": columns,
+            "rows": rows
+        })
+
+        report_lines.append("### Action Log Details")
+        report_lines.append(f"__TABLE__\n{table_json}")
 
     human_readable_report = "\n".join(report_lines)
 

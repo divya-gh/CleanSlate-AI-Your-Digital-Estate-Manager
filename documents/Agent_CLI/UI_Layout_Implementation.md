@@ -111,3 +111,68 @@ Do NOT use fallback responses while in ORGANIZE_MODE.
 
 Image - chat_checkbox
 
+============================================================================================
+# Implementing Tabular output 
+
+## Update OptimizationPlannerNode:
+**Agent OptimizationPlannerNode (or SummaryNode) is currently emitting plain text:**
+
+### Output:
+```
+== CleanSlate AI PC Assistant Optimization Action Plan ===
+Total Estimated Storage Space Recovered: 8663212 bytes
+Suggested Actions:
+  [1] DELETE: c:\users\divya\onedrive\desktop\collection\Cheet sheets\pics\Data+Visualizations+-+DataCamp.pdf
+      Reasoning: Exact duplicate of another file.
+      Safe to delete: True | Confidence: 0.95 | Space: 3955024 bytes
+  [2] DELETE: c:\users\divya\onedrive\desktop\collection\Cheet sheets\pics\excel_python.jpg
+      Reasoning: Exact duplicate of another file.
+      Safe to delete: True | Confidence: 0.95 | Space: 153726 bytes
+```
+
+## The fix: Emit a TABLE interrupt
+
+### Prompt: 
+```
+Update the OptimizationPlannerNode and SummaryNode logic.
+
+Instead of printing raw text for optimization actions, emit a TABLE widget using __TABLE__ JSON.
+
+The table should have columns:
+- Action (DELETE, ARCHIVE, MOVE)
+- Category (duplicate, sensitive, resume, image, etc.)
+- File Path
+- Space Saved (bytes)
+- Confidence (0–1)
+
+Example JSON structure to emit:
+
+{
+  "__TABLE__": {
+    "columns": ["Action", "Category", "File Path", "Space Saved", "Confidence"],
+    "rows": [
+      ["DELETE", "duplicate", "c:/users/.../file.pdf", "3955024", "0.95"],
+      ["DELETE", "duplicate", "c:/users/.../excel_python.jpg", "153726", "0.95"],
+      ["DELETE", "sensitive", "c:/users/.../DL.bmp", "0", "0.95"]
+    ]
+  }
+}
+
+Render this table in the UI instead of plain text.
+
+Do NOT print repeated headers.
+Do NOT print repeated summaries.
+Do NOT print raw text dumps.
+
+After showing the table, ask:
+"Would you like me to execute these actions?"
+with two buttons:
+- Confirm Cleanup
+- Cancel
+
+Use __TOGGLE_SELECT__ for these buttons.
+
+Stop execution after emitting the table interrupt.
+Resume only after user selects confirm/cancel.
+
+```
