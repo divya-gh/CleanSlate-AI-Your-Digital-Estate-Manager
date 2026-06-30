@@ -274,10 +274,21 @@ def _parse_paths(input_val: Any) -> list[str]:
     return []
 
 def _get_default_safe_suggestions() -> str:
-    """Returns OS-appropriate safe folder suggestions to show the user."""
+    """Returns OS-appropriate safe folder suggestions, preferring OneDrive paths on Windows."""
     if os.name == "nt":
         username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
         base = f"C:/Users/{username}"
+        onedrive_base = f"C:/Users/{username}/OneDrive"
+
+        # Prefer OneDrive paths if they exist (common with Microsoft 365)
+        if os.path.isdir(onedrive_base):
+            return (
+                f"  \u2705  {onedrive_base}/Desktop\n"
+                f"  \u2705  {onedrive_base}/Documents\n"
+                f"  \u2705  {base}/Downloads\n"
+                f"  \u2705  {onedrive_base}/Pictures\n"
+                f"  \u2705  {onedrive_base}/Videos"
+            )
         return (
             f"  \u2705  {base}/Desktop\n"
             f"  \u2705  {base}/Documents\n"
@@ -362,6 +373,33 @@ async def folder_scope_node(
     _is_resume_turn = _was_already_active and _any_step_missing and user_answer
 
     # ------------------------------------------------------------------ #
+    # Handle special signals from the UI                                   #
+    # ------------------------------------------------------------------ #
+    # __RESCAN__ — user clicked "Scan a different folder" in the checkbox widget.
+    # Clear path state so step 1 re-asks for a new parent folder.
+    if _is_resume_turn and user_answer == "__RESCAN__":
+        yield Event(actions=EventActions(state_delta={
+            "parent_folder": None,
+            "subfolder_selections": None,
+        }))
+        # Remove from ri so step 1 fires again
+        ri.pop("parent_folder", None)
+        ri.pop("subfolder_selections", None)
+        # Re-show step 1 immediately (fall through, don't count as answered)
+        _is_resume_turn = False
+
+    # "use this folder" — user wants to organize the parent folder directly
+    # when no subfolders were found; inject a synthetic selection.
+    if _is_resume_turn and user_answer.strip().lower() == "use this folder":
+        import json as _json_uf
+        parent_val = ri.get("parent_folder", "")
+        if parent_val and "parent_folder" in ri and "subfolder_selections" not in ri:
+            synth = _json_uf.dumps({"organized": [parent_val], "never_touch": []})
+            ri["subfolder_selections"] = synth
+            yield Event(actions=EventActions(state_delta={"subfolder_selections": synth}))
+            _is_resume_turn = False  # synthetic — don't re-advance step order
+
+    # ------------------------------------------------------------------ #
     # CRITICAL: Only persist the ONE newly-answered step per resume turn. #
     # Persisting ALL answered steps on every rerun triggers an infinite   #
     # state_delta cascade (rerun_on_resume fires again each time).        #
@@ -444,19 +482,36 @@ async def folder_scope_node(
         subfolders = _list_subfolders(parent)
 
         if not subfolders:
-            # No subfolders found — treat the parent folder itself as the organize target
-            # and skip the checkbox step by injecting a synthetic selection
-            ri["subfolder_selections"] = _json.dumps({
-                "organized": [parent],
-                "never_touch": [],
-            })
-            yield Event(actions=EventActions(state_delta={"subfolder_selections": ri["subfolder_selections"]}))
-            # Fall through to STEP 3 immediately
+            # No subfolders at all — use the folder itself as the single target,
+            # but first ask the user if they want to re-enter a different path.
+            username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
+            onedrive_hint = ""
+            if os.name == "nt" and "onedrive" not in parent.lower():
+                onedrive_base = f"C:/Users/{username}/OneDrive"
+                if os.path.isdir(onedrive_base):
+                    onedrive_hint = (
+                        f"\n\n\U0001f4a1 Tip: Your OneDrive folders are at:\n"
+                        f"   {onedrive_base}/Desktop\n"
+                        f"   {onedrive_base}/Documents"
+                    )
+            retry_msg = (
+                f"\U0001f4c2 No sub-folders found inside:\n   {parent}\n\n"
+                "This folder has no sub-folders to select from. You can:\n"
+                f"  \u2022 Type a DIFFERENT parent path to scan its sub-folders"
+                + onedrive_hint + "\n"
+                f"  \u2022 Or type \"use this folder\" to organize {parent} directly"
+            )
+            # Clear parent_folder so the user can re-enter
+            yield Event(actions=EventActions(state_delta={"parent_folder": None}))
+            yield RequestInput(interrupt_id="parent_folder", message=retry_msg)
+            return
         else:
-            # Emit __CHECKBOX_SELECT__ so the chat UI renders interactive checkboxes
+            # Emit __CHECKBOX_SELECT__ so the chat UI renders interactive checkboxes.
+            # Include the count so the UI can show it.
             checkbox_payload = _json.dumps({
                 "parent": parent,
                 "subfolders": subfolders,
+                "count": len(subfolders),
             })
             msg = (
                 "__CHECKBOX_SELECT__\n"
