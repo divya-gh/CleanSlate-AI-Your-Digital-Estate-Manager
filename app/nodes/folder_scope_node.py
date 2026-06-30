@@ -373,6 +373,26 @@ async def folder_scope_node(
     _is_resume_turn = _was_already_active and _any_step_missing and user_answer
 
     # ------------------------------------------------------------------ #
+    # CASCADE GUARD — prevent state_delta reruns from re-saving           #
+    # ------------------------------------------------------------------ #
+    # When we save answer X to step N via state_delta, ADK triggers an
+    # immediate rerun with user_answer still == X. Without a guard the
+    # loop would save X to step N+1, N+2, … cascading infinitely.
+    #
+    # Guard rule: if user_answer is already the stored value for ANY step
+    # that is already in ri, this run is a post-save cascade rerun — skip
+    # the save phase entirely and proceed straight to the next RequestInput.
+    if _is_resume_turn and user_answer not in ("__RESCAN__",):
+        _already_saved_to = [
+            s for s in _STEP_ORDER
+            if s in ri and str(ri.get(s, "")).strip() == user_answer.strip()
+        ]
+        if _already_saved_to:
+            # Cascade rerun detected — user_answer is already stored.
+            # Do NOT save again; just let the node reach the next step prompt.
+            _is_resume_turn = False
+
+    # ------------------------------------------------------------------ #
     # Handle special signals from the UI                                   #
     # ------------------------------------------------------------------ #
     # __RESCAN__ — user clicked "Scan a different folder" in the checkbox widget.
@@ -382,10 +402,8 @@ async def folder_scope_node(
             "parent_folder": None,
             "subfolder_selections": None,
         }))
-        # Remove from ri so step 1 fires again
         ri.pop("parent_folder", None)
         ri.pop("subfolder_selections", None)
-        # Re-show step 1 immediately (fall through, don't count as answered)
         _is_resume_turn = False
 
     # "use this folder" — user wants to organize the parent folder directly
@@ -393,23 +411,24 @@ async def folder_scope_node(
     if _is_resume_turn and user_answer.strip().lower() == "use this folder":
         import json as _json_uf
         parent_val = ri.get("parent_folder", "")
-        if parent_val and "parent_folder" in ri and "subfolder_selections" not in ri:
+        if parent_val and "subfolder_selections" not in ri:
             synth = _json_uf.dumps({"organized": [parent_val], "never_touch": []})
             ri["subfolder_selections"] = synth
             yield Event(actions=EventActions(state_delta={"subfolder_selections": synth}))
-            _is_resume_turn = False  # synthetic — don't re-advance step order
+            _is_resume_turn = False
 
     # ------------------------------------------------------------------ #
-    # CRITICAL: Only persist the ONE newly-answered step per resume turn. #
-    # Persisting ALL answered steps on every rerun triggers an infinite   #
-    # state_delta cascade (rerun_on_resume fires again each time).        #
+    # Save the ONE newly-answered step (only on a real user turn).        #
     # ------------------------------------------------------------------ #
     if _is_resume_turn:
         for step in _STEP_ORDER:
             if step not in ri:
                 ri[step] = user_answer
-                # Persist ONLY this new answer — nothing else
                 yield Event(actions=EventActions(state_delta={step: user_answer}))
+                # After saving, mark _is_resume_turn=False so that IF the
+                # node continues (fall-through for synthetic steps) it doesn't
+                # try to save again in the same execution pass.
+                _is_resume_turn = False
                 break
 
     # Derive cleanup_intent from the upstream 'intent' field if not set directly.

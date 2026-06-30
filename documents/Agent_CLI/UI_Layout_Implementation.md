@@ -109,3 +109,5 @@ Do NOT use fallback responses while in ORGANIZE_MODE.
 
 ```
 
+Image - chat_checkbox
+
