@@ -360,10 +360,18 @@ async def folder_scope_node(
                    "security_question", "security_answer", "weekly_organizer"]
     _any_step_missing = any(s not in ri for s in _STEP_ORDER)
     _is_resume_turn = _was_already_active and _any_step_missing and user_answer
+
+    # ------------------------------------------------------------------ #
+    # CRITICAL: Only persist the ONE newly-answered step per resume turn. #
+    # Persisting ALL answered steps on every rerun triggers an infinite   #
+    # state_delta cascade (rerun_on_resume fires again each time).        #
+    # ------------------------------------------------------------------ #
     if _is_resume_turn:
         for step in _STEP_ORDER:
             if step not in ri:
                 ri[step] = user_answer
+                # Persist ONLY this new answer — nothing else
+                yield Event(actions=EventActions(state_delta={step: user_answer}))
                 break
 
     # Derive cleanup_intent from the upstream 'intent' field if not set directly.
@@ -379,28 +387,31 @@ async def folder_scope_node(
         yield Event(output=output, actions=EventActions(route="scope_invalid"))
         return
 
-    # Persist the latest merged answer into session state so the next
-    # rerun_on_resume can read it.
-    _STEP_KEYS = {"parent_folder", "subfolder_selections", "user_pin",
-                  "security_question", "security_answer", "weekly_organizer"}
-    _answers_to_persist = {k: v for k, v in ri.items() if k in _STEP_KEYS}
-    if _answers_to_persist:
-        yield Event(actions=EventActions(state_delta=_answers_to_persist))
-
     # ------------------------------------------------------------------ #
-    # STEP 1 — Ask for the parent folder path                            #
+    # STEP 1 — Ask for the parent folder (with suggestions + blocked list)#
     # ------------------------------------------------------------------ #
     if "parent_folder" not in ri:
+        suggestions = _get_default_safe_suggestions()
+        system_blocked = _get_default_system_paths()
+        blocked_preview = "\n".join(
+            f"  \u26d4  {p}" for p in system_blocked[:6]
+        ) + ("\n  ... (and more system folders)" if len(system_blocked) > 6 else "")
+
         username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
-        example = f"C:/Users/{username}/Desktop" if os.name == "nt" else f"/Users/{username}/Desktop"
+        example = f"C:/Users/{username}/Downloads" if os.name == "nt" else f"/Users/{username}/Downloads"
+
         msg = (
             "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
             + "\u2500" * 60 + "\n\n"
-            "\U0001f4c2 Enter the full path of the folder you want to organize.\n"
-            "I\u2019ll list everything inside so you can choose exactly what to clean.\n\n"
-            "\U0001f512 Sensitive files will be moved to your secure Authenticated folder.\n\n"
+            "\U0001f4c2 Suggested safe folders you can organize:\n"
+            + suggestions + "\n\n"
+            "\u26d4 Automatically blocked (system folders \u2014 never touched):\n"
+            + blocked_preview + "\n\n"
+            "\U0001f512 Sensitive files found during cleanup will be moved to\n"
+            "   your secure Authenticated folder automatically.\n\n"
             + "\u2500" * 60 + "\n"
-            f"Type the folder path (e.g. {example}):"
+            "Please type the folder you want me to organize\n"
+            f"(e.g. C:/Users/{username}/Desktop \u2014 I\u2019ll list its sub-folders so you can pick which ones to clean):"
         )
         yield RequestInput(interrupt_id="parent_folder", message=msg)
         return

@@ -621,6 +621,8 @@ async function runSSE(message) {
     let bestResponse = '';
     let requestMsg   = '';
     let requestIid   = null;
+    // Track whether we've seen a structured output (prefer it over LLM text)
+    let gotStructured = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -634,30 +636,54 @@ async function runSSE(message) {
         if (!json || json === '[DONE]') continue;
         let ev;
         try { ev = JSON.parse(json); } catch { continue; }
+
+        // --- HITL interrupt (functionCall from ADK) ---
         const fc = ev && ev.content && ev.content.parts && ev.content.parts[0] && ev.content.parts[0].functionCall;
         if (fc) {
           const iid = fc.id || (fc.args && fc.args.interruptId);
           const msg = (fc.args && fc.args.message) || '';
-          if (iid) { requestIid = iid; requestMsg = msg; }
+          if (iid) {
+            requestIid = iid;
+            requestMsg = msg;
+            // Once we know this is a HITL turn, stop using LLM text as response
+            gotStructured = true;
+          }
           continue;
         }
+
+        // --- Older ADK interrupt format ---
         if (ev && (ev.type === 'request_input' || ev.interrupt_id)) {
           requestMsg = ev.message || ev.interrupt_message || '';
           requestIid = ev.interrupt_id || null;
+          gotStructured = true;
           continue;
         }
-        const out =
+
+        // --- Structured node output (most reliable, always prefer) ---
+        const structOut =
           (ev && ev.output && ev.output.human_readable_report) ||
           (ev && ev.output && ev.output.message)               ||
           (ev && ev.output && ev.output.conversational_response) ||
-          (ev && ev.output && ev.output.summary_report)         ||
-          (ev && ev.content && ev.content.parts && ev.content.parts[0] && ev.content.parts[0].text);
-        if (!out && ev && ev.output && typeof ev.output === 'object') {
+          (ev && ev.output && ev.output.summary_report);
+
+        if (structOut) {
+          bestResponse = structOut;
+          gotStructured = true;
+          continue;
+        }
+
+        // --- Fallback: LLM streaming text (only use if no structured output yet) ---
+        if (!gotStructured) {
+          const textOut = ev && ev.content && ev.content.parts && ev.content.parts[0] && ev.content.parts[0].text;
+          if (textOut) bestResponse = textOut;
+        }
+
+        // --- Fallback: scan any output field for a usable string ---
+        if (!gotStructured && ev && ev.output && typeof ev.output === 'object') {
           for (const val of Object.values(ev.output)) {
             if (typeof val === 'string' && val.trim().length > 20) { bestResponse = val; break; }
           }
         }
-        if (out) bestResponse = out;
       }
     }
 
@@ -718,3 +744,4 @@ boot();
 </script>
 </body>
 </html>
+

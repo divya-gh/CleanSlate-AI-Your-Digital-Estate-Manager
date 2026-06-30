@@ -479,18 +479,44 @@ def file_discovery_node(
         for ap in policy.allowed_paths:
             # Check path existence without reading contents or following symlinks
             if not os.path.exists(ap):
-                raise ValueError(f"Allowed path '{ap}' does not exist.")
-            if os.path.islink(ap):
-                raise ValueError(
-                    f"Allowed path '{ap}' is a symbolic link, which is not supported."
+                err_msg = (
+                    f"\u26a0\ufe0f  Folder not found: '{ap}'\n\n"
+                    "Please make sure the folder exists and try again.\n"
+                    "Tip: Enter a PARENT folder (e.g. C:/Users/YourName/Desktop) \u2014\n"
+                    "CleanSlate will list its sub-folders for you to choose from."
                 )
+                dummy_policy = FolderScopePolicy(allowed_paths=["."])
+                output = FileDiscoveryOutput(
+                    file_inventory=[],
+                    folder_scope_policy=dummy_policy,
+                    search_mode=False,
+                    safe_mode=False,
+                    reasoning=err_msg,
+                )
+                return Event(output=output, actions=EventActions(route="error"))
+            if os.path.islink(ap):
+                dummy_policy = FolderScopePolicy(allowed_paths=["."])
+                output = FileDiscoveryOutput(
+                    file_inventory=[],
+                    folder_scope_policy=dummy_policy,
+                    search_mode=False,
+                    safe_mode=False,
+                    reasoning=f"\u26a0\ufe0f  Path '{ap}' is a symbolic link, which is not supported.",
+                )
+                return Event(output=output, actions=EventActions(route="error"))
 
             # Check for overlaps with blocked paths
             for bp in policy.blocked_paths:
                 if ap == bp or ap.startswith(bp + os.sep):
-                    raise ValueError(
-                        f"Allowed path '{ap}' overlaps with or is inside blocked path '{bp}'."
+                    dummy_policy = FolderScopePolicy(allowed_paths=["."])
+                    output = FileDiscoveryOutput(
+                        file_inventory=[],
+                        folder_scope_policy=dummy_policy,
+                        search_mode=False,
+                        safe_mode=False,
+                        reasoning=f"\u26a0\ufe0f  Path '{ap}' overlaps with blocked path '{bp}'.",
                     )
+                    return Event(output=output, actions=EventActions(route="error"))
 
         try:
             inventory, reasoning = _scan_allowed_paths(

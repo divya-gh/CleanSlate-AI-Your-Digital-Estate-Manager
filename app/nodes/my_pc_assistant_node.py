@@ -352,11 +352,11 @@ async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
             # it as node_input.user_query to use as the HITL step answer.
             user_query=node_input.user_query,
         )
-        # Also persist the new answers so folder_scope_node can read them
-        _state_delta = {"organize_flow_active": True, **_new_answers}
+        # Do NOT include _new_answers in state_delta here — folder_scope_node
+        # persists each answer individually to avoid state_delta cascade reruns.
         yield Event(output=output, actions=EventActions(
             route="cleanup",
-            state_delta=_state_delta,
+            state_delta={"organize_flow_active": True},
         ))
         return
 
