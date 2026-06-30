@@ -40,8 +40,30 @@ Launch ADK Playground
 
 #### Then open:
 
-Code
-http://127.0.0.1:8080/dev-ui/?app=app
+```
+http://127.0.0.1:8080/dev-ui/
+
+AND
+http://127.0.0.1:8000/chat
+
+```
+
+========================================================================================
+# Testing http://127.0.0.1:8000/chat playgound
+
+### Playground opens with a welcome Message:
+
+Image - chat_welcome
+
+### Follow along
+
+### Step 1. Type : Organize my computer
+Image - chat_organize_mycomputer
+
+### Step 1. Type : Type the path
+
+
+
 What to test inside the Playground:
 ✔ 1. Ask a simple question
 “Search for images”

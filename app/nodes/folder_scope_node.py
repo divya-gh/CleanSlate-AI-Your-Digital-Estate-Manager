@@ -302,6 +302,25 @@ def _hash_secret(value: str) -> str:
     return hashlib.sha256(value.strip().encode()).hexdigest()  # nosemgrep
 
 
+def _list_subfolders(parent_path: str) -> list[str]:
+    """List direct subdirectories of parent_path (metadata-only, max 50).
+
+    Returns a sorted list of absolute paths using forward slashes.
+    Never recurses, never reads file contents.
+    """
+    import json as _json  # noqa: F401 (used by callers via __CHECKBOX_SELECT__ protocol)
+    try:
+        entries = []
+        with os.scandir(parent_path) as it:
+            for entry in it:
+                if entry.is_dir(follow_symlinks=False):
+                    entries.append(entry.path.replace("\\", "/"))
+                if len(entries) >= 50:
+                    break
+        return sorted(entries)
+    except (OSError, PermissionError):
+        return []
+
 
 async def folder_scope_node(
     ctx: Context,
@@ -334,9 +353,10 @@ async def folder_scope_node(
     # the flag was already set before this run started.
     _was_already_active = bool(ri.get("organize_flow_active", False))
 
-    # Determine which step we are in and insert the user's latest answer.
-    # Only do this on resume turns (not when user first says "organize my computer").
-    _STEP_ORDER = ["allowed_paths", "blocked_paths", "user_pin",
+    # New step order for ORGANIZE_MODE:
+    #   parent_folder → subfolder_selections → user_pin →
+    #   security_question → security_answer → weekly_organizer
+    _STEP_ORDER = ["parent_folder", "subfolder_selections", "user_pin",
                    "security_question", "security_answer", "weekly_organizer"]
     _any_step_missing = any(s not in ri for s in _STEP_ORDER)
     _is_resume_turn = _was_already_active and _any_step_missing and user_answer
@@ -361,79 +381,106 @@ async def folder_scope_node(
 
     # Persist the latest merged answer into session state so the next
     # rerun_on_resume can read it.
-    _STEP_KEYS = {"allowed_paths", "blocked_paths", "user_pin",
+    _STEP_KEYS = {"parent_folder", "subfolder_selections", "user_pin",
                   "security_question", "security_answer", "weekly_organizer"}
     _answers_to_persist = {k: v for k, v in ri.items() if k in _STEP_KEYS}
     if _answers_to_persist:
         yield Event(actions=EventActions(state_delta=_answers_to_persist))
 
     # ------------------------------------------------------------------ #
-    # STEP 1 — Ask which folders to organize (show suggestions first)     #
+    # STEP 1 — Ask for the parent folder path                            #
     # ------------------------------------------------------------------ #
-    if "allowed_paths" not in ri:
-        suggestions = _get_default_safe_suggestions()
-        system_blocked = _get_default_system_paths()
-        blocked_preview = "\n".join(
-            f"  \u26d4  {p}" for p in system_blocked[:6]
-        ) + ("\n  ... (and more system folders)" if len(system_blocked) > 6 else "")
-
+    if "parent_folder" not in ri:
+        username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
+        example = f"C:/Users/{username}/Desktop" if os.name == "nt" else f"/Users/{username}/Desktop"
         msg = (
-            "\U0001f9f9 Great! Let's get your computer organized safely.\n"
+            "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
             + "\u2500" * 60 + "\n\n"
-            "\U0001f4c2 Suggested safe folders you can organize:\n"
-            + suggestions + "\n\n"
-            "\u26d4 Automatically blocked (system folders \u2014 never touched):\n"
-            + blocked_preview + "\n\n"
-            "\U0001f512 Sensitive files found during cleanup will be moved to\n"
-            "   your secure Authenticated folder automatically.\n\n"
+            "\U0001f4c2 Enter the full path of the folder you want to organize.\n"
+            "I\u2019ll list everything inside so you can choose exactly what to clean.\n\n"
+            "\U0001f512 Sensitive files will be moved to your secure Authenticated folder.\n\n"
             + "\u2500" * 60 + "\n"
-            + "Please type the folder(s) you want me to organize\n"
-            "(comma-separated absolute paths, e.g. C:/Users/YourName/Downloads):"
+            f"Type the folder path (e.g. {example}):"
         )
-        yield RequestInput(interrupt_id="allowed_paths", message=msg)
+        yield RequestInput(interrupt_id="parent_folder", message=msg)
         return
 
     # ------------------------------------------------------------------ #
-    # STEP 2 — Ask which folders to never touch (optional)               #
+    # STEP 2 — List subfolders → send checkbox widget                    #
     # ------------------------------------------------------------------ #
-    if "blocked_paths" not in ri:
-        allowed_preview = "\n".join(
-            f"  \u2705  {p}" for p in _parse_paths(ri["allowed_paths"])[:5]
-        )
-        msg = (
-            "\u2705 Folders to organize:\n" + allowed_preview + "\n\n"
-            "Are there any additional folders I should NEVER touch?\n"
-            "(comma-separated absolute paths, or type \"none\" to skip)"
-        )
-        yield RequestInput(interrupt_id="blocked_paths", message=msg)
-        return
+    if "subfolder_selections" not in ri:
+        import json as _json
+        parent = ri["parent_folder"].strip().replace("\\", "/").rstrip("/")
+
+        # Validate the parent path first
+        try:
+            _validate_single_path(parent, is_allowed=True)
+        except ValueError as e:
+            yield Event(
+                output=FolderScopeOutput(
+                    folder_scope_policy=None,
+                    message="Invalid folder path.",
+                    human_readable_report=f"\u26a0\ufe0f  Invalid path: {e}\nPlease enter a valid absolute path.",
+                ),
+                actions=EventActions(route="scope_invalid", state_delta={"parent_folder": None}),
+            )
+            yield RequestInput(
+                interrupt_id="parent_folder",
+                message=f"\u26a0\ufe0f  Invalid path: {e}\n\nPlease type a valid absolute folder path:",
+            )
+            return
+
+        subfolders = _list_subfolders(parent)
+
+        if not subfolders:
+            # No subfolders found — treat the parent folder itself as the organize target
+            # and skip the checkbox step by injecting a synthetic selection
+            ri["subfolder_selections"] = _json.dumps({
+                "organized": [parent],
+                "never_touch": [],
+            })
+            yield Event(actions=EventActions(state_delta={"subfolder_selections": ri["subfolder_selections"]}))
+            # Fall through to STEP 3 immediately
+        else:
+            # Emit __CHECKBOX_SELECT__ so the chat UI renders interactive checkboxes
+            checkbox_payload = _json.dumps({
+                "parent": parent,
+                "subfolders": subfolders,
+            })
+            msg = (
+                "__CHECKBOX_SELECT__\n"
+                + checkbox_payload + "\n"
+                "Select which folders to organize and which to leave untouched:"
+            )
+            yield RequestInput(interrupt_id="subfolder_selections", message=msg)
+            return
 
     # ------------------------------------------------------------------ #
-    # Validate paths before moving to PIN setup                          #
+    # Parse subfolder_selections → derive organize & never_touch lists   #
     # ------------------------------------------------------------------ #
-    raw_allowed = ri["allowed_paths"]
-    raw_blocked = ri["blocked_paths"]
+    import json as _json2
+    selections_raw = ri.get("subfolder_selections", "{}")
+    try:
+        if isinstance(selections_raw, str) and selections_raw.startswith("{"):
+            sel = _json2.loads(selections_raw)
+        else:
+            sel = {"organized": [selections_raw], "never_touch": []}
+    except Exception:
+        sel = {"organized": [], "never_touch": []}
 
-    allowed_list = _parse_paths(raw_allowed)
-    raw_blocked_str = str(raw_blocked).strip().lower()
-    blocked_list = [] if raw_blocked_str in ("none", "", "skip") else _parse_paths(raw_blocked)
-
-    errors: list[str] = []
     norm_allowed: list[str] = []
     norm_blocked: list[str] = []
+    errors: list[str] = []
 
-    if not allowed_list:
-        errors.append("You must specify at least one folder to organize.")
-    else:
-        for ap in allowed_list:
-            try:
-                cleaned = _validate_single_path(ap, is_allowed=True)
-                if cleaned not in norm_allowed:
-                    norm_allowed.append(cleaned)
-            except ValueError as e:
-                errors.append(f"Folder '{ap}' is invalid: {e!s}")
+    for ap in sel.get("organized", []):
+        try:
+            cleaned = _validate_single_path(ap, is_allowed=True)
+            if cleaned not in norm_allowed:
+                norm_allowed.append(cleaned)
+        except ValueError as e:
+            errors.append(f"Folder '{ap}' is invalid: {e!s}")
 
-    for bp in blocked_list:
+    for bp in sel.get("never_touch", []):
         try:
             cleaned = _validate_single_path(bp, is_allowed=False)
             if cleaned not in norm_blocked:
@@ -441,39 +488,31 @@ async def folder_scope_node(
         except ValueError as e:
             errors.append(f"Blocked folder '{bp}' is invalid: {e!s}")
 
-    if not errors:
-        default_system = _get_default_system_paths()
-        agent_internal = _get_agent_internal_blocked_paths()
-        for ib in default_system + agent_internal:
-            if ib not in norm_blocked:
-                norm_blocked.append(ib)
-        for ap in norm_allowed:
-            for bp in norm_blocked:
-                if ap == bp or ap.startswith(bp + "/"):
-                    errors.append(
-                        f"Folder '{ap}' overlaps with blocked/system path '{bp}'."
-                    )
+    if not norm_allowed:
+        errors.append("You must select at least one folder to organize.")
 
     if errors:
         hr_message = (
-            "\u26a0\ufe0f  We found some issues. Please fix the following:\n"
+            "\u26a0\ufe0f  We found some issues:\n"
             + "\n".join(f"  \u2022 {err}" for err in errors)
         )
-        output = FolderScopeOutput(
-            folder_scope_policy=None,
-            message="Validation failed.",
-            validation_errors=errors,
-            human_readable_report=hr_message,
+        yield Event(
+            output=FolderScopeOutput(
+                folder_scope_policy=None,
+                message="Validation failed.",
+                validation_errors=errors,
+                human_readable_report=hr_message,
+            ),
+            actions=EventActions(route="scope_invalid", state_delta={"subfolder_selections": None}),
         )
-        has_allowed_errors = any("Folder '" in err and "is invalid" in err for err in errors)
-        clear_delta = {"blocked_paths": None}
-        if has_allowed_errors:
-            clear_delta["allowed_paths"] = None
-        yield Event(output=output, actions=EventActions(
-            route="scope_invalid",
-            state_delta=clear_delta,
-        ))
         return
+
+    # Merge in default system blocked paths
+    default_system = _get_default_system_paths()
+    agent_internal = _get_agent_internal_blocked_paths()
+    for ib in default_system + agent_internal:
+        if ib not in norm_blocked:
+            norm_blocked.append(ib)
 
     # ------------------------------------------------------------------ #
     # STEP 3 — Create a 4-digit PIN                                      #
@@ -497,7 +536,7 @@ async def folder_scope_node(
             output=FolderScopeOutput(
                 folder_scope_policy=None,
                 message="Invalid PIN.",
-                human_readable_report="⚠️  Invalid PIN. A PIN must be exactly 4 digits (0–9).",
+                human_readable_report="\u26a0\ufe0f  Invalid PIN. A PIN must be exactly 4 digits (0\u20139).",
             ),
             actions=EventActions(
                 route="scope_invalid",
@@ -506,7 +545,7 @@ async def folder_scope_node(
         )
         yield RequestInput(
             interrupt_id="user_pin",
-            message="⚠️  Invalid PIN. A PIN must be exactly 4 digits (0–9).\nPlease try again:",
+            message="\u26a0\ufe0f  Invalid PIN. A PIN must be exactly 4 digits (0\u20139).\nPlease try again:",
         )
         return
 
@@ -544,7 +583,7 @@ async def folder_scope_node(
             output=FolderScopeOutput(
                 folder_scope_policy=None,
                 message="Invalid security question selection.",
-                human_readable_report="⚠️  Please enter a number 1–5.",
+                human_readable_report="\u26a0\ufe0f  Please enter a number 1\u20135.",
             ),
             actions=EventActions(
                 route="scope_invalid",
@@ -553,7 +592,7 @@ async def folder_scope_node(
         )
         yield RequestInput(
             interrupt_id="security_question",
-            message="⚠️  Please enter a number 1–5 to choose your security question:",
+            message="\u26a0\ufe0f  Please enter a number 1\u20135 to choose your security question:",
         )
         return
 
@@ -568,17 +607,19 @@ async def folder_scope_node(
         return
 
     # ------------------------------------------------------------------ #
-    # STEP 5 — Weekly Organizer preference                               #
+    # STEP 5 — Weekly Organizer — render a toggle button widget          #
     # ------------------------------------------------------------------ #
     if "weekly_organizer" not in ri:
-        msg = (
-            "\U0001f4c5 Weekly Organizer\n"
-            "\u2500" * 60 + "\n\n"
-            "Would you like to enable the Weekly Organizer?\n"
-            "It will automatically clean up your chosen folders once a week.\n\n"
-            "  \u2705  Type \"enable\"  \u2014 turn on weekly cleanup\n"
-            "  \u274c  Type \"disable\" \u2014 keep weekly cleanup off for now"
-        )
+        import json as _json3
+        toggle_payload = _json3.dumps({
+            "question": "\U0001f4c5 Enable the Weekly Organizer?",
+            "description": "Automatically clean up your chosen folders once a week.",
+            "options": [
+                {"label": "\u2705 Enable Weekly Organizer", "value": "enable"},
+                {"label": "\u274c Disable for now",        "value": "disable"},
+            ],
+        })
+        msg = "__TOGGLE_SELECT__\n" + toggle_payload
         yield RequestInput(interrupt_id="weekly_organizer", message=msg)
         return
 
@@ -609,7 +650,7 @@ async def folder_scope_node(
 
     weekly_status = "\U0001f7e2 Enabled" if weekly_enabled else "\U0001f534 Disabled"
     success_msg = (
-        "\u2705 Setup complete! Here's your configuration summary:\n"
+        "\u2705 Setup complete! Here\u2019s your configuration summary:\n"
         "\u2500" * 60 + "\n\n"
         f"\U0001f4c2 Folders to organize ({len(norm_allowed)}):\n"
         + "\n".join(f"  \u2022 {p}" for p in norm_allowed) + "\n\n"

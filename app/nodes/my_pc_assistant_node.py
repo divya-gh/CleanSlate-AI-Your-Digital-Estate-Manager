@@ -340,7 +340,7 @@ async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
         _session_state = {}
 
     _ri = dict(getattr(ctx, "resume_inputs", None) or {})
-    _STEP_KEYS = {"allowed_paths", "blocked_paths", "user_pin",
+    _STEP_KEYS = {"parent_folder", "subfolder_selections", "user_pin",
                   "security_question", "security_answer", "weekly_organizer"}
     _new_answers = {k: v for k, v in _ri.items() if k in _STEP_KEYS}
 

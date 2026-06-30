@@ -133,7 +133,7 @@ print('[ 4 ] ORGANIZE FLOW  →  "organize my computer"')
 sid_org = new_session()
 print(f"     session_id: {sid_org}")
 reply_org, iid_org, imsg_org = send(sid_org, "organize my computer")
-check("Correct interrupt_id = allowed_paths",      iid_org == "allowed_paths",
+check("Correct interrupt_id = parent_folder",      iid_org == "parent_folder",
       f"got={iid_org!r}")
 check("Prompt mentions folder/path/organize",
       any(kw in (imsg_org or "").lower() for kw in ["folder", "path", "organize"]))
@@ -141,21 +141,32 @@ check("Prompt length sane (< 2000 chars)",         len(imsg_org) < 2000,  f"len=
 print(f"     interrupt_id  : {iid_org!r}")
 print(f"     prompt preview: {repr(imsg_org[:130])}")
 
-# ── 5. step 2 of organize ──────────────────────────────────────────────────
+# ── 5. step 2 of organize — user provides parent folder ───────────────────
 print()
-print("[ 5 ] ORGANIZE STEP 2  →  user provides folder path")
-if iid_org == "allowed_paths":
+print("[ 5 ] ORGANIZE STEP 2  →  user provides parent folder path")
+import os as _os
+_test_folder = _os.getcwd().replace('\\', '/')
+if iid_org == "parent_folder":
     r5, iid5, imsg5 = send(
         sid_org,
-        "C:/Users/divya/Downloads",
-        resume={"allowed_paths": "C:/Users/divya/Downloads"},
+        _test_folder,
+        resume={"parent_folder": _test_folder},
     )
-    check("Next interrupt = blocked_paths",         iid5 == "blocked_paths", f"got={iid5!r}")
-    check("Step-2 prompt non-empty",                bool(imsg5))
+    # Agent lists subfolders → sends __CHECKBOX_SELECT__ OR advances if no subs
+    _got_checkbox = (imsg5 or "").startswith("__CHECKBOX_SELECT__")
+    _got_subfolder = iid5 == "subfolder_selections"
+    _got_next_step = iid5 in ("subfolder_selections", "user_pin")
+    check("Step-2 advances the flow", _got_next_step, f"got iid={iid5!r}")
+    check("Step-2 prompt non-empty",  bool(imsg5))
+    if _got_subfolder and _got_checkbox:
+        print("     → checkbox widget sent (subfolders found)")
+    elif iid5 == "user_pin":
+        print("     → no subfolders in test dir, skipped to PIN step")
     print(f"     interrupt_id  : {iid5!r}")
-    print(f"     prompt preview: {repr(imsg5[:100])}")
+    print(f"     prompt preview: {repr((imsg5 or '')[:100])}")
 else:
     check("Step-2 (skipped, step-4 failed)", False, "no interrupt from step 4")
+    check("Step-2 prompt non-empty", False)
 
 # ── 6. sessions API ────────────────────────────────────────────────────────
 print()

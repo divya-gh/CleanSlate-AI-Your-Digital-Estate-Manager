@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -10,6 +10,7 @@
       --bg:        #0f1117;
       --surface:   #1a1d27;
       --surface2:  #22263a;
+      --surface3:  #2a2f47;
       --border:    #2e3250;
       --accent:    #6c8fff;
       --accent2:   #a78bfa;
@@ -18,11 +19,10 @@
       --user-bg:   #1e2a5e;
       --agent-bg:  #1a1d27;
       --success:   #34d399;
+      --danger:    #f87171;
       --radius:    14px;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
@@ -32,8 +32,6 @@
       flex-direction: column;
       overflow: hidden;
     }
-
-    /* ── Header ── */
     header {
       display: flex;
       align-items: center;
@@ -64,8 +62,6 @@
       animation: pulse 2s infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-    /* ── Chat area ── */
     #chat {
       flex: 1;
       overflow-y: auto;
@@ -78,10 +74,8 @@
     #chat::-webkit-scrollbar { width: 4px; }
     #chat::-webkit-scrollbar-track { background: transparent; }
     #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
     .msg { display: flex; gap: 10px; max-width: 800px; width: 100%; }
     .msg.user { flex-direction: row-reverse; margin-left: auto; }
-
     .avatar {
       width: 34px; height: 34px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -89,7 +83,6 @@
     }
     .msg.agent .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
     .msg.user  .avatar { background: var(--user-bg); border: 1px solid var(--border); }
-
     .bubble {
       padding: 12px 16px;
       border-radius: var(--radius);
@@ -109,8 +102,6 @@
       border-top-right-radius: 4px;
       color: #c7d2fe;
     }
-
-    /* typing indicator */
     .typing .bubble { display: flex; gap: 5px; align-items: center; padding: 14px 18px; }
     .typing .bubble span {
       width: 7px; height: 7px; border-radius: 50%;
@@ -120,8 +111,6 @@
     .typing .bubble span:nth-child(2) { animation-delay: .15s; }
     .typing .bubble span:nth-child(3) { animation-delay: .3s; }
     @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-
-    /* ── Input bar ── */
     footer {
       padding: 14px 20px 18px;
       background: var(--surface);
@@ -138,7 +127,6 @@
       transition: border-color .2s;
     }
     .input-row:focus-within { border-color: var(--accent); }
-
     #input {
       flex: 1;
       background: transparent;
@@ -153,7 +141,6 @@
       line-height: 1.5;
     }
     #input::placeholder { color: var(--text-dim); }
-
     #send {
       width: 40px; height: 40px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -170,23 +157,168 @@
     #send:active { transform: scale(.93); }
     #send svg    { width: 18px; height: 18px; fill: #fff; }
     #send:disabled { opacity: .35; cursor: not-allowed; }
-
     .hint {
       margin-top: 8px;
       font-size: 11px;
       color: var(--text-dim);
       text-align: center;
     }
-
-    /* links in agent bubbles */
     .bubble a { color: var(--accent); text-decoration: none; }
     .bubble a:hover { text-decoration: underline; }
+
+    /* ORGANIZE_MODE Widgets */
+    .widget-wrap {
+      display: flex;
+      gap: 10px;
+      max-width: 800px;
+      width: 100%;
+    }
+    .widget-wrap .avatar {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      flex-shrink: 0;
+    }
+    .widget-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      border-top-left-radius: 4px;
+      padding: 18px 20px;
+      flex: 1;
+      min-width: 0;
+    }
+    .widget-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 12px;
+    }
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .folder-list::-webkit-scrollbar { width: 3px; }
+    .folder-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: var(--surface2);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+    }
+    .folder-item:hover { border-color: var(--border); }
+    .folder-item.checked   { border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.07); }
+    .folder-item.unchecked { border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.05); }
+    .folder-checkbox {
+      width: 18px; height: 18px; border-radius: 5px;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 11px;
+      transition: background .15s, border-color .15s;
+    }
+    .folder-item.checked   .folder-checkbox { background: var(--success); border-color: var(--success); color: #000; }
+    .folder-item.unchecked .folder-checkbox { background: rgba(248,113,113,.2); border-color: var(--danger); color: var(--danger); }
+    .folder-icon { font-size: 15px; flex-shrink: 0; }
+    .folder-path {
+      font-size: 13px;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .folder-item.unchecked .folder-path { color: var(--text-dim); text-decoration: line-through; }
+    .folder-status {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .folder-item.checked   .folder-status { background: rgba(52,211,153,.15); color: var(--success); }
+    .folder-item.unchecked .folder-status { background: rgba(248,113,113,.15); color: var(--danger); }
+    .widget-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .widget-legend span { display: flex; align-items: center; gap: 5px; }
+    .widget-submit {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 9px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .widget-submit:hover  { opacity: .88; }
+    .widget-submit:active { transform: scale(.98); }
+    .widget-submit:disabled { opacity: .4; cursor: not-allowed; }
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .toggle-btn {
+      padding: 14px 12px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, transform .1s;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .toggle-btn:hover { border-color: var(--accent); background: var(--surface3); }
+    .toggle-btn:active { transform: scale(.97); }
+    .toggle-btn.primary {
+      border-color: var(--success);
+      background: rgba(52,211,153,.1);
+    }
+    .toggle-btn.primary:hover { background: rgba(52,211,153,.18); }
+    .toggle-btn.secondary {
+      border-color: var(--danger);
+      background: rgba(248,113,113,.08);
+    }
+    .toggle-btn.secondary:hover { background: rgba(248,113,113,.15); }
+    .toggle-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .toggle-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">🖥️</div>
+  <div class="logo">&#x1F5A5;</div>
   <div class="header-text">
     <h1>CleanSlate AI</h1>
     <p>My PC Assistant</p>
@@ -198,36 +330,36 @@
 
 <footer>
   <div class="input-row">
-    <textarea id="input" rows="1" placeholder='Say "Organize my computer" to get started…' disabled></textarea>
+    <textarea id="input" rows="1" placeholder='Say "Organize my computer" to get started' disabled></textarea>
     <button id="send" disabled>
       <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
     </button>
   </div>
-  <p class="hint">CleanSlate AI never reads file contents · metadata only · all actions require your approval</p>
+  <p class="hint">CleanSlate AI never reads file contents &middot; metadata only &middot; all actions require your approval</p>
 </footer>
 
 <script>
-const ADK   = '';
-const APP   = 'cleanslate_ai_my_pc_assistant';
-const USER  = 'user';
+const ADK  = '';
+const APP  = 'cleanslate_ai_my_pc_assistant';
+const USER = 'user';
 
 const chat  = document.getElementById('chat');
 const input = document.getElementById('input');
 const send  = document.getElementById('send');
 
-let sessionId  = null;
-let pendingIid = null;   // interrupt_id from last RequestInput
-let busy       = false;
+let sessionId    = null;
+let pendingIid   = null;
+let busy         = false;
+let widgetActive = false;
 
-/* ── helpers ── */
 function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
 
 function addMsg(role, text) {
   const wrap = document.createElement('div');
-  wrap.className = `msg ${role}`;
-  const av  = document.createElement('div');
+  wrap.className = 'msg ' + role;
+  const av = document.createElement('div');
   av.className = 'avatar';
-  av.textContent = role === 'agent' ? '🤖' : '👤';
+  av.textContent = role === 'agent' ? String.fromCodePoint(0x1F916) : String.fromCodePoint(0x1F464);
   const bub = document.createElement('div');
   bub.className = 'bubble';
   bub.textContent = text;
@@ -242,8 +374,14 @@ function showTyping() {
   const wrap = document.createElement('div');
   wrap.className = 'msg agent typing';
   wrap.id = 'typing';
-  wrap.innerHTML = `<div class="avatar">🤖</div>
-    <div class="bubble"><span></span><span></span><span></span></div>`;
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = String.fromCodePoint(0x1F916);
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.innerHTML = '<span></span><span></span><span></span>';
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
   chat.appendChild(wrap);
   scrollBottom();
 }
@@ -254,13 +392,13 @@ function removeTyping() {
 }
 
 function setReady(ok) {
-  input.disabled  = !ok;
-  send.disabled   = !ok;
-  busy            = !ok;
-  if (ok) input.focus();
+  const inputOk = ok && !widgetActive;
+  input.disabled = !inputOk;
+  send.disabled  = !inputOk;
+  busy = !ok;
+  if (inputOk) input.focus();
 }
 
-/* ── auto-resize textarea ── */
 input.addEventListener('input', () => {
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -270,7 +408,186 @@ input.addEventListener('keydown', e => {
 });
 send.addEventListener('click', handleSend);
 
-/* ── SSE runner ── */
+/* ORGANIZE_MODE Widget System */
+
+function parseInterruptMsg(msg) {
+  if (!msg) return null;
+  const CB_PREFIX = '__CHECKBOX_SELECT__\n';
+  const TG_PREFIX = '__TOGGLE_SELECT__\n';
+  if (msg.startsWith(CB_PREFIX)) {
+    const rest = msg.slice(CB_PREFIX.length);
+    const nl = rest.indexOf('\n');
+    const json  = nl >= 0 ? rest.slice(0, nl) : rest;
+    const label = nl >= 0 ? rest.slice(nl + 1) : '';
+    try { return { type: 'checkbox', data: JSON.parse(json), label }; } catch { return null; }
+  }
+  if (msg.startsWith(TG_PREFIX)) {
+    const json = msg.slice(TG_PREFIX.length);
+    try { return { type: 'toggle', data: JSON.parse(json) }; } catch { return null; }
+  }
+  return null;
+}
+
+function dismissWidget() {
+  const w = document.getElementById('active-widget');
+  if (w) w.remove();
+  widgetActive = false;
+}
+
+function renderCheckboxWidget(data, label, iid) {
+  widgetActive = true;
+  setReady(false);
+
+  const subfolders = (data.subfolders || []);
+  const state = subfolders.map(p => ({ path: p, checked: true }));
+
+  const wrap = document.createElement('div');
+  wrap.className = 'widget-wrap';
+  wrap.id = 'active-widget';
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = String.fromCodePoint(0x1F916);
+
+  const card = document.createElement('div');
+  card.className = 'widget-card';
+
+  const title = document.createElement('div');
+  title.className = 'widget-title';
+  title.textContent = String.fromCodePoint(0x1F4C1) + ' Select Folders to Organize';
+  card.appendChild(title);
+
+  const legend = document.createElement('div');
+  legend.className = 'widget-legend';
+  legend.innerHTML =
+    '<span><span style="color:var(--success)">&#10003;</span>&nbsp;Organize this folder</span>' +
+    '<span><span style="color:var(--danger)">&#10005;</span>&nbsp;Never touch</span>';
+  card.appendChild(legend);
+
+  if (label) {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:13px;color:var(--text-dim);margin-bottom:10px;';
+    lbl.textContent = label;
+    card.appendChild(lbl);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'folder-list';
+  card.appendChild(list);
+
+  function buildItems() {
+    list.innerHTML = '';
+    state.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'folder-item ' + (item.checked ? 'checked' : 'unchecked');
+      const parts = item.path.replace(/\\/g, '/').split('/');
+      const name  = parts[parts.length - 1] || item.path;
+      const cb = document.createElement('div');
+      cb.className = 'folder-checkbox';
+      cb.textContent = item.checked ? '\u2713' : '\u2715';
+      const icon = document.createElement('div');
+      icon.className = 'folder-icon';
+      icon.textContent = String.fromCodePoint(0x1F4C1);
+      const path = document.createElement('div');
+      path.className = 'folder-path';
+      path.title = item.path;
+      path.textContent = name;
+      const status = document.createElement('div');
+      status.className = 'folder-status';
+      status.textContent = item.checked ? 'Organize' : 'Skip';
+      row.appendChild(cb);
+      row.appendChild(icon);
+      row.appendChild(path);
+      row.appendChild(status);
+      row.addEventListener('click', () => {
+        state[idx].checked = !state[idx].checked;
+        buildItems();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  buildItems();
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'widget-submit';
+  submitBtn.id = 'widget-submit';
+  submitBtn.textContent = 'Confirm Selection \u2192';
+  submitBtn.addEventListener('click', () => {
+    const organized   = state.filter(i => i.checked).map(i => i.path);
+    const never_touch = state.filter(i => !i.checked).map(i => i.path);
+    const selection   = JSON.stringify({ organized, never_touch });
+
+    const orgNames  = organized.map(p => { const ps = p.replace(/\\/g,'/').split('/'); return String.fromCodePoint(0x1F4C1)+' '+(ps[ps.length-1]||p); });
+    const skipNames = never_touch.map(p => { const ps = p.replace(/\\/g,'/').split('/'); return String.fromCodePoint(0x1F4C1)+' '+(ps[ps.length-1]||p); });
+    const summary = [
+      organized.length   ? '\u2714 Organize: ' + orgNames.join(', ')  : '',
+      never_touch.length ? '\u2716 Skip: '     + skipNames.join(', ') : '',
+    ].filter(Boolean).join('\n');
+
+    dismissWidget();
+    addMsg('user', summary || '(No folders selected)');
+    runSSE(selection);
+  });
+  card.appendChild(submitBtn);
+
+  wrap.appendChild(av);
+  wrap.appendChild(card);
+  chat.appendChild(wrap);
+  scrollBottom();
+}
+
+function renderToggleWidget(data, iid) {
+  widgetActive = true;
+  setReady(false);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'widget-wrap';
+  wrap.id = 'active-widget';
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = String.fromCodePoint(0x1F916);
+
+  const card = document.createElement('div');
+  card.className = 'widget-card';
+
+  const title = document.createElement('div');
+  title.className = 'widget-title';
+  title.textContent = data.question || 'Choose an option';
+  card.appendChild(title);
+
+  if (data.description) {
+    const desc = document.createElement('div');
+    desc.className = 'toggle-desc';
+    desc.textContent = data.description;
+    card.appendChild(desc);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'toggle-grid';
+
+  (data.options || []).forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'toggle-btn ' + (idx === 0 ? 'primary' : 'secondary');
+    btn.textContent = opt.label;
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.toggle-btn').forEach(b => b.disabled = true);
+      dismissWidget();
+      addMsg('user', opt.label);
+      runSSE(opt.value);
+    });
+    grid.appendChild(btn);
+  });
+
+  card.appendChild(grid);
+  wrap.appendChild(av);
+  wrap.appendChild(card);
+  chat.appendChild(wrap);
+  scrollBottom();
+}
+
+/* SSE runner */
 async function runSSE(message) {
   if (busy) return;
   busy = true;
@@ -290,7 +607,7 @@ async function runSSE(message) {
   pendingIid = null;
 
   try {
-    const resp = await fetch(`${ADK}/run_sse`, {
+    const resp = await fetch(ADK + '/run_sse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -300,128 +617,100 @@ async function runSSE(message) {
 
     const reader  = resp.body.getReader();
     const decoder = new TextDecoder();
-    let   buf     = '';
-
-    // Collect the best response seen across ALL events
-    let bestResponse   = '';   // last output.* value seen
-    let requestMsg     = '';   // RequestInput message
-    let requestIid     = null; // RequestInput interrupt_id
+    let buf = '';
+    let bestResponse = '';
+    let requestMsg   = '';
+    let requestIid   = null;
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       buf += decoder.decode(value, { stream: true });
-
       const lines = buf.split('\n');
       buf = lines.pop();
-
       for (const line of lines) {
         if (!line.startsWith('data:')) continue;
         const json = line.slice(5).trim();
         if (!json || json === '[DONE]') continue;
-
         let ev;
         try { ev = JSON.parse(json); } catch { continue; }
-
-        // RequestInput (HITL pause) — ADK sends as functionCall in content.parts
-        // Shape: { content: { parts: [{ functionCall: { id, args: { interruptId, message } } }] } }
-        const fc = ev?.content?.parts?.[0]?.functionCall;
+        const fc = ev && ev.content && ev.content.parts && ev.content.parts[0] && ev.content.parts[0].functionCall;
         if (fc) {
-          const iid = fc.id || fc.args?.interruptId;
-          const msg = fc.args?.message || '';
-          if (iid) {
-            requestIid = iid;
-            requestMsg = msg;
-          }
+          const iid = fc.id || (fc.args && fc.args.interruptId);
+          const msg = (fc.args && fc.args.message) || '';
+          if (iid) { requestIid = iid; requestMsg = msg; }
           continue;
         }
-
-        // Fallback: top-level interrupt_id field (older ADK versions)
-        if (ev.type === 'request_input' || ev.interrupt_id) {
+        if (ev && (ev.type === 'request_input' || ev.interrupt_id)) {
           requestMsg = ev.message || ev.interrupt_message || '';
           requestIid = ev.interrupt_id || null;
           continue;
         }
-
-        // Extract text from ANY known location — always overwrite (never +=)
         const out =
-          ev?.output?.human_readable_report   ||
-          ev?.output?.message                 ||
-          ev?.output?.conversational_response ||
-          ev?.output?.summary_report          ||
-          ev?.content?.parts?.[0]?.text;
-
-        // Fallback: scan all string fields in output for something substantial
-        if (!out && ev?.output && typeof ev.output === 'object') {
+          (ev && ev.output && ev.output.human_readable_report) ||
+          (ev && ev.output && ev.output.message)               ||
+          (ev && ev.output && ev.output.conversational_response) ||
+          (ev && ev.output && ev.output.summary_report)         ||
+          (ev && ev.content && ev.content.parts && ev.content.parts[0] && ev.content.parts[0].text);
+        if (!out && ev && ev.output && typeof ev.output === 'object') {
           for (const val of Object.values(ev.output)) {
-            if (typeof val === 'string' && val.trim().length > 20) {
-              bestResponse = val;
-              break;
-            }
+            if (typeof val === 'string' && val.trim().length > 20) { bestResponse = val; break; }
           }
         }
-
-        if (out) bestResponse = out;   // overwrite — last wins, no duplicates
+        if (out) bestResponse = out;
       }
     }
 
-    // ── Show results once ──────────────────────────────────────────
     if (requestIid !== null) {
-      // HITL: show the prompt, wait for user reply
-      if (requestMsg) addMsg('agent', requestMsg);
       pendingIid = requestIid;
+      const parsed = parseInterruptMsg(requestMsg);
+      if (parsed && parsed.type === 'checkbox') {
+        renderCheckboxWidget(parsed.data, parsed.label, requestIid);
+      } else if (parsed && parsed.type === 'toggle') {
+        renderToggleWidget(parsed.data, requestIid);
+      } else {
+        if (requestMsg) addMsg('agent', requestMsg);
+        setReady(true);
+      }
     } else if (bestResponse) {
       addMsg('agent', bestResponse);
+      setReady(true);
     } else {
-      // Nothing found — surface raw event dump for debugging
       addMsg('agent', '(No response received. Please try again.)');
+      setReady(true);
     }
 
   } catch (err) {
     removeTyping();
-    addMsg('agent', '⚠️ Connection error: ' + err.message);
+    addMsg('agent', String.fromCodePoint(0x26A0) + ' Connection error: ' + err.message);
+    setReady(true);
   }
 
-  setReady(true);
+  busy = false;
 }
 
-/* ── send handler ── */
 async function handleSend() {
   const text = input.value.trim();
-  if (!text || busy) return;
+  if (!text || busy || widgetActive) return;
   input.value = '';
   input.style.height = 'auto';
   addMsg('user', text);
   await runSSE(text);
 }
 
-/* ── boot: create session + show static welcome (no agent call) ── */
-const WELCOME =
-`Hello! I'm CleanSlate AI \u2014 My PC Assistant.
-
-I'm here to help you manage, organize, and optimize your computer safely.
-I can:
-  \ud83d\udcc2  Search your files
-  \ud83e\uddf9  Declutter folders and remove duplicates
-  \ud83d\udd12  Detect and protect sensitive documents
-  \ud83d\udcc5  Run your Weekly Organizer automatically
-
-You can say: "Organize my computer" to get started.
-\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`;
+const WELCOME = 'Hello! I\u2019m CleanSlate AI \u2014 My PC Assistant.\n\nI\u2019m here to help you manage, organize, and optimize your computer safely.\nI can:\n  \uD83D\uDCC2  Search your files\n  \uD83E\uDDF9  Declutter folders and remove duplicates\n  \uD83D\uDD12  Detect and protect sensitive documents\n  \uD83D\uDCC5  Run your Weekly Organizer automatically\n\nYou can say: "Organize my computer" to get started.\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
 
 async function boot() {
-  // Show welcome immediately — no agent call needed
   addMsg('agent', WELCOME);
-
   try {
-    const sr = await fetch(`${ADK}/apps/${APP}/users/${USER}/sessions`, {
+    const sr = await fetch(ADK + '/apps/' + APP + '/users/' + USER + '/sessions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
     });
     const sess = await sr.json();
-    sessionId  = sess.id || sess.session_id;
+    sessionId = sess.id || sess.session_id;
     setReady(true);
   } catch (err) {
-    addMsg('agent', '\u26a0\ufe0f Could not connect to CleanSlate AI backend.\nMake sure `python run.py` is running.\n\nError: ' + err.message);
+    addMsg('agent', '\u26A0\uFE0F Could not connect to CleanSlate AI backend.\nMake sure `python run.py` is running.\n\nError: ' + err.message);
   }
 }
 

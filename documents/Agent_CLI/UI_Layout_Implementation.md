@@ -1,4 +1,4 @@
-# Implementing Welcome Message for Antigravity UI
+# Implementing Welcome Message for Antigravity UI 
 
 # 🚀 CleanSlate AI — My PC Assistant
 **Your Personal PC Cleanup Assistant, Powered by ADK 2.0**
@@ -56,4 +56,56 @@ Would you like to enable Weekly Organizer?
 """
 ```
 Image- UI_layout1 and UI_layout2
+
+========================================================================================
+# Adding check boxes to classify folders 
+
+Prompt: 
+```
+
+Update the agent logic and dev-ui logic.
+
+When the user enters a folder path (example: C:/Users/divya/Desktop), enter ORGANIZE_MODE.
+
+In ORGANIZE_MODE:
+1. List all subfolders inside the provided folder.
+2. Render each subfolder as a checkbox with an icon:
+
+   - icon: 📁
+   - label: folder name
+   - value: absolute path
+   - checked = true means "organize this folder"
+   - checked = false means "never touch this folder"
+
+Show the UI like this:
+"Select which folders to organize and which to leave untouched:"
+
+Example:
+📁 [✔] C:/Users/divya/Desktop/Collection
+📁 [✔] C:/Users/divya/Desktop/Photos
+📁 [✖] C:/Users/divya/Desktop/School
+📁 [✔] C:/Users/divya/Desktop/Work
+📁 [✖] C:/Users/divya/Desktop/Random
+
+After the user submits checkbox selections:
+- Save checked folders as ORGANIZE_LIST
+- Save unchecked folders as NEVER_TOUCH_LIST
+
+Then continue the workflow:
+1. Explain sensitive file handling:
+   "Sensitive files will be moved to your authenticated secure folder."
+
+2. Ask the user to create a 4-digit PIN.
+3. Ask the user to choose one security question for PIN recovery.
+
+4. Render a toggle button for Weekly Organizer:
+   - "Enable Weekly Organizer"
+   - "Disable Weekly Organizer"
+
+5. After the user chooses weekly organizer settings, proceed with cleanup.
+
+Do NOT reset to the welcome message.
+Do NOT use fallback responses while in ORGANIZE_MODE.
+
+```
 
