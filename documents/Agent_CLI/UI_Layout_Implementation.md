@@ -152,8 +152,8 @@ Example JSON structure to emit:
     "columns": ["Action", "Category", "File Path", "Space Saved", "Confidence"],
     "rows": [
       ["DELETE", "duplicate", "c:/users/.../file.pdf", "3955024", "0.95"],
-      ["DELETE", "duplicate", "c:/users/.../excel_python.jpg", "153726", "0.95"],
-      ["DELETE", "sensitive", "c:/users/.../DL.bmp", "0", "0.95"]
+      ["ARCHIVE", " Unused", "c:/users/.../excel_python.jpg", "153726", "0.95"],
+      ["MOVE", "sensitive", "c:/users/.../DL.bmp", "0", "0.95"]
     ]
   }
 }

@@ -347,8 +347,10 @@ def summary_node(
             ])
 
         table_json = _json3.dumps({
-            "columns": columns,
-            "rows": rows
+            "__TABLE__": {
+                "columns": columns,
+                "rows": rows
+            }
         })
 
         report_lines.append("### Action Log Details")

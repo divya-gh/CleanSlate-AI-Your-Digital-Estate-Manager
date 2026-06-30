@@ -161,9 +161,20 @@ _SENSITIVE_KEYWORDS = [
     "driver",
     "license",
     "card",
-    "id",
 ]
 _SENSITIVE_EXTENSIONS = {".tax", ".w2", ".1040", ".med", ".medical", ".key", ".pem"}
+
+
+def _has_high_risk_keyword(name: str) -> bool:
+    name_lower = name.lower()
+    # Check safe substrings
+    if any(kw in name_lower for kw in _SENSITIVE_KEYWORDS):
+        return True
+    # Standalone matches for short abbreviations
+    import re
+    if re.search(r'\b(id|dl)\b', name_lower):
+        return True
+    return False
 
 
 def _detect_signals(
@@ -264,7 +275,7 @@ def sensitive_detection_node(
 
         # Check if the filename contains high-risk keywords to bypass optimization limits
         basename_lower = Path(file.path).name.lower()
-        has_high_risk_keyword = any(kw in basename_lower for kw in _SENSITIVE_KEYWORDS)
+        has_high_risk_keyword = _has_high_risk_keyword(basename_lower)
 
         # Optimization: Zero signals or single signal skips Gemini (exempt high-risk keywords)
         if len(signals) < 2 and not has_high_risk_keyword:
@@ -332,6 +343,35 @@ def sensitive_detection_node(
             sens_type = result.sensitivity_type
             conf = result.confidence
             reason = result.reasoning
+
+            # Force sensitivity if filename contains high-risk keywords
+            if has_high_risk_keyword:
+                file_is_sensitive = True
+                conf = max(conf, 0.95)
+                if sens_type == "none" or not sens_type:
+                    sens_type = "identity"
+                    import re as _re
+                    for kw, st in [
+                        ("ssn", "SSN"),
+                        ("passport", "identity"),
+                        ("bank", "banking"),
+                        ("medical", "medical"),
+                        ("tax", "tax"),
+                        ("password", "password"),
+                        ("social_security", "SSN"),
+                        ("api_key", "api_key"),
+                        ("secret", "api_key"),
+                        ("resume", "identity"),
+                        ("driver", "identity"),
+                        ("license", "identity"),
+                        ("card", "identity"),
+                        ("id", "identity"),
+                        ("dl", "identity"),
+                    ]:
+                        if kw in basename_lower or (kw in ("id", "dl") and _re.search(rf'\b{kw}\b', basename_lower)):
+                            sens_type = st
+                            break
+                reason = f"Enforced sensitive classification based on high-risk filename keyword. Original: {reason}"
 
             # Extra check: double-signal rule enforce (exempt high-risk keywords)
             if file_is_sensitive and len(signals) < 2 and not has_high_risk_keyword:

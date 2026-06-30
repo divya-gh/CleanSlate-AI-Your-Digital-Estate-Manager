@@ -263,6 +263,46 @@ def _generate_with_retry(client, model, contents, config, max_retries=3, initial
             raise e
 
 
+def _get_local_category_from_keyword(name: str, parent_folder: str) -> tuple[FileCategory, float, str] | None:
+    name_lower = name.lower()
+    parent_lower = parent_folder.lower()
+    import re
+
+    # Check resumes
+    if "resume" in name_lower or "cv" in name_lower:
+        return FileCategory.RESUME, 0.95, "Classified locally as resume based on filename keyword."
+    
+    # Check tax docs
+    tax_kws = ["tax", "w2", "1099", "1040"]
+    if any(kw in name_lower for kw in tax_kws) or any(kw in parent_lower for kw in tax_kws):
+        return FileCategory.TAX, 0.95, "Classified locally as tax based on keyword."
+        
+    # Check medical docs
+    med_kws = ["medical", "health", "prescription", "diagnosis"]
+    if any(kw in name_lower for kw in med_kws) or any(kw in parent_lower for kw in med_kws):
+        return FileCategory.MEDICAL, 0.95, "Classified locally as medical based on keyword."
+        
+    # Check screenshots
+    if "screenshot" in name_lower or "ss" in name_lower:
+        return FileCategory.SCREENSHOT, 0.95, "Classified locally as screenshot based on keyword."
+        
+    # Check school docs
+    school_kws = ["school", "homework", "assignment", "grade", "course", "class"]
+    if any(kw in name_lower for kw in school_kws) or any(kw in parent_lower for kw in school_kws):
+        return FileCategory.SCHOOL, 0.95, "Classified locally as school based on keyword."
+        
+    # Check invoices
+    inv_kws = ["invoice", "bill", "receipt", "payment"]
+    if any(kw in name_lower for kw in inv_kws) or any(kw in parent_lower for kw in inv_kws):
+        return FileCategory.INVOICE, 0.95, "Classified locally as invoice based on keyword."
+        
+    # Check standalone abbreviations like id and dl
+    if re.search(r'\b(id|dl)\b', name_lower):
+        return FileCategory.MISC, 0.95, "Classified locally as misc based on standalone id/dl abbreviation."
+        
+    return None
+
+
 def classification_node(node_input: FileDiscoveryOutput) -> Event:
     """ClassificationNode — classifies each file in the inventory using safety-biased Gemini (metadata only)."""
     safe_mode = node_input.safe_mode
@@ -286,6 +326,21 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
 
         # Local bypass checks to avoid unnecessary Gemini API calls on large inventories
         basename_lower = basename.lower()
+
+        # 0. Local keyword-based category check
+        local_res = _get_local_category_from_keyword(basename, parent_folder)
+        if local_res is not None:
+            l_cat, l_conf, l_reason = local_res
+            classified.append(
+                ClassifiedFile(
+                    path=file.path,
+                    category=l_cat,
+                    confidence=l_conf,
+                    reasoning=l_reason,
+                    classification_method="metadata_only",
+                )
+            )
+            continue
 
         # 1. Source code bypass
         if type_guess == FileCategory.SOURCE_CODE:

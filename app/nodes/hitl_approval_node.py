@@ -125,8 +125,10 @@ async def hitl_approval_node(
             ])
 
         table_json = _json.dumps({
-            "columns": columns,
-            "rows": rows
+            "__TABLE__": {
+                "columns": columns,
+                "rows": rows
+            }
         })
 
         toggle_json = _json.dumps({

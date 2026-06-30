@@ -121,6 +121,7 @@ CleanSlate AI is an autonomous, multi agent system that intelligently manages di
 •	Credit Card
 •	Password files
 •	API keys
+•	Passport files
 •	Legal/medical/ID documents
 
 Sensitive files are never deleted.

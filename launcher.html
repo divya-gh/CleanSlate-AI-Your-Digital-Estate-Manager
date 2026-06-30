@@ -420,7 +420,8 @@ function addMsg(role, text) {
     const postText = nl >= 0 ? rest.slice(nl + 1) : '';
     
     try {
-      const tableData = JSON.parse(jsonStr);
+      const rawJson = JSON.parse(jsonStr);
+      const tableData = rawJson.__TABLE__ ? rawJson.__TABLE__ : rawJson;
       const tableContainer = document.createElement('div');
       tableContainer.className = 'widget-table-container';
       
@@ -533,7 +534,12 @@ function parseInterruptMsg(msg) {
     const line = segments[i];
     if (line.startsWith('__TABLE__')) {
       try {
-        tableData = JSON.parse(segments[i + 1]);
+        const rawJson = JSON.parse(segments[i + 1]);
+        if (rawJson.__TABLE__) {
+          tableData = rawJson.__TABLE__;
+        } else {
+          tableData = rawJson;
+        }
       } catch (e) {}
     } else if (line.startsWith('__TOGGLE_SELECT__')) {
       try {
