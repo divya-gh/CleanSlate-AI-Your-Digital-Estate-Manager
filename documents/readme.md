@@ -38,10 +38,11 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 ## 🟦 2. What CleanSlate AI Does (Features & The Agentic Workflow)
 CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven PC assistant that executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0):
 
-•	**Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:
-        
-         `Agentic `: -   1. **Intent Routing (`MyPCAssistantNode`)**: Routes conversational queries to the right sub-flow (cleanup vs. search).
-                  2. **Folder Scope Security (`FolderScopeNode`)**: Establishes the mandatory explicit security perimeter for the operation.Scans user selected folders
+•	**Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
+         `Agentic `: -   
+                 1. **Intent Routing (`MyPCAssistantNode`)**: Routes conversational queries to the right sub-flow (cleanup vs. search).
+                 2. **Folder Scope Security (`FolderScopeNode`)**: Establishes the mandatory explicit security perimeter for the operation.Scans user selected folders
+                  
 •	**Intelligent File Discovery**: Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
 - `Agentic `: -   3. **File Discovery (`FileDiscoveryNode`)**: High-speed, metadata-only recursive traversal of approved directories.
 
