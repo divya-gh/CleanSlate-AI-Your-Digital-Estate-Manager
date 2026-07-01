@@ -37,14 +37,17 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 - **MCP (Model Context Protocol)**: Exposes tools like filesystem scanners and file movers natively to the agent.
 - **Agent CLI**: For rapid scaffolding, building, evaluating, and deploying the agent.
 - **ADK SKILLS**: Leveraged for building specialized capabilities into the AI workflows.
+- **Semgrep Security Hooks**: Enforces SDD safety rules (like preventing LLM file content uploads) statically during the CI/CD and commit pipeline.
 - **Antigravity**: Used for deep integration, observability, and complex agent interactions.
 - **Logging & Traceability**: Comprehensive telemetry ensuring every action is recorded for auditability and rollback capabilities.
 
 ---
 
-## 🔒 Security Architecture (The 7 Principles)
+## 🔒 Security Architecture (The 7 Principles & STRIDE)
 
-CleanSlate AI adheres strictly to the **7 Principles of Agent Security**:
+CleanSlate AI was designed using the **STRIDE Threat Model** (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege) to harden the agent against prompt injections, unauthorized filesystem access, and data exfiltration.
+
+It adheres strictly to the **7 Principles of Agent Security**:
 
 1. **Least Privilege**: The agent only reads and writes to explicitly approved folders (Folder Scope Policy). System folders are completely blocked.
 2. **Human-In-The-Loop (HITL)**: No destructive action (like file deletion) occurs without explicit user review and approval.
