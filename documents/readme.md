@@ -170,10 +170,10 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 | 🏛️  // 07_SECURITY_PILLARS                             | 🛡️  // 07_SECURITY_LAYERS                             |
 +-------------------------------------------------------+-------------------------------------------------------+
 | 🛡️  1. SECURE_BY_DESIGN                                | 🌐  1. PHYSICAL_LAYER                                 |
-|    • Sensitive content detection                      |    • Local host hardware machine boundary             |
-|    • Authenticated Secure vault                       |                                                       |
-|    • PIN + security question                          |                                                       |
-|    • Runtime safety gates                             |                                                       |
+|          • Sensitive content detection                      |    • Local host hardware machine boundary             |
+|          • Authenticated Secure vault                       |                                                       |
+|          • PIN + security question                          |                                                       |
+|          • Runtime safety gates                             |                                                       |
 +-------------------------------------------------------+-------------------------------------------------------+
 | ⚙️  2. SECURE_BY_DEFAULT                               | 📊  2. DATA_LAYER                                     |
 |    • Sensitive files never deleted                    |    • Isolated environment asset & state directory     |
