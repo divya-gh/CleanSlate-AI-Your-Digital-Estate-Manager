@@ -163,7 +163,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ---
 
-## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
+## 🛡️ Security Architecture
 #### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls):
 
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
@@ -176,86 +176,121 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
   <tbody>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. SECURE_BY_DESIGN🛡️</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. SECURE_BY_DESIGN🔒</span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Sensitive File Isolation</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Authenticated Secure Vault</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Access Recovery-PIN + security question</i></span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Runtime Safety Gates</span>
+        <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i>i></span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. PHYSICAL_LAYER🌐</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Local host hardware machine boundary</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. Infrastructure & Networking🌐</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Sandboxed execution</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• FS access only through MCP tools</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Network isolation</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• No uncontrolled paths</span><br>
       </td>
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. SECURE_BY_DEFAULT⚙️</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Sensitive files never deleted or moved to unsafe folders</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Safety-first execution flow with dry-run</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Sensitive files never deleted or moved to vault</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Implicit dry-run: Safety-first execution</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Rollback enabled for all destructive actions</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. DATA_LAYER📊</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Isolated environment asset & state directory</span>
+        <span style="padding-left: 20px; display: inline-block;">• Encrypts sensitive context</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Least‑privilege access: No content Preview</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Logs/Summary redact sensitive path</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Partitions storage to avoid cross‑tenant exposure</span>
       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. SECURE_IN_DEPLOYMENT🚀</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Sandbox‑safe file operations</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• No external network calls</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• No unsafe path traversal</span>
+        <span style="padding-left: 20px; display: inline-block;">• Runs safely in sandboxed environments</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• No Exfiltration: Zero external network</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Traversal Defense: Absolute path enforcement</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. OPERATING_SYSTEM_LAYER💻</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Scoped system-level path & OS access hooks</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. Model Security💻</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Treats prompts and rule files as source code</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Protects against tampering and injection.</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Semgrep rules prevent unsafe LLM usage</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 documents model-level threats</span>
       </td>
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. ZERO_TRUST🔑</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Every file validated</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Sensitive files require authentication</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• No implicit trust of user input</span>
+        <span style="padding-left: 20px; display: inline-block;">• Explicit Scoping: Blocked path are invisible to agent</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Sensitive operation require authentication</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Input Sanitization: No implicit trust of user input</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. NETWORK_LAYER🔌</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Air-gapped boundary limits (Zero cloud APIs)</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. Application & Runtime🔌</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Uses LLM firewalls and pre/post tool‑call hooks</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Gateways prevent unrestricted agent calls.</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Semgrep rules enforce runtime safety</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Enforces safe-mode in run time</span>
       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. CONTINUOUS_MONITORING👁️‍🗨️</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Automated active background validation</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. Defense in Depth👁️‍🗨️</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Layered Pipeline: Discovery ➔</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Local Pattern Matching➔ LLM Classification</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Vault Encryption ➔ Transaction Logging</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• Heuristics & LLM Co-Verification:Fallback regex rules</span>
+      </td>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">💎 5. APPLICATION_LAYER</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Cryptographic vault isolation runtime</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. IAM Management💎</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Unique agent identity</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• HITLApproval required for delete</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Secure file handling with IAM rules</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 documents IAM threats</span>
       </td>
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">📝 6. ENCRYPTED_STATE_LOGS</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Tamper-proof transaction logging history</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. Operational Security📝</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Full traceability through structured logs</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Telemetry Protection:Erases sensitive file details in summary and logs</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Rollback records, and audit trails</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• Graceful Degradation: Recovers safely timeout failures</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🧠 6. AI_AGENT_LAYER</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• LLM prompt guardrails and validation rules</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. Observability & Security Ops🧠</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Continuous monitoring via logs, traces, and metrics</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Detects drift or infinite loops</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Implementing JSONL structured logs</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Semgrep ensures no sensitive leakage</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 includes observability threats</span>
       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">⚡ 7. FAILURE_ISOLATION</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Process sandboxing during structural faults</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. Privacy by Design⚡</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Redacts and masks sensitive filenames</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• No PII exposed in logs or summaries.</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Restricts the LLM from reading file content</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Works exclusively with metadata</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• Safe-mode operations throught the graph</span>
       </td>
       <td valign="top" style="padding:12px;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">👤 7. USER_ACCESS_LAYER</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Multifactor identity verification (PIN + Prompt)</span>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. Governance👤</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Ensures compliance with AI‑risk frameworks</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 (404+ lines)</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Semgrep safety contract (26+ rules)</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Residual risks documented</span><br>        
+        <span style="padding-left: 20px; display: inline-block;">• SStrict enforcemnt of SPEC governance in nodes</span>
       </td>
     </tr>
   </tbody>
 </table>
 
+**Note:** Every principle and layer is implemented, tested, and documented.
 ---
 
 
