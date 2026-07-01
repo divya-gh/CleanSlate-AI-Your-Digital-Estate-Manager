@@ -164,9 +164,40 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ---
 
 ## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
-#### CleanSlate AI is built using the `7-Pillar Security Architecture`.
+#### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls): .
 
-![Security Architecture Diagram](Images/security_architecture.png)
+<table border="0" style="width: 100%; border-collapse: collapse;">
+  <tr style="border: none;">
+    <!-- Left Column: 7 Pillars -->
+    <td style="width: 50%; vertical-align: top; border: none; padding-right: 10px;">
+
+| Sl. No. | 7 Pillars of Security |
+| :---: | :--- |
+| **1** | **Secure by Design**<br>• Sensitive content detection<br>• Authenticated Secure vault<br>• PIN + security question<br>• Runtime safety gates |
+| **2** | **Secure by Default**<br>• Sensitive files never deleted or moved to unsafe folders<br>• Safety-first execution flow with dry-run<br>• Rollback enabled for all destructive actions |
+| **3** | **Secure in Deployment**<br>• Sandbox‑safe file operations<br>• No external network calls<br>• No unsafe path traversal |
+| **4** | **Zero Trust Architecture**<br>• Every file validated<br>• Sensitive files require authentication<br>• No implicit trust of user input |
+| **5** | **Continuous Monitoring**<br>• Active safety verification protocols |
+| **6** | **Encrypted State Logs**<br>• Tamper-proof tracking of file histories |
+| **7** | **Graceful Failure Isolation**<br>• Isolated process environments during critical errors |
+
+    </td>
+    <!-- Right Column: 7 Layers -->
+    <td style="width: 50%; vertical-align: top; border: none; padding-left: 10px;">
+
+| Sl. No. | 7 Layers of Security |
+| :---: | :--- |
+| **1** | **Physical Layer**<br>• Secure host hardware boundaries |
+| **2** | **Data Layer**<br>• Isolated environment state storage |
+| **3** | **Operational System (OS) Layer**<br>• Restricted system-level file access hooks |
+| **4** | **Network Layer**<br>• Absolute air-gapped isolation barrier |
+| **5** | **Application Layer**<br>• Cryptographic vault runtime environments |
+| **6** | **AI Agent Layer**<br>• Strict guardrail filters on execution prompts |
+| **7** | **User Access Layer**<br>• Secure PIN + Multifactor challenge logic |
+
+    </td>
+  </tr>
+</table>
 
 ### 1. Secure by Design
 * **Sensitive File Isolation**: Proactive identification of sensitive content (SSNs, API keys, tax forms).
