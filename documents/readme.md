@@ -111,7 +111,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ##  🛠️  4. Core Technologies Used
 
 #### ✔ ADK Agent 2.0
-•	Multi step workflows
+Multi step workflows
 •	Interrupt driven UI
 •	Node graph architecture
 •	Ambient agent state
