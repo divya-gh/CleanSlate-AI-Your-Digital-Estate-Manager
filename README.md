@@ -73,19 +73,48 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ---
 
-## 🔒 Security Architecture (The 7 Principles & STRIDE)
+## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
 
-CleanSlate AI was designed using the **STRIDE Threat Model** (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege) to harden the agent against prompt injections, unauthorized filesystem access, and data exfiltration.
+CleanSlate AI was designed using the **STRIDE Threat Model** (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege) to harden the agent against prompt injections, unauthorized filesystem access, and exfiltration.
 
-It adheres strictly to the **7 Principles of Agent Security**:
+![Security Architecture Diagram](assets/security_architecture.png)
 
-1. **Least Privilege**: The agent only reads and writes to explicitly approved folders (Folder Scope Policy). System folders are completely blocked.
-2. **Human-In-The-Loop (HITL)**: No destructive action (like file deletion) occurs without explicit user review and approval.
-3. **Data Minimization**: File contents are never uploaded to the cloud without permission; the agent operates entirely on local metadata and file names for classification.
-4. **Secure Defaults**: Runs in "Dry-Run" mode by default. Sensitive files are moved to a secure, PIN-protected `Authenticated_Secure` folder.
-5. **Fail-Safe & Rollback**: Every file operation is logged, enabling full reversibility. If an error occurs, the system fails gracefully without destroying data.
-6. **Auditability**: Complete logging and traceability of all LLM reasoning, user approvals, and disk modifications.
-7. **Defense in Depth**: Employs multiple layers of security, including regex-based fallback heuristics for safety checks when the LLM is unavailable.
+It adheres strictly to the **7 Pillars of Security**:
+
+### 1. Secure by Design
+* **Sensitive File Isolation**: Proactive identification of sensitive content (SSNs, API keys, tax forms).
+* **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
+* **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
+* **Runtime Constraints**: Strict runtime safety gates preventing unauthorized system calls.
+
+### 2. Secure by Default
+* **Non-Destructive Vaulting**: Sensitive files are never deleted; they are securely moved to the vault.
+* **Implicit Dry-Run**: Safety-first execution flow presenting proposed changes prior to making modifications.
+* **Universal Rollback**: Complete transaction logs recorded to revert any file system operations (rename, move, delete).
+
+### 3. Secure in Deployment
+* **Sandbox Integration**: Tested and verified to operate safely in restricted cloud sandboxes (e.g., Kaggle, remote VMs).
+* **No Exfiltration**: Zero external network requests allowed during execution, retaining all sensitive data locally.
+* **Traversal Defense**: Absolute path enforcement and blocking of parent directory traversal (`..`).
+
+### 4. Zero Trust
+* **Explicit Scoping**: The Folder Scope Policy acts as a hard boundary—unapproved directories are completely invisible to the agent.
+* **Authentication Boundaries**: Re-authenticates requests targeting the secure vault to prevent privilege creep.
+* **Input Sanitization**: Rejects and sanitizes raw user inputs, including leading/trailing quote stripping and slash normalization.
+
+### 5. Defense in Depth
+* **Layered Pipeline**: Executes in distinct sequential phases: Discovery ➔ Local Pattern Matching ➔ LLM Classification ➔ Vault Encryption ➔ Transaction Logging.
+* **Heuristics & LLM Co-Verification**: Fallback regex rules verify classification to ensure security even when API connections are degraded.
+
+### 6. Operational Security
+* **Full Auditability**: Logs every node transition, LLM decision, user input, and file modification.
+* **Telemetry Protection**: Erases sensitive file details from execution summaries and telemetry outputs.
+* **Graceful Degradation**: Recovers safely from file locks, permissions issues, or API timeout failures without leaving partial transactions.
+
+### 7. Privacy by Design
+* **Filename Masking**: Redacts and masks sensitive filenames (e.g., `[RESTRICTED]/SSN_****.txt`) in logs and UI lists.
+* **Content Blindness**: Restricts the LLM from reading file content; the agent works exclusively with metadata.
+* **PII Redaction**: Auto-filters any personally identifiable information (PII) from user-facing reports.
 
 ---
 

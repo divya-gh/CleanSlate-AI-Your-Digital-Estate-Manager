@@ -164,53 +164,44 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ---
 
 ## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
-#### CleanSlate AI is built using `Security 7 Principles`.
+#### CleanSlate AI is built using the `7-Pillar Security Architecture`.
+
+![Security Architecture Diagram](Images/security_architecture.png)
 
 ### 1. Secure by Design
-•	Sensitive file detection
-•	Authenticated Secure Folder
-•	PIN + security question
-•	Runtime safety checks
+* **Sensitive File Isolation**: Proactive identification of sensitive content (SSNs, API keys, tax forms).
+* **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
+* **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
+* **Runtime Constraints**: Strict runtime safety gates preventing unauthorized system calls.
 
 ### 2. Secure by Default
-Sensitive files never deleted
+* **Non-Destructive Vaulting**: Sensitive files are never deleted; they are securely moved to the vault.
+* **Implicit Dry-Run**: Safety-first execution flow presenting proposed changes prior to making modifications.
+* **Universal Rollback**: Complete transaction logs recorded to revert any file system operations (rename, move, delete).
 
-Sensitive files never moved to unsafe folders
+### 3. Secure in Deployment
+* **Sandbox Integration**: Tested and verified to operate safely in restricted cloud sandboxes (e.g., Kaggle, remote VMs).
+* **No Exfiltration**: Zero external network requests allowed during execution, retaining all sensitive data locally.
+* **Traversal Defense**: Absolute path enforcement and blocking of parent directory traversal (`..`).
 
-Rollback enabled for all destructive actions
+### 4. Zero Trust
+* **Explicit Scoping**: The Folder Scope Policy acts as a hard boundary—unapproved directories are completely invisible to the agent.
+* **Authentication Boundaries**: Re-authenticates requests targeting the secure vault to prevent privilege creep.
+* **Input Sanitization**: Rejects and sanitizes raw user inputs, including leading/trailing quote stripping and slash normalization.
 
-3. Secure in Deployment
-Sandbox‑safe file operations
+### 5. Defense in Depth
+* **Layered Pipeline**: Executes in distinct sequential phases: Discovery ➔ Local Pattern Matching ➔ LLM Classification ➔ Vault Encryption ➔ Transaction Logging.
+* **Heuristics & LLM Co-Verification**: Fallback regex rules verify classification to ensure security even when API connections are degraded.
 
-No external network calls
+### 6. Operational Security
+* **Full Auditability**: Logs every node transition, LLM decision, user input, and file modification.
+* **Telemetry Protection**: Erases sensitive file details from execution summaries and telemetry outputs.
+* **Graceful Degradation**: Recovers safely from file locks, permissions issues, or API timeout failures without leaving partial transactions.
 
-No unsafe path traversal
-
-4. Zero Trust
-Every file validated
-
-Sensitive files require authentication
-
-No implicit trust of user input
-
-5. Defense in Depth
-Detection → classification → secure storage → logging
-
-6. Operational Security
-Full traceability
-
-Action logs
-
-Rollback logs
-
-Error logs
-
-7. Privacy by Design
-Sensitive filenames masked
-
-Sensitive details hidden in summaries
-
-No PII exposed in logs
+### 7. Privacy by Design
+* **Filename Masking**: Redacts and masks sensitive filenames (e.g., `[RESTRICTED]/SSN_****.txt`) in logs and UI lists.
+* **Content Blindness**: Restricts the LLM from reading file content; the agent works exclusively with metadata.
+* **PII Redaction**: Auto-filters any personally identifiable information (PII) from user-facing reports.
 
 ## 🟦 6. Semgrep Rules
 #### CleanSlate AI uses Semgrep for static analysis:
