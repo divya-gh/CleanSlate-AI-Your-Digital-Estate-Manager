@@ -166,41 +166,95 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
 #### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls): .
 ```
-<table border="0" style="width: 100%; border-collapse: collapse; border: none;">
-  <tr style="border: none;">
-    <!-- Left Column: 7 Pillars -->
-    <td style="width: 50%; vertical-align: top; border: none; padding-right: 15px;">
-
-| Sl. No. | 7 Pillars of Security |
-| :---: | :--- |
-| **1** | **Secure by Design**<br>• Sensitive content detection<br>• Authenticated Secure vault<br>• PIN + security question<br>• Runtime safety gates |
-| **2** | **Secure by Default**<br>• Sensitive files never deleted or moved to unsafe folders<br>• Safety-first execution flow with dry-run<br>• Rollback enabled for all destructive actions |
-| **3** | **Secure in Deployment**<br>• Sandbox‑safe file operations<br>• No external network calls<br>• No unsafe path traversal |
-| **4** | **Zero Trust**<br>• Every file validated<br>• Sensitive files require authentication<br>• No implicit trust of user input |
-| **5** | **Continuous Monitoring**<br>• Automated active background validation |
-| **6** | **Encrypted State Logs**<br>• Tamper-proof transaction logging history |
-| **7** | **Failure Isolation**<br>• Process sandboxing during structural faults |
-
-    </td>
-    <!-- Right Column: 7 Layers -->
-    <td style="width: 50%; vertical-align: top; border: none; padding-left: 15px;">
-
-| Sl. No. | 7 Layers of Security |
-| :---: | :--- |
-| **1** | **Physical Layer**<br>• Local host hardware machine boundary |
-| **2** | **Data Layer**<br>• Isolated environment asset & state directory |
-| **3** | **Operating System Layer**<br>• Scoped system-level path & OS access hooks |
-| **4** | **Network Layer**<br>• Air-gapped boundary limits (Zero cloud APIs) |
-| **5** | **Application Layer**<br>• Cryptographic vault isolation runtime |
-| **6** | **AI Agent Layer**<br>• LLM prompt guardrails and validation rules |
-| **7** | **User Access Layer**<br>• Multifactor identity verification (PIN + Prompt) |
-
-    </td>
-  </tr>
+<table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
+  <thead>
+    <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+      <th style="width: 50%; padding: 12px; text-align: left; font-size: 16px; border-right: 1px solid #cbd5e1;">7 Pillars of Security</th>
+      <th style="width: 50%; padding: 12px; text-align: left; font-size: 16px;">7 Layers of Security</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>1. Secure by Design</b><br>
+        • Sensitive content detection<br>
+        • Authenticated Secure vault<br>
+        • PIN + security question<br>
+        • Runtime safety gates
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>1. Physical Layer</b><br>
+        • Local host hardware machine boundary
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>2. Secure by Default</b><br>
+        • Sensitive files never deleted or moved to unsafe folders<br>
+        • Safety-first execution flow with dry-run<br>
+        • Rollback enabled for all destructive actions
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>2. Data Layer</b><br>
+        • Isolated environment asset & state directory
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>3. Secure in Deployment</b><br>
+        • Sandbox‑safe file operations<br>
+        • No external network calls<br>
+        • No unsafe path traversal
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>3. Operating System Layer</b><br>
+        • Scoped system-level path & OS access hooks
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>4. Zero Trust</b><br>
+        • Every file validated<br>
+        • Sensitive files require authentication<br>
+        • No implicit trust of user input
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>4. Network Layer</b><br>
+        • Air-gapped boundary limits (Zero cloud APIs)
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>5. Continuous Monitoring</b><br>
+        • Automated active background validation
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>5. Application Layer</b><br>
+        • Cryptographic vault isolation runtime
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>6. Encrypted State Logs</b><br>
+        • Tamper-proof transaction logging history
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>6. AI Agent Layer</b><br>
+        • LLM prompt guardrails and validation rules
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e2e8f0;">
+      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+        <b>7. Failure Isolation</b><br>
+        • Process sandboxing during structural faults
+      </td>
+      <td style="padding: 12px; vertical-align: top;">
+        <b>7. User Access Layer</b><br>
+        • Multifactor identity verification (PIN + Prompt)
+      </td>
+    </tr>
+  </tbody>
 </table>
-
-### 1. Secure by Design
-* **Sensitive File Isolation**: Proactive identification of sensitive content (SSNs, API keys, tax forms).
 ```
 * **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
 * **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
