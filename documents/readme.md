@@ -176,11 +176,11 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
   <tbody>
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
-        <b>1. Secure by Design</b><br>
-        - Sensitive File Isolation<br>
-        • Authenticated Secure vault<br>
-        • PIN + security question<br>
-        • Runtime safety gates
+        <b>1. Secure by Design:</b><br>
+          • Sensitive File Isolation<br>
+          • Authenticated Secure vault<br>
+          • PIN + security question<br>
+          • Runtime safety gates
       </td>
       <td style="padding: 12px; vertical-align: top;">
         <b>1. Physical Layer</b><br>
