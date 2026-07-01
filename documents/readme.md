@@ -164,7 +164,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ---
 
 ## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
-#### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls): .
+#### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls):
 
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
