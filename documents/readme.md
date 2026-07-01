@@ -154,13 +154,13 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 •	Safe CI/CD and commit pipeline.
 
 #### ✔ STRIDE Threat Model(Threat	Mitigation)
+•	S – Spoofing	PIN + security question
+•	T – Tampering	Rollback + secure folder
+•	R – Repudiation	Full action logs
+•	I – Information Disclosure	Sensitive file masking
+•	D – Denial of Service	Bounded folder scanning
+•	E – Elevation of Privilege	No privileged operations
 •	Enforces SDD safety rule to reason about threats at design time.
-#### S – Spoofing	PIN + security question
-#### T – Tampering	Rollback + secure folder
-#### R – Repudiation	Full action logs
-#### I – Information Disclosure	Sensitive file masking
-#### D – Denial of Service	Bounded folder scanning
-#### E – Elevation of Privilege	No privileged operations
 
 #### ✔ SKILLS.md
 •	File scanning
