@@ -169,8 +169,8 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
     <tr>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#00F5D4; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🏛️ // 07_SECURITY_PILLARS</th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#00F5D4; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🛡️ // 07_SECURITY_LAYERS</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🧱 07 SECURITY PILLARS</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS</th>
     </tr>
   </thead>
   <tbody>
@@ -382,71 +382,3 @@ Kaggle Video	GitHub Video
 
 ### 🟦 17. License
 MIT License 
--------------------------
-
-<table border="1" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; font-family:sans-serif;">
-  <thead>
-    <tr>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#00F5D4; font-family:Consolas, Monaco, monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px;">🏛️ // 07_SECURITY_PILLARS</th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#00F5D4; font-family:Consolas, Monaco, monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px;">🛡️ // 07_SECURITY_LAYERS</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td valign="top" style="padding:12px; width:50%; line-height:1.6;">
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🛡️ 1. SECURE_BY_DESIGN</span><br>
-        <span style="font-size:11px; color:#8b949e; padding-left:20px; display:inline-block;"><i>• Sensitive content detection</i></span><br>
-        <span style="font-size:11px; color:#8b949e; padding-left:20px; display:inline-block;"><i>• Authenticated Secure vault</i></span><br>
-        <span style="font-size:11px; color:#8b949e; padding-left:20px; display:inline-block;"><i>• PIN + security question</i></span><br>
-        <span style="padding-left:20px; display:inline-block;">• Runtime safety gates</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">⚙️ 2. SECURE_BY_DEFAULT</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Sensitive files never deleted or moved to unsafe folders</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Safety-first execution flow with dry-run</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Rollback enabled for all destructive actions</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🚀 3. SECURE_IN_DEPLOYMENT</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Sandbox‑safe file operations</span><br>
-        <span style="padding-left:20px; display:inline-block;">• No external network calls</span><br>
-        <span style="padding-left:20px; display:inline-block;">• No unsafe path traversal</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🔑 4. ZERO_TRUST</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Every file validated</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Sensitive files require authentication</span><br>
-        <span style="padding-left:20px; display:inline-block;">• No implicit trust of user input</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">👁️‍🗨️ 5. CONTINUOUS_MONITORING</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Automated active background validation</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">📝 6. ENCRYPTED_STATE_LOGS</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Tamper-proof transaction logging history</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">⚡ 7. FAILURE_ISOLATION</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Process sandboxing during structural faults</span>
-      </td>
-
-      <td valign="top" style="padding:12px; width:50%; line-height:1.6;">
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🌐 1. PHYSICAL_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Local host hardware machine boundary</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">📊 2. DATA_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Isolated environment asset & state directory</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">💻 3. OPERATING_SYSTEM_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Scoped system-level path & OS access hooks</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🔌 4. NETWORK_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Air-gapped boundary limits (Zero cloud APIs)</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">💎 5. APPLICATION_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Cryptographic vault isolation runtime</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">🧠 6. AI_AGENT_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• LLM prompt guardrails and validation rules</span>
-        <br><br>
-        <span style="font-family:Consolas, Monaco, monospace; font-size:14px; font-weight:bold; color:#58a6ff;">👤 7. USER_ACCESS_LAYER</span><br>
-        <span style="padding-left:20px; display:inline-block;">• Multifactor identity verification (PIN + Prompt)</span>
-      </td>
-    </tr>
-  </tbody>
-</table>
