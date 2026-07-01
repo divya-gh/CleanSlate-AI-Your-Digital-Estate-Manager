@@ -176,11 +176,11 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
   <tbody>
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 10px; vertical-align: top; border-right: 1px solid #cbd5e1;">
-        <b>1. Secure by Design:</b><br>
-          <small<i>• Sensitive File Isolation</i></small><br>
-          <small<i>• Authenticated Secure vault</i></small><br>
-          <small<i>• PIN + security question</i></small><br>
-          <small<i>• Runtime safety gates</small</i></small>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#0A192F;">🛡️ 1. SECURE_BY_DESIGN</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#0A192F;">🛡️ 1. SECURE_BY_DESIGN</span><br>
+        <span style="font-size: 11px; color: #475569; padding-left: 20px; display: inline-block;"><i>• Sensitive content detection</i></span><br>
+        <span style="font-size: 11px; color: #475569; padding-left: 20px; display: inline-block;"><i>• Authenticated Secure vault</i></span><br>
+        <span style="font-size: 11px; color: #475569; padding-left: 20px; display: inline-block;"><i>• PIN + security question</i></span><br>
       </td>
       <td style="padding: 10px; vertical-align: top;">
         <b>1. Physical Layer</b><br>
