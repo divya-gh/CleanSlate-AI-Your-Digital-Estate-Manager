@@ -188,10 +188,10 @@ File scanning
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. SECURE_BY_DESIGN🔒</span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Sensitive File Isolation</i></span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Authenticated Secure Vault</i></span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Access Recovery-PIN + security question</i></span><br>
-        <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i></span>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"> • Sensitive File Isolation</span><br>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"> • Authenticated Secure Vault</span><br>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"> • Access Recovery-PIN + security question</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Runtime Safety Gates</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. INFRASTRUCTURE_&_NETWORKING🌐</span><br>
