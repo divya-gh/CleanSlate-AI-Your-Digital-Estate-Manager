@@ -194,7 +194,7 @@ File scanning
         <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i></span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. Infrastructure & Networking🌐</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. INFRASTRUCTURE_&_NETWORKING🌐</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Sandboxed execution</span><br>
         <span style="padding-left: 20px; display: inline-block;">• FS access only through MCP tools</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Network isolation</span><br>
@@ -224,7 +224,7 @@ File scanning
         <span style="padding-left: 20px; display: inline-block;">• Traversal Defense: Absolute path enforcement</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. Model Security💻</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. MODEL_SECURITY💻</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Treats prompts and rule files as source code</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Protects against tampering and injection.</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep rules prevent unsafe LLM usage</span><br>
@@ -239,7 +239,7 @@ File scanning
         <span style="padding-left: 20px; display: inline-block;">• Input Sanitization: No implicit trust of user input</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. Application & Runtime🔌</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. APPLICATION_&_RUNTIME🔌</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Uses LLM firewalls and pre/post tool‑call hooks</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Gateways prevent unrestricted agent calls.</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep rules enforce runtime safety</span><br>
@@ -247,7 +247,7 @@ File scanning
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. Defense in Depth👁️‍🗨️</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. DEFENSE_IN_DEPTH👁️‍🗨️</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Layered Pipeline: Discovery ➔</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Local Pattern Matching➔ LLM Classification</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Vault Encryption ➔ Transaction Logging</span><br>        
@@ -255,7 +255,7 @@ File scanning
       </td>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. IAM Management💎</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. IAM_MANAGEMENT💎</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Unique agent identity</span><br>
         <span style="padding-left: 20px; display: inline-block;">• HITLApproval required for delete</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Secure file handling with IAM rules</span><br>        
@@ -264,14 +264,14 @@ File scanning
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. Operational Security📝</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. OPERATIONAL_SECURITY📝</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Full traceability through structured logs</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Telemetry Protection:Erases sensitive file details in summary and logs</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Rollback records, and audit trails</span><br>        
         <span style="padding-left: 20px; display: inline-block;">• Graceful Degradation: Recovers safely timeout failures</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. Observability & Security Ops🧠</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. OBSERVABILITY_&_SECURITY_OPS🧠</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Continuous monitoring via logs, traces, and metrics</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Detects drift or infinite loops</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep ensures no sensitive leakage</span><br>        
@@ -280,7 +280,7 @@ File scanning
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. Privacy by Design⚡</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. PRIVACY_BY_DESIGN⚡</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Redacts and masks sensitive filenames</span><br>
         <span style="padding-left: 20px; display: inline-block;">• No PII exposed in logs or summaries.</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Restricts the LLM from reading file content</span><br>
@@ -288,7 +288,7 @@ File scanning
         <span style="padding-left: 20px; display: inline-block;">• Safe-mode operations throught the graph</span>
       </td>
       <td valign="top" style="padding:12px;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. Governance👤</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">7. GOVERNANCE👤</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Ensures compliance with AI‑risk frameworks</span><br>
         <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 (404+ lines)</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep safety contract (26+ rules)</span><br>
@@ -368,146 +368,6 @@ Kaggle Video	GitHub Video
 
 ### 🟦 17. License
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; width: 100%;">
-
-  <div style="border: 2px solid #30363d; border-radius: 8px; overflow: hidden; background-color: #0d1117;">
-    <div style="padding: 16px; background-color: #0B132B; border-bottom: 2px solid #30363d;">
-      <span style="font-family: Consolas, Monaco, monospace; font-size: 16px; font-weight: bold; color: #00F5D4; letter-spacing: 0.5px;">🔒 // 07_SECURITY_PILLARS</span><br>
-      <span style="font-size: 12px; color: #8b949e; font-style: italic;">-- Design Philosophy & Architecture</span>
-    </div>
-    <div style="padding: 16px;">
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">🛡️ 1. SECURE_BY_DESIGN</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Sensitive File Isolation<br>
-          • Authenticated Secure Vault<br>
-          • Access Recovery (PIN + security question)<br>
-          • Runtime Safety Gates
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">⚙️ 2. SECURE_BY_DEFAULT</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Sensitive files never deleted or moved to vault without verification<br>
-          • Implicit dry-run: Safety-first execution engine<br>
-          • Rollback protocols enabled for all destructive actions
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">🚀 3. SECURE_IN_DEPLOYMENT</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Runs natively and safely in sandboxed execution environments<br>
-          • No Data Exfiltration: Zero external cloud network interactions<br>
-          • Strict safety enforcement checkpoints embedded within logging<br>
-          • Traversal Defense: Absolute canonical path verification
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">🔑 4. ZERO_TRUST_ARCHITECTURE</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Explicit Scoping: Blocked OS paths remain invisible to the agent<br>
-          • Every single sensitive system operation requires step-up authentication<br>
-          • Deterministic Input Sanitization: Zero implicit trust of LLM or user inputs
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">👁️‍🗨️ 5. DEFENSE_IN_DEPTH</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Layered pipeline flow: Discovery ➔ Local Patterns ➔ LLM Classification<br>
-          • Cryptographic Vault Encryption ➔ Immutable Transaction Logging<br>
-          • Multi-Heuristics & LLM Co-Verification: Fallback regex safeguard layers
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">📝 6. OPERATIONAL_SECURITY</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Complete audit traceability through deterministic structured telemetry logs<br>
-          • Telemetry Protection: Dynamically erases sensitive details in system summaries<br>
-          • Cryptographic rollback records and append-only audit tracking trails<br>
-          • Graceful Degradation: Recovers safely from timeout bottlenecks and faults
-        </span>
-      </div>
-      <div>
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #58a6ff;">⚡ 7. PRIVACY_BY_DESIGN</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Automated sanitization masks and redacts system filenames<br>
-          • Absolute zero PII details exposed within runtime logs or AI summaries<br>
-          • Context Isolation: Explicitly restricts the LLM from reading raw payloads<br>
-          • Operates safely on system graph nodes using abstract safe-mode constraints
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <div style="border: 2px solid #30363d; border-radius: 8px; overflow: hidden; background-color: #0d1117;">
-    <div style="padding: 16px; background-color: #0B132B; border-bottom: 2px solid #30363d;">
-      <span style="font-family: Consolas, Monaco, monospace; font-size: 16px; font-weight: bold; color: #00F5D4; letter-spacing: 0.5px;">🧩 // 07_SECURITY_LAYERS</span><br>
-      <span style="font-size: 12px; color: #8b949e; font-style: italic;">-- Operational Controls & Implementation</span>
-    </div>
-    <div style="padding: 16px;">
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">🌐 1. INFRASTRUCTURE_&_NETWORKING</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Standardized sandboxed environment sub-process operations<br>
-          • File system operations constrained exclusively through Model Context Protocol (MCP)<br>
-          • Hard air-gapped network layer isolation barriers<br>
-          • Strict protection blocks preventing unverified directory traversals
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">📊 2. DATA_LAYER</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Least-Privilege Execution Paradigm: Suppresses unauthorized raw previews<br>
-          • Structural logs completely redact sensitive data path records<br>
-          • Segmented workspace partitions to prevent multi-tenant cross-contamination
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">💻 3. MODEL_SECURITY</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Immutable Ruleset Logic: Treats prompt templates and rules as code binaries<br>
-          • System hardening safeguards against prompt injection and tampering vectors<br>
-          • Programmatic Semgrep linting rules intercept unsafe or compromised LLM execution<br>
-          • Modeled comprehensive adversarial scenarios mapped out via STRIDE v2.0 benchmarks
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">🔌 4. APPLICATION_&_RUNTIME_FIREWALL</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Dynamic LLM safety firewalls validating pre/post tool invocations<br>
-          • Enterprise gateway proxies to intercept unrestricted or cascading agent iterations<br>
-          • Custom Semgrep safety assertions enforcing programmatic runtime state compliance
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">💎 5. IAM_MANAGEMENT</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Unique cryptographic security identity assigned to individual local agent entities<br>
-          • Mandatory Human-In-The-Loop (HITL) manual confirmations required for destruction tasks<br>
-          • Granular identity parameters defining structural multi-tenant access models<br>
-          • Systematic IAM vulnerability profiling recorded via STRIDE v2.0
-        </span>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">🧠 6. OBSERVABILITY_&_SECURITY_OPS</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Persistent real-time state analysis via unified telemetry monitoring pipelines<br>
-          • Algorithmic runtime evaluation checks for halting exceptions or cyclical loop states<br>
-          • Closed-loop monitoring loops checking for accidental PII leaks or memory overflows<br>
-          • Proactive detection of structural tracking risks via updated STRIDE v2.0
-        </span>
-      </div>
-      <div>
-        <span style="font-family: Consolas, Monaco, monospace; font-size: 14px; font-weight: bold; color: #ff7b72;">👤 7. GOVERNANCE_&_COMPLIANCE</span><br>
-        <span style="font-size: 13px; color: #c9d1d9; padding-left: 22px; display: block; margin-top: 4px;">
-          • Absolute runtime alignment matching international AI risk framework parameters<br>
-          • Verified documentation covering security layers (STRIDE v2.0: 404+ line profiles)<br>
-          • Programmatic enforcement checks (Static analysis suite: 26+ Semgrep rulesets)<br>
-          • Rigid technical execution constraints strictly managed by safe specification nodes
-        </span>
-      </div>
-    </div>
-  </div>
 
 </div>
 MIT License 
