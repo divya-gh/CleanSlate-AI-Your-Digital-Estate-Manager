@@ -145,12 +145,22 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
-#### ✔ Semgrep Security Hooks
-•	Statistically safe CI/CD and commit pipeline.
+#### ✔ Semgrep Security Hooks(static analysis)
+•	Detect unsafe file operations
+•	Prevent path traversal & accidental PII exposure
+•	Prevent insecure regex patternsc& logging
+•	Prevent insecure 
+•	Enforce ADK node safety patterns
+•	Safe CI/CD and commit pipeline.
 
-#### ✔ STRIDE Threat Model
-•	Enforces SDD safety rule
-• Reason about threats at design time.
+#### ✔ STRIDE Threat Model(Threat	Mitigation)
+•	Enforces SDD safety rule to reason about threats at design time.
+#### S – Spoofing	PIN + security question
+#### T – Tampering	Rollback + secure folder
+#### R – Repudiation	Full action logs
+#### I – Information Disclosure	Sensitive file masking
+#### D – Denial of Service	Bounded folder scanning
+#### E – Elevation of Privilege	No privileged operations
 
 #### ✔ SKILLS.md
 •	File scanning
@@ -290,67 +300,9 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
   </tbody>
 </table>
 
-**Note:** Every principle and layer is implemented, tested, and documented.
+#### **Note:** Every principle and layer is implemented, tested, and documented.
+
 ---
-
-
-
-* **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
-* **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
-* **Runtime Constraints**: Strict runtime safety gates preventing unauthorized system calls.
-
-### 2. Secure by Default
-* **Non-Destructive Vaulting**: Sensitive files are never deleted; they are securely moved to the vault.
-* **Implicit Dry-Run**: Safety-first execution flow presenting proposed changes prior to making modifications.
-* **Universal Rollback**: Complete transaction logs recorded to revert any file system operations (rename, move, delete).
-
-### 3. Secure in Deployment
-* **Sandbox Integration**: Tested and verified to operate safely in restricted cloud sandboxes (e.g., Kaggle, remote VMs).
-* **No Exfiltration**: Zero external network requests allowed during execution, retaining all sensitive data locally.
-* **Traversal Defense**: Absolute path enforcement and blocking of parent directory traversal (`..`).
-
-### 4. Zero Trust
-* **Explicit Scoping**: The Folder Scope Policy acts as a hard boundary—unapproved directories are completely invisible to the agent.
-* **Authentication Boundaries**: Re-authenticates requests targeting the secure vault to prevent privilege creep.
-* **Input Sanitization**: Rejects and sanitizes raw user inputs, including leading/trailing quote stripping and slash normalization.
-
-### 5. Defense in Depth
-* **Layered Pipeline**: Executes in distinct sequential phases: Discovery ➔ Local Pattern Matching ➔ LLM Classification ➔ Vault Encryption ➔ Transaction Logging.
-* **Heuristics & LLM Co-Verification**: Fallback regex rules verify classification to ensure security even when API connections are degraded.
-
-### 6. Operational Security
-* **Full Auditability**: Logs every node transition, LLM decision, user input, and file modification.
-* **Telemetry Protection**: Erases sensitive file details from execution summaries and telemetry outputs.
-* **Graceful Degradation**: Recovers safely from file locks, permissions issues, or API timeout failures without leaving partial transactions.
-
-### 7. Privacy by Design
-* **Filename Masking**: Redacts and masks sensitive filenames (e.g., `[RESTRICTED]/SSN_****.txt`) in logs and UI lists.
-* **Content Blindness**: Restricts the LLM from reading file content; the agent works exclusively with metadata.
-* **PII Redaction**: Auto-filters any personally identifiable information (PII) from user-facing reports.
-
-## 🟦 6. Semgrep Rules
-#### CleanSlate AI uses Semgrep for static analysis:
-•	Detect unsafe file operations
-•	Prevent path traversal
-•	Prevent insecure regex patterns
-•	Prevent insecure logging
-•	Prevent accidental PII exposure
-•	Enforce ADK node safety patterns
-
-
-## 🟦 7. STRIDE Threat Model
-### Threat	Mitigation
-
-#### S – Spoofing	PIN + security question
-#### T – Tampering	Rollback + secure folder
-#### R – Repudiation	Full action logs
-#### I – Information Disclosure	Sensitive file masking
-#### D – Denial of Service	Bounded folder scanning
-#### E – Elevation of Privilege	No privileged operations
-
-
-
-
 
 ## 🟦 10. Setup Instructions
 #### Clone the Repository
