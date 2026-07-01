@@ -48,7 +48,7 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 - **Summary & Logging:** Produces a professional, color‑coded action log and cleanup summary and centralized logging capturing every proposed & executed action, failure & rollback, Sensitive file detections, Node transitions and pub/sub events for traceability.
 - **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
 - **Conversational Assistant**: Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
-- **sandbox environments**: Runs safely in the sandox environment (Kaggle, cloud VMs)
+- **Sandbox Environments**: Runs safely in the sandox environment (Kaggle, cloud VMs)
 
 ---
 
@@ -177,7 +177,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
     <tr style="border-bottom: 1px solid #e2e8f0;">
       <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
         <b>1. Secure by Design</b><br>
-        • Sensitive content detection<br>
+        - Sensitive File Isolation<br>
         • Authenticated Secure vault<br>
         • PIN + security question<br>
         • Runtime safety gates
@@ -255,6 +255,8 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
     </tr>
   </tbody>
 </table>
+
+----
 
 * **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
 * **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
