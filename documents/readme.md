@@ -169,63 +169,63 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
     <tr>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🧱 07 SECURITY PILLARS</th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🧱 07 SECURITY PILLARS</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🛡️ 1. SECURE_BY_DESIGN</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. SECURE_BY_DESIGN🛡️</span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>• Sensitive content detection</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>• Authenticated Secure vault</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>• PIN + security question</i></span><br>
         <span style="padding-left: 20px; display: inline-block;">• Runtime safety gates</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🌐 1. PHYSICAL_LAYER</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. PHYSICAL_LAYER🌐</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Local host hardware machine boundary</span>
       </td>
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">⚙️ 2. SECURE_BY_DEFAULT</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. SECURE_BY_DEFAULT⚙️</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Sensitive files never deleted or moved to unsafe folders</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Safety-first execution flow with dry-run</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Rollback enabled for all destructive actions</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">📊 2. DATA_LAYER</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. DATA_LAYER📊</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Isolated environment asset & state directory</span>
       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🚀 3. SECURE_IN_DEPLOYMENT</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. SECURE_IN_DEPLOYMENT🚀</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Sandbox‑safe file operations</span><br>
         <span style="padding-left: 20px; display: inline-block;">• No external network calls</span><br>
         <span style="padding-left: 20px; display: inline-block;">• No unsafe path traversal</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">💻 3. OPERATING_SYSTEM_LAYER</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. OPERATING_SYSTEM_LAYER💻</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Scoped system-level path & OS access hooks</span>
       </td>
     </tr>
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🔑 4. ZERO_TRUST</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. ZERO_TRUST🔑</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Every file validated</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Sensitive files require authentication</span><br>
         <span style="padding-left: 20px; display: inline-block;">• No implicit trust of user input</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">🔌 4. NETWORK_LAYER</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">4. NETWORK_LAYER🔌</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Air-gapped boundary limits (Zero cloud APIs)</span>
       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
-        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">👁️‍🗨️ 5. CONTINUOUS_MONITORING</span><br>
+        <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">5. CONTINUOUS_MONITORING👁️‍🗨️</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Automated active background validation</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
