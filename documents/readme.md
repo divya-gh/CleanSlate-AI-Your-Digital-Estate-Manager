@@ -72,7 +72,7 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 ## 🏗️ 3. System Architecture Overview
 CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
 
-**CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, Skills.md, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
+**CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, ADK SKILLS, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
 
 ##### High‑Level Architecture Diagram (ASCII)
 ```
@@ -107,8 +107,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 └──────────────────────────────┘
 ```
 
-##  🛠️  4. Technologies Used
-### Core Technologies
+##  🛠️  4. Core Technologies Used
 
 ### ✔ ADK Agent 2.0
 •	Multi step workflows
@@ -122,14 +121,16 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 •	Secure execution
 
 ### ✔ Agent CLI
-•	Local testing
-•	Node debugging
+•	Rapid scaffolding
+•	Building, evaluating and deploying the agent
+•	Node debugging, Local testing
 •	Workflow validation
 
 ### ✔ Pub/Sub (Ambient Agent)
 •	Event driven communication
 •	State propagation
 •	Interrupt handling
+•	Triggers autonomous weekly background organization
 
 ### ✔ Antigravity
 •	Node graph editor
@@ -139,9 +140,16 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ### ✔ Logging & Traceability
 •	Full action logs
-•	Rollback logs
-•	Sensitive file logs
-•	Error logs
+•	Audibility & Rollback capability
+•	Sensitive file & error logs
+•	Node transitions and pub/sub events
+
+### ✔ Semgrep Security Hooks
+•	Statistically safe CI/CD and commit pipeline.
+
+### ✔ STRIDE Threat Model
+•	Enforces SDD safety rule
+• Reason about threats at design time.
 
 ### ✔ SKILLS.md
 •	File scanning
@@ -222,21 +230,8 @@ No PII exposed in logs
 #### E – Elevation of Privilege	No privileged operations
 
 
-## 🟦 8. Workflows
-#### ✔ Folder selection
-#### ✔ Sensitive file detection
-#### ✔ Optimization planning
-#### ✔ Cleanup execution
-#### ✔ Rollback
- ####✔ Summary dashboard
 
-## 🟦 9. Outputs
-#### CleanSlate AI produces:
-•	Professional cleanup summary
-•	Color coded action logs
-•	Sensitive file protection report
-•	Storage recovery report
-•	Rollback capability report
+
 
 ## 🟦 10. Setup Instructions
 #### Clone the Repository
