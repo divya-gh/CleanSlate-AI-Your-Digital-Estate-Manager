@@ -106,6 +106,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 │ (Professional Dashboard UI)   │
 └──────────────────────────────┘
 ```
+---
 
 ##  🛠️  4. Core Technologies Used
 
@@ -160,7 +161,9 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 •	Logging skill
 •	Table rendering skill
 
-## 🟦 5. Security Architecture
+---
+
+## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
 #### CleanSlate AI is built using `Security 7 Principles`.
 
 ### 1. Secure by Design
