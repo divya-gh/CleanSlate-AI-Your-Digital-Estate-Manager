@@ -303,6 +303,15 @@ File scanning
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.11+ and and uv.
+- Node.js (for custom Web UI)
+- Antigravity
+- Google AI Studio Gemini API Key
+
+
 ## 🟦 10. Setup Instructions
 #### Clone the Repository
 ```
