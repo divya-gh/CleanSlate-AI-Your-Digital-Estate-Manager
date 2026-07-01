@@ -117,36 +117,36 @@ Multi step workflows
 •	Ambient agent state
 
 #### ✔ MCP Server
-•	Tool orchestration
+Tool orchestration
 •	File operations
 •	Secure execution
 
 #### ✔ Agent CLI
-•	Rapid scaffolding
+Rapid scaffolding
 •	Building, evaluating and deploying the agent
 •	Node debugging, Local testing
 •	Workflow validation
 
 #### ✔ Pub/Sub (Ambient Agent)
-•	Event driven communication
+Event driven communication
 •	State propagation
 •	Interrupt handling
 •	Triggers autonomous weekly background organization
 
 #### ✔ Antigravity
-•	Node graph editor
+Node graph editor
 •	Agent manifest
 •	Logging console
 •	SDD workflow
 
 #### ✔ Logging & Traceability
-•	Full action logs
+Full action logs
 •	Audibility & Rollback capability
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
 #### ✔ Semgrep Security Hooks(static analysis)
-•	Detect unsafe file operations
+Detect unsafe file operations
 •	Prevent path traversal & accidental PII exposure
 •	Prevent insecure regex patternsc& logging
 •	Prevent insecure 
@@ -163,7 +163,7 @@ Multi step workflows
 •	Enforces SDD safety rule to reason about threats at design time.
 
 #### ✔ SKILLS.md
-•	File scanning
+File scanning
 •	Sensitive classification
 •	Duplicate detection
 •	Archive skill
