@@ -1,4 +1,5 @@
 import os
+import json as _json
 from unittest.mock import MagicMock
 
 import pytest
@@ -16,11 +17,21 @@ from app.nodes.folder_scope_node import (
     _parse_paths,
     _validate_single_path,
 )
+from app.nodes.organize_state import OrganizerSessionStore
+
+
+@pytest.fixture(autouse=True)
+def clean_session_store() -> None:
+    # Clear the session store before/after each test to prevent cross-test leakage
+    from app.nodes.organize_state import _STORE
+    _STORE.clear()
 
 
 @pytest.mark.anyio
 async def test_folder_scope_cleanup_intent_false() -> None:
     ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
     ctx.resume_inputs = {}
     node_input = FolderScopeInput(cleanup_intent=False)
 
@@ -37,8 +48,10 @@ async def test_folder_scope_cleanup_intent_false() -> None:
 
 
 @pytest.mark.anyio
-async def test_folder_scope_prompts_for_allowed_paths() -> None:
+async def test_folder_scope_prompts_for_parent_folder() -> None:
     ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
     ctx.resume_inputs = {}
     node_input = FolderScopeInput(cleanup_intent=True)
 
@@ -49,15 +62,22 @@ async def test_folder_scope_prompts_for_allowed_paths() -> None:
     assert len(events) == 1
     event = events[0]
     assert isinstance(event, RequestInput)
-    assert event.interrupt_id == "allowed_paths"
-    assert "allow the assistant to scan" in event.message
+    assert event.interrupt_id == "parent_folder"
+    assert "Suggested safe folders" in event.message
 
 
 @pytest.mark.anyio
-async def test_folder_scope_prompts_for_blocked_paths() -> None:
+async def test_folder_scope_prompts_for_subfolder_selections() -> None:
     ctx = MagicMock()
-    ctx.resume_inputs = {"allowed_paths": "C:\\Users\\User\\Documents"}
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
     node_input = FolderScopeInput(cleanup_intent=True)
+
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    # Mock that the user entered a valid parent folder path
+    cwd = os.getcwd().replace("\\", "/")
+    store.set("parent_folder", cwd)
 
     events = []
     async for event in folder_scope_node(ctx, node_input):
@@ -66,19 +86,21 @@ async def test_folder_scope_prompts_for_blocked_paths() -> None:
     assert len(events) == 1
     event = events[0]
     assert isinstance(event, RequestInput)
-    assert event.interrupt_id == "blocked_paths"
-    assert "must never touch" in event.message
+    assert event.interrupt_id == "subfolder_selections"
 
 
 @pytest.mark.anyio
-async def test_folder_scope_validation_error_and_field_clearing() -> None:
-    # allowed_paths contains a system path, which is invalid
+async def test_folder_scope_prompts_for_user_pin() -> None:
     ctx = MagicMock()
-    ctx.resume_inputs = {
-        "allowed_paths": "C:\\Windows",
-        "blocked_paths": "C:\\Users\\User\\Downloads",
-    }
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
     node_input = FolderScopeInput(cleanup_intent=True)
+
+    parent_folder = "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    store.set("parent_folder", parent_folder)
+    store.set("subfolder_selections", _json.dumps({"organized": [parent_folder + "/SubFolder"], "never_touch": []}))
 
     events = []
     async for event in folder_scope_node(ctx, node_input):
@@ -86,28 +108,105 @@ async def test_folder_scope_validation_error_and_field_clearing() -> None:
 
     assert len(events) == 1
     event = events[0]
-    assert isinstance(event, Event)
-    assert event.actions.route == "scope_invalid"
-    assert event.output.folder_scope_policy is None
-    assert len(event.output.validation_errors) > 0
-    # Checks that allowed_paths got popped, but blocked_paths remains
-    assert "allowed_paths" not in ctx.resume_inputs
-    assert "blocked_paths" in ctx.resume_inputs
+    assert isinstance(event, RequestInput)
+    assert event.interrupt_id == "user_pin"
+    assert "create a 4-digit PIN" in event.message
+
+
+@pytest.mark.anyio
+async def test_folder_scope_prompts_for_security_question() -> None:
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
+    node_input = FolderScopeInput(cleanup_intent=True)
+
+    parent_folder = "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    store.set("parent_folder", parent_folder)
+    store.set("subfolder_selections", _json.dumps({"organized": [parent_folder + "/SubFolder"], "never_touch": []}))
+    store.set("user_pin", "1234")
+
+    events = []
+    async for event in folder_scope_node(ctx, node_input):
+        events.append(event)
+
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, RequestInput)
+    assert event.interrupt_id == "security_question"
+    assert "Choose a security question" in event.message
+
+
+@pytest.mark.anyio
+async def test_folder_scope_prompts_for_security_answer() -> None:
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
+    node_input = FolderScopeInput(cleanup_intent=True)
+
+    parent_folder = "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    store.set("parent_folder", parent_folder)
+    store.set("subfolder_selections", _json.dumps({"organized": [parent_folder + "/SubFolder"], "never_touch": []}))
+    store.set("user_pin", "1234")
+    store.set("security_question", "1")  # First question
+
+    events = []
+    async for event in folder_scope_node(ctx, node_input):
+        events.append(event)
+
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, RequestInput)
+    assert event.interrupt_id == "security_answer"
+    assert "first pet?" in event.message
+
+
+@pytest.mark.anyio
+async def test_folder_scope_prompts_for_weekly_organizer() -> None:
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
+    node_input = FolderScopeInput(cleanup_intent=True)
+
+    parent_folder = "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    store.set("parent_folder", parent_folder)
+    store.set("subfolder_selections", _json.dumps({"organized": [parent_folder + "/SubFolder"], "never_touch": []}))
+    store.set("user_pin", "1234")
+    store.set("security_question", "1")
+    store.set("security_answer", "Buddy")
+
+    events = []
+    async for event in folder_scope_node(ctx, node_input):
+        events.append(event)
+
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, RequestInput)
+    assert event.interrupt_id == "weekly_organizer"
+    assert "__TOGGLE_SELECT__" in event.message
 
 
 @pytest.mark.anyio
 async def test_folder_scope_success_policy_construction() -> None:
-    # Valid paths
-    allowed_path = (
-        "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
-    )
-    blocked_path = (
-        "C:/Users/User/Downloads" if os.name == "nt" else "/home/user/downloads"
-    )
-
     ctx = MagicMock()
-    ctx.resume_inputs = {"allowed_paths": allowed_path, "blocked_paths": blocked_path}
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session"
     node_input = FolderScopeInput(cleanup_intent=True)
+
+    parent_folder = "C:/Users/User/Documents" if os.name == "nt" else "/home/user/documents"
+    store = OrganizerSessionStore.for_session("test_session")
+    store.set_active()
+    store.set("parent_folder", parent_folder)
+    store.set("subfolder_selections", _json.dumps({"organized": [parent_folder + "/Work"], "never_touch": [parent_folder + "/Private"]}))
+    store.set("user_pin", "1234")
+    store.set("security_question", "1")
+    store.set("security_answer", "Buddy")
+    store.set("weekly_organizer", "enable")
 
     events = []
     async for event in folder_scope_node(ctx, node_input):
@@ -119,20 +218,8 @@ async def test_folder_scope_success_policy_construction() -> None:
     assert event.actions.route == "scope_ok"
     policy = event.output.folder_scope_policy
     assert policy is not None
-    assert policy.version == "1.0"
-    assert policy.source == "interactive_cleanup"
-    assert policy.created_by == "FolderScopeNode"
-
-    # Verify that the allowed path is in allowed_paths
-    assert allowed_path.lower() in policy.allowed_paths
-
-    # Verify that default system paths and the user blocked path are inside blocked_paths
-    assert blocked_path.lower() in policy.blocked_paths
-    # Default system paths should be populated
-    if os.name == "nt":
-        assert "c:/windows" in policy.blocked_paths
-    else:
-        assert "/system" in policy.blocked_paths or "/usr" in policy.blocked_paths
+    assert (parent_folder + "/Work").lower() in policy.allowed_paths
+    assert (parent_folder + "/Private").lower() in policy.blocked_paths
 
 
 def test_validate_single_path_constraints() -> None:

@@ -1,21 +1,25 @@
-# Implementing Welcome Message for Antigravity UI 
+# Implementing Antigravity UI Layout 
 
 # 🚀 CleanSlate AI — My PC Assistant
 **Your Personal PC Cleanup Assistant, Powered by ADK 2.0**
 
 ============================================================================================
-## When the user opens CleanSlate AI agent:
 
-🎉 A centered welcome message appears at the top
-🎉 The user is told exactly what to say
-🎉 When they say “organize my computer” → the guided flow starts
-🎉 Allowed vs blocked paths are shown
-🎉 User selects folder scope
-🎉 Sensitive files are moved to authenticated folder
-🎉 User creates a PIN + security question
-🎉 User chooses weekly organizer enable/disable
+## When the user opens CleanSlate AI agent Playground :
 
-Implementation:
+#### 🎉 A centered `welcome message` appears at the top
+#### 🎉 The user is told exactly what to say - eg: You can say: `"Organize my computer"`
+#### 🎉 When they say “organize my computer” → the guided flow starts
+#### 🎉 Allowed vs blocked paths are shown
+#### 🎉 User selects folder scope - eg: `C:/Users/divya/OneDrive/Desktop`
+#### 🎉 User selects folders clean in the selected path
+#### 🎉 User creates a PIN + security question
+#### 🎉 Sensitive files are moved to authenticated folder with PIN
+#### 🎉 User chooses weekly organizer enable/disable - `Ambient`
+#### 🎉 Agent asks the user if it can go ahead with the `Clean up Action` 
+#### 🎉 Agent generates beautiful `CLEANUP SUMMARY REPORT` and `ACTION LOG`
+
+### Step 1. Implementation of Welcome Message:
 - Prompt in Antigravity:
 ```
 
@@ -175,4 +179,204 @@ Use __TOGGLE_SELECT__ for these buttons.
 Stop execution after emitting the table interrupt.
 Resume only after user selects confirm/cancel.
 
+```
+=====================================================================================
+# Imnplementing Authentication Folder
+
+## Ensure `Authenticated_Secure folder`  is created in the root path.
+
+### Prompt:
+```
+Update the ExecutionNode and SensitiveFileHandler logic.
+
+Before moving any sensitive file, ensure the Authenticated_Secure folder exists inside the selected  Parent folder(Eg: C:/Users/divya/Desktop/Collection/) .
+
+Implement:
+
+secure_folder = os.path.join(parent_folder, "Authenticated_Secure")
+os.makedirs(secure_folder, exist_ok=True)
+
+Then move sensitive files ONLY into secure_folder.
+
+If the destination is NOT secure_folder:
+    → block the move
+    → log FAILURE
+    → do not attempt to move sensitive files into "Organized" or any other folder.
+
+This ensures:
+- Sensitive files always have a valid destination
+- Sensitive moves succeed
+- Safety checks remain intact
+- No more repeated FAILURE rows
+
+```
+
+=================================================================================
+
+# FINAL SUMMARYNODE UPGRADE 
+
+## Prompt:
+```
+Update the SummaryNode logic to produce a colorful, professional, dashboard-style cleanup summary.
+
+Replace the plain text summary with a structured, emoji-enhanced, visually polished report.
+
+The SummaryNode should generate output in the following format:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧹  CLEANSLATE AI — CLEANUP SUMMARY REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 OVERVIEW
+──────────────────────────────────────────────
+• Total Actions:            {total_actions}
+• Successful Actions:       {successful_actions}   🟢
+• Failed Actions:           {failed_actions}       🔴
+• Skipped Actions:          {skipped_actions}      ⚪
+
+💾 STORAGE RECOVERY
+──────────────────────────────────────────────
+• Total Space Recovered:    {space_recovered} bytes  📦
+
+🔐 SENSITIVE FILE PROTECTION
+──────────────────────────────────────────────
+• Sensitive Files Protected: {sensitive_count}
+• Status:                   🛡️ All protected safely
+• Details:                  Hidden for privacy
+
+♻️ ROLLBACK CAPABILITY
+──────────────────────────────────────────────
+• Rollback Supported:       {rollback_supported}   🔄
+• Rollback Unsupported:     {rollback_unsupported} ✔️
+
+🧪 DRY-RUN MODE
+──────────────────────────────────────────────
+• Dry-Run Active:           {dry_run_status}  🚫
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📜 ACTION LOG DETAILS
+(Scroll above for full table)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Implementation Requirements:
+
+1. SummaryNode must read all cleanup results from ctx.session.state:
+   - total_actions
+   - successful_actions
+   - failed_actions
+   - skipped_actions
+   - space_recovered
+   - sensitive_count
+   - rollback_supported
+   - rollback_unsupported
+   - dry_run_status
+
+2. SummaryNode must NOT emit an interrupt.
+   It must return a normal MyPCAssistantOutput with the formatted text.
+
+3. SummaryNode must NOT re-run cleanup or re-trigger ExecutionNode.
+
+4. SummaryNode must NOT print raw JSON or raw logs.
+   Only the formatted dashboard-style summary should be shown.
+
+5. SummaryNode must NOT reset ORGANIZE_MODE.
+   It should simply conclude the workflow.
+
+6. The formatting must remain stable across sandbox, Windows, and Linux environments.
+
+
+```
+
+Image -summary_dashboard
+
+=====================================================================================
+
+# Implementing Professional, Color‑Coded Action Log (Text‑UI Safe)
+
+**This prompt updates agents SummaryNode so every entry is grouped, color‑coded, and formatted cleanly.**
+
+### Prompt:
+```
+Update the SummaryNode (or the node responsible for printing Action Log Details)
+to render a polished, color‑coded, professional action log.
+
+Replace the raw action-by-action dump with a structured, grouped,
+emoji-enhanced dashboard-style log.
+
+The Action Log section must follow this exact format:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📜  CLEANUP ACTION LOG — DETAILED REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🟢 SUCCESSFUL ACTIONS
+──────────────────────────────────────────────
+For each successful action:
+🟢 {ACTION_TYPE} • {FILE_NAME}
+If the action has a success message:
+    └─ {details}
+
+Group all successful actions together.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔴 FAILED ACTIONS
+──────────────────────────────────────────────
+For each failed action:
+🔴 {ACTION_TYPE} • {FILE_NAME}
+    └─ ❗ {error_message}
+
+Group all failed actions together.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚪ SKIPPED ACTIONS (only if any exist)
+──────────────────────────────────────────────
+For each skipped action:
+⚪ {ACTION_TYPE} • {FILE_NAME}
+    └─ {reason}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 NOTES
+──────────────────────────────────────────────
+• “File not found” failures indicate the file was moved, renamed,
+  or deleted before execution.
+• “PathNotAllowed” failures indicate archive destination violated
+  safety or traversal policy.
+• Sensitive files remain protected and hidden by design.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Implementation Requirements:
+
+1. SummaryNode must read the full action log list from ctx.session.state
+   (e.g., ctx.session.state["action_log"]).
+
+2. Each action log entry contains:
+   - action_type (MOVE, DELETE, ARCHIVE)
+   - category (sensitive, image, document, other)
+   - file_name
+   - status (SUCCESS, FAILURE, SKIPPED)
+   - details (error or success message)
+
+3. SummaryNode must group logs by status:
+   - SUCCESS
+   - FAILURE
+   - SKIPPED
+
+4. SummaryNode must NOT emit an interrupt.
+   It must return a normal MyPCAssistantOutput with the formatted text.
+
+5. SummaryNode must NOT print raw JSON or raw logs.
+   Only the formatted dashboard-style log should be shown.
+
+6. Formatting must remain stable across sandbox, Windows, and Linux.
+
+7. Sensitive file names must be replaced with:
+   “[Protected Sensitive File]”
+   unless already anonymized.
+
+This change ensures the Action Log Details section is colorful,
+professional, readable, and judge-friendly.
 ```

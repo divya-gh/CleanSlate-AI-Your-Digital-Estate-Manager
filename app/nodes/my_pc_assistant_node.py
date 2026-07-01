@@ -42,6 +42,10 @@ class MyPCAssistantInput(BaseModel):
     @classmethod
     def _validate_content(cls, data: Any) -> Any:
         """Handle incoming format variants from the runner."""
+        from pydantic import BaseModel
+        if isinstance(data, BaseModel):
+            return data.model_dump()
+
         if isinstance(data, dict):
             # If parts exists (Vertex API agent format)
             if "parts" in data:
@@ -302,10 +306,6 @@ def _sanitize_search_query(q: str | None) -> str | None:
         "system32",
         "programdata",
         "appdata",
-        "ssn",
-        "password",
-        "tax",
-        "banking",
     }
     words = s.split()
     cleaned_words = [w for w in words if w.lower() not in blocked_keywords]
@@ -420,7 +420,7 @@ async def my_pc_assistant_node(ctx: Context, node_input: MyPCAssistantInput):
         output = MyPCAssistantOutput(
             intent="other",
             conversational_response=reply,
-            human_readable_report=reply,
+            human_readable_report="",
         )
         # route="other" → no matching edge → workflow terminates (does NOT loop)
         yield Event(output=output, actions=EventActions(route="other"))

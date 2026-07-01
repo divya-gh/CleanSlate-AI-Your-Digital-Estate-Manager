@@ -8,6 +8,65 @@
 
 ## How to Test if Your Agent Is Working 
 
+### Ensure you have MASTER TEST FOLDER STRUCTURE FOR CLEANSLATE AI
+#### Example:
+```
+CleanSlate_Test/
+│
+├── Allowed/
+│   ├── Documents/
+│   │   ├── Resume.docx
+│   │   ├── Notes.txt
+│   │   ├── Meeting.pdf
+│   │   ├── Duplicate_Resume.docx
+│   │   └── Random.docx
+│   │
+│   ├── Images/
+│   │   ├── photo1.png
+│   │   ├── photo1_copy.png
+│   │   ├── vacation.jpg
+│   │   └── meme.png
+│   │
+│   ├── Videos/
+│   │   ├── clip1.mp4
+│   │   ├── clip1_copy.mp4
+│   │   └── birthday.mov
+│   │
+│   ├── Projects/
+│   │   ├── projectA/
+│   │   │   ├── code.py
+│   │   │   ├── notes.md
+│   │   │   └── data.csv
+│   │   └── projectB/
+│   │       ├── main.js
+│   │       └── readme.md
+│   │
+│   └── Mixed/
+│       ├── random.zip
+│       ├── duplicate.zip
+│       ├── duplicate_copy.zip
+│       ├── image.png
+│       └── doc.pdf
+│
+├── Sensitive/
+│   ├── tax_2023.pdf
+│   ├── passport_scan.png
+│   ├── ssn_info.txt
+│   ├── medical_report.pdf
+│   └── bank_statement.pdf
+│
+├── Blocked/
+│   ├── System32/
+│   │   └── kernel.dll
+│   ├── Windows/
+│   │   └── registry.dat
+│   └── Private/
+│       └── do_not_touch.txt
+│
+└── Authenticated_Secure/
+    └── (empty — sensitive files will be moved here)
+```
+
 ### ✅ Step 1 — Run the Agent Locally (Interactive Mode)
 
 #### This verifies:

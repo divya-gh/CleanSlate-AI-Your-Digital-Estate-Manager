@@ -104,22 +104,21 @@ def test_summary_aggregation_dry_run() -> None:
 
     # 2. Verification of Safety Filters
     report = output.human_readable_report
-    assert "Dry Run Mode — No changes were made." in report
-    assert "## Cleanup Summary" in report
-    assert "## Storage Recovery" in report
-    assert "## Sensitive File Protection" in report
-    assert "## Rollback Capability" in report
-    assert "## Dry-Run Status" in report
+    assert "• Dry-Run Active:           True" in report
+    assert "All protected safely" in report
+    assert "/allowed/blocked/file.txt" not in report
+    assert "a protected file" in report
+    assert "♻️ ROLLBACK CAPABILITY" in report
+    assert "🧪 DRY-RUN MODE" in report
 
     # Check absolute system/blocked path leaks are prevented
     assert "/allowed/blocked/file.txt" not in report
-    assert "a protected file" in report
 
     # Check sensitive files leaks are prevented
     assert "sensitive.txt" not in report
     assert "banking" not in report
     assert "banking statement" not in report
-    assert "Protected 1 sensitive file(s) (details hidden for privacy)" in report
+    assert "• Sensitive Files Protected: 1" in report
 
 
 def test_summary_real_run_failed_action() -> None:

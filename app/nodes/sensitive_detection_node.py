@@ -13,6 +13,9 @@ from pathlib import Path
 from google import genai
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.agents.context import Context
+from app.nodes.organize_state import OrganizerSessionStore
+import hashlib
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field
 
@@ -157,10 +160,12 @@ _SENSITIVE_KEYWORDS = [
     "social_security",
     "api_key",
     "secret",
-    "resume",
     "driver",
     "license",
     "card",
+    "flight",
+    "credit",
+    "statement",
 ]
 _SENSITIVE_EXTENSIONS = {".tax", ".w2", ".1040", ".med", ".medical", ".key", ".pem"}
 
@@ -172,7 +177,7 @@ def _has_high_risk_keyword(name: str) -> bool:
         return True
     # Standalone matches for short abbreviations
     import re
-    if re.search(r'\b(id|dl)\b', name_lower):
+    if re.search(r'\b(id|dl|api)\b', name_lower):
         return True
     return False
 
@@ -197,7 +202,7 @@ def _detect_signals(
         signals.append("sensitive_extension")
 
     # 3. Predecessor classification category
-    if cf_category in (FileCategory.TAX, FileCategory.MEDICAL, FileCategory.RESUME):
+    if cf_category in (FileCategory.TAX, FileCategory.MEDICAL):
         signals.append("classification_category")
 
     # 4. Folder keyword (parent directory name contains keywords)
@@ -234,6 +239,7 @@ def _generate_with_retry(client, model, contents, config, max_retries=3, initial
 
 def sensitive_detection_node(
     node_input: DuplicateDetectionOutput,
+    ctx: Context | None = None,
 ) -> Event:
     """SensitiveDetectionNode — classifies sensitivity using strictly metadata and Gemini."""
     inventory = node_input.file_inventory
@@ -242,9 +248,32 @@ def sensitive_detection_node(
     search_mode = node_input.search_mode
     classified_lookup = {cf.path: cf for cf in node_input.classified_files}
 
-    # Initialize Gemini client
-    client = genai.Client()
+    # ── CHECK CACHE ──
+    session_id = None
+    if ctx:
+        session_id = (
+            getattr(ctx.session, "id", None)
+            or getattr(ctx.session, "session_id", None)
+            or str(id(ctx.session))
+        )
 
+    policy_hash = None
+    if policy:
+        paths_str = ",".join(sorted(policy.allowed_paths)) + "|" + ",".join(sorted(policy.blocked_paths)) + f"|{policy.safe_mode}"
+        policy_hash = hashlib.sha256(paths_str.encode("utf-8")).hexdigest()
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        cached_hash = store.get("discovery_policy_hash")
+        if cached_hash == policy_hash and store.has("sensitive_output"):
+            cached_event = store.get("sensitive_output")
+            return Event(output=cached_event.output, actions=cached_event.actions)
+
+    # Initialize Gemini client lazily/safely
+    try:
+        client = genai.Client()
+    except Exception:
+        client = None
 
     checked: list[SensitiveFileEntry] = []
     non_sensitive_paths: list[str] = []
@@ -276,6 +305,19 @@ def sensitive_detection_node(
         # Check if the filename contains high-risk keywords to bypass optimization limits
         basename_lower = Path(file.path).name.lower()
         has_high_risk_keyword = _has_high_risk_keyword(basename_lower)
+
+        # Rule-based fallback: Always mark high-risk keywords as sensitive to prevent LLM false-negatives
+        if has_high_risk_keyword:
+            checked.append(
+                SensitiveFileEntry(
+                    path=file.path,
+                    sensitive=True,
+                    sensitivity_type="flagged_keyword",
+                    confidence=1.0,
+                    reasoning="Rule-based match: High risk keyword detected in filename.",
+                )
+            )
+            continue
 
         # Optimization: Zero signals or single signal skips Gemini (exempt high-risk keywords)
         if len(signals) < 2 and not has_high_risk_keyword:
@@ -365,6 +407,8 @@ def sensitive_detection_node(
                         ("driver", "identity"),
                         ("license", "identity"),
                         ("card", "identity"),
+                        ("flight", "identity"),
+                        ("credit", "banking"),
                         ("id", "identity"),
                         ("dl", "identity"),
                     ]:
@@ -475,4 +519,8 @@ def sensitive_detection_node(
         reasoning=reasoning,
     )
 
-    return Event(output=output, actions=EventActions(route="plan"))
+    event = Event(output=output, actions=EventActions(route="plan"))
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        store.set("sensitive_output", event)
+    return event

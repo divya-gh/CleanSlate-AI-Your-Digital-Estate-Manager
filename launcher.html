@@ -909,6 +909,8 @@ async function runSSE(message) {
         if (structOut) {
           bestResponse = structOut;
           gotStructured = true;
+          requestIid = null;
+          requestMsg = '';
           continue;
         }
 

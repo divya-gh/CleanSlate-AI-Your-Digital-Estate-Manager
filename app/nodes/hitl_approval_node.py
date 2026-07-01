@@ -81,8 +81,17 @@ async def hitl_approval_node(
     """
     plan = node_input.action_plan
 
+    session_id = (
+        getattr(ctx.session, "id", None)
+        or getattr(ctx.session, "session_id", None)
+        or str(id(ctx.session))
+    )
+    from app.nodes.organize_state import OrganizerSessionStore
+    store = OrganizerSessionStore.for_session(session_id)
+    store_val = store.get("hitl_approved")
+
     # Step 1: Interrupt if we don't have the user's input yet
-    if not ctx.resume_inputs or "hitl_approved" not in ctx.resume_inputs:
+    if not store_val and (not ctx.resume_inputs or "hitl_approved" not in ctx.resume_inputs):
         import json as _json
         import os as _os
 
@@ -108,7 +117,7 @@ async def hitl_approval_node(
 
             # Derive Action display
             if category == "sensitive":
-                action_display = "SENSITIVE"
+                action_display = "MOVE"
             elif "near duplicate" in reason_lower:
                 action_display = "NEAR_DUPLICATE"
             elif category == "duplicate":
@@ -149,13 +158,35 @@ async def hitl_approval_node(
         return
 
     # Step 2: Handle resumed state when input is available
-    user_reply = ctx.resume_inputs["hitl_approved"]
-    is_approved = str(user_reply).lower().strip() in {
-        "yes",
-        "y",
-        "approve",
-        "true",
-    }
+    if store_val:
+        user_reply = store_val
+    else:
+        user_reply = ctx.resume_inputs["hitl_approved"]
+
+    if isinstance(user_reply, list) and len(user_reply) > 0:
+        user_reply_str = str(user_reply[0]).lower().strip()
+    elif isinstance(user_reply, dict) and "value" in user_reply:
+        user_reply_str = str(user_reply["value"]).lower().strip()
+    else:
+        user_reply_str = str(user_reply).lower().strip()
+
+    has_negative = any(neg in user_reply_str for neg in ["no", "not", "cancel", "deny", "reject", "never", "false"])
+    is_approved = (
+        user_reply_str in {
+            "yes",
+            "y",
+            "approve",
+            "true",
+            "confirm cleanup",
+            "confirm",
+            "cleanup",
+        }
+        or ("confirm" in user_reply_str and not has_negative)
+        or ("approve" in user_reply_str and not has_negative)
+    )
+
+    # Deactivate and clear the organize session store since the decision has been made
+    store.clear()
 
     approved: list[CleanupAction] = []
     if is_approved:
@@ -191,10 +222,10 @@ async def hitl_approval_node(
             approved_actions=approved,
             classified_files=node_input.classified_files,
             duplicate_groups=node_input.duplicate_groups,
-            file_inventory=node_input.file_inventory,
+            file_inventory=node_input.file_inventory if hasattr(node_input, "file_inventory") else getattr(node_input, "file_inventory", []),
             folder_scope_policy=node_input.folder_scope_policy,
             sensitive_files=node_input.sensitive_files,
-            dry_run=plan.dry_run,
+            dry_run=not is_approved,
             rollback_enabled=True,
             reasoning=(
                 f"User approved the plan: {is_approved}. "

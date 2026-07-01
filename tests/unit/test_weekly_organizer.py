@@ -195,7 +195,7 @@ def test_safe_mode_planning_and_execution(tmp_path) -> None:
     assert str(file_sensitive) in actions_lookup
     assert actions_lookup[str(file_sensitive)].action_type == "move"
     assert (
-        "Sensitive file moved to Authenticated"
+        "Sensitive file moved to Authenticated_Secure"
         in actions_lookup[str(file_sensitive)].reasoning
     )
 
@@ -220,7 +220,7 @@ def test_safe_mode_planning_and_execution(tmp_path) -> None:
 
     # Verify destinations
     assert not file_sensitive.exists()
-    assert (allowed_dir / "Authenticated" / "sensitive.txt").exists()
+    assert (allowed_dir / "Authenticated_Secure" / "sensitive.txt").exists()
 
     assert not file_dup_sec.exists()
     assert (allowed_dir / "WeeklyReview" / "dup2.txt").exists()

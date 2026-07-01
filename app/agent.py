@@ -178,7 +178,7 @@ workflow = Workflow(
         ),
         Edge(
             from_node=n_discovery,
-            to_node=n_assistant,
+            to_node=n_summary,
             route=["search_return", "error"],
         ),
         # Pipeline sequence

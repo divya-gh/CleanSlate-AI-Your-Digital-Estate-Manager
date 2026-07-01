@@ -15,6 +15,8 @@ from pathlib import Path
 
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.agents.context import Context
+from app.nodes.organize_state import OrganizerSessionStore
 from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassificationOutput, ClassifiedFile
@@ -185,7 +187,8 @@ def _compute_near_duplicate_score(f1: FileMetadata, f2: FileMetadata) -> float:
 
 def duplicate_detection_node(
     node_input: ClassificationOutput,
-) -> DuplicateDetectionOutput:
+    ctx: Context | None = None,
+) -> Event:
     """DuplicateDetectionNode — detects exact and near duplicate files.
 
     Processes file_inventory from predecessor. For each eligible file,
@@ -194,6 +197,27 @@ def duplicate_detection_node(
     """
     inventory = node_input.file_inventory
     policy = node_input.folder_scope_policy
+
+    # ── CHECK CACHE ──
+    session_id = None
+    if ctx:
+        session_id = (
+            getattr(ctx.session, "id", None)
+            or getattr(ctx.session, "session_id", None)
+            or str(id(ctx.session))
+        )
+
+    policy_hash = None
+    if policy:
+        paths_str = ",".join(sorted(policy.allowed_paths)) + "|" + ",".join(sorted(policy.blocked_paths)) + f"|{policy.safe_mode}"
+        policy_hash = hashlib.sha256(paths_str.encode("utf-8")).hexdigest()
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        cached_hash = store.get("discovery_policy_hash")
+        if cached_hash == policy_hash and store.has("dedupe_output"):
+            cached_event = store.get("dedupe_output")
+            return Event(output=cached_event.output, actions=cached_event.actions)
 
     from app.config import set_policy_override
     set_policy_override(policy.model_dump())
@@ -324,7 +348,11 @@ def duplicate_detection_node(
             sensitive_file_blocked=sensitive_file_blocked,
         )
 
-        return Event(output=output, actions=EventActions(route="sensitive"))
+        event = Event(output=output, actions=EventActions(route="sensitive"))
+        if session_id and policy_hash:
+            store = OrganizerSessionStore.for_session(session_id)
+            store.set("dedupe_output", event)
+        return event
     finally:
         from app.config import set_policy_override
         set_policy_override(None)

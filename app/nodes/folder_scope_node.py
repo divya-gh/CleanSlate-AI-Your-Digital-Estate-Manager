@@ -376,9 +376,9 @@ async def folder_scope_node(
 
     # ── Step order for ORGANIZE_MODE ────────────────────────────────────────
     #   parent_folder → subfolder_selections → user_pin →
-    #   security_question → security_answer → weekly_organizer
+    #   security_question → security_answer → weekly_organizer → hitl_approved
     _STEP_ORDER = ["parent_folder", "subfolder_selections", "user_pin",
-                   "security_question", "security_answer", "weekly_organizer"]
+                   "security_question", "security_answer", "weekly_organizer", "hitl_approved"]
 
     # ── Save the current HITL answer (if this is a resume turn) ────────────
     # node_input.user_query contains the user's message text.
@@ -422,7 +422,7 @@ async def folder_scope_node(
             message=msg,
             human_readable_report=msg,
         )
-        yield Event(output=output, actions=EventActions(route="scope_invalid"))
+        yield Event(output=output, actions=EventActions(route=None))
         return
 
     # ------------------------------------------------------------------ #
@@ -459,7 +459,7 @@ async def folder_scope_node(
     # ------------------------------------------------------------------ #
     if "subfolder_selections" not in ri:
         import json as _json
-        parent = ri["parent_folder"].strip().replace("\\", "/").rstrip("/")
+        parent = ri["parent_folder"].strip().strip("\"'").replace("\\", "/").rstrip("/")
 
         # Validate the parent path first
         try:
@@ -712,6 +712,7 @@ async def folder_scope_node(
         created_at=now,
         created_by="FolderScopeNode",
         source="interactive_cleanup",
+        pin_hash=pin_hash,
     )
 
     weekly_status = "\U0001f7e2 Enabled" if weekly_enabled else "\U0001f534 Disabled"

@@ -8,6 +8,8 @@ folders). Supports dry-run and logs all outcomes.
 
 from __future__ import annotations
 
+import concurrent.futures
+import json
 import os
 import time
 from pathlib import Path
@@ -148,7 +150,8 @@ def _is_sensitive_file(path: str, sensitive_files: list[SensitiveFileEntry]) -> 
     """Check if the file is marked sensitive in the database/output."""
     norm_path = os.path.normcase(os.path.abspath(path))
     for sf in sensitive_files:
-        if os.path.normcase(os.path.abspath(sf.path)) == norm_path:
+        sf_real_path = resolve_real_path(sf.path)
+        if os.path.normcase(os.path.abspath(sf_real_path)) == norm_path:
             return sf.sensitive
     return False
 
@@ -196,7 +199,59 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
         estimated_recovery_sum = 0
         actual_failures_count = 0
 
-        for action in approved_actions:
+        # Pre-process Authenticated_Secure folders to enforce PIN locking
+        if hasattr(policy, "pin_hash") and getattr(policy, "pin_hash"):
+            auth_dirs_seen = set()
+            for action in approved_actions:
+                path = resolve_real_path(action.path)
+                if action.action_type == "move" and _is_sensitive_file(path, sensitive_files):
+                    matching_ap = _find_matching_allowed_path(path, policy)
+                    dest_parent = Path(matching_ap) if matching_ap else Path(path).parent
+                    auth_dir = dest_parent / "Authenticated_Secure"
+                    if str(auth_dir) not in auth_dirs_seen:
+                        auth_dirs_seen.add(str(auth_dir))
+                        data_dir = auth_dir / "_data_"
+                        os.makedirs(data_dir, exist_ok=True)
+                        if os.name == "nt":
+                            # Hide the data folder initially
+                            os.system(f'attrib +h +s "{data_dir}"')
+                        
+                        unlock_py = (
+                            "import hashlib, os, getpass\n\n"
+                            f"EXPECTED = '{policy.pin_hash}'\n"
+                            "pin = getpass.getpass('Enter 4-digit PIN: ')\n"
+                            "if hashlib.sha256(pin.encode()).hexdigest() == EXPECTED:\n"
+                            "    script_dir = os.path.dirname(os.path.abspath(__file__))\n"
+                            "    data_dir = os.path.join(script_dir, '_data_')\n"
+                            "    if os.name == 'nt': os.system(f'attrib -h -s \"{data_dir}\"')\n"
+                            "    print('Folder unlocked! You can now access _data_')\n"
+                            "    if os.name == 'nt': os.system(f'explorer \"{data_dir}\"')\n"
+                            "    input('Press Enter to exit...')\n"
+                            "else:\n"
+                            "    print('Invalid PIN.')\n"
+                            "    input('Press Enter to exit...')\n"
+                        )
+                        lock_py = (
+                            "import os\n"
+                            "script_dir = os.path.dirname(os.path.abspath(__file__))\n"
+                            "data_dir = os.path.join(script_dir, '_data_')\n"
+                            "if os.name == 'nt': os.system(f'attrib +h +s \"{data_dir}\"')\n"
+                            "print('Folder locked!')\n"
+                            "import time; time.sleep(1)\n"
+                        )
+                        with open(auth_dir / "Unlock.py", "w") as f:
+                            f.write(unlock_py)
+                        with open(auth_dir / "Lock.py", "w") as f:
+                            f.write(lock_py)
+
+        def _process_action(action):
+            local_log = []
+            local_audit_logs = []
+            local_success = 0
+            local_failure = 0
+            local_actual_failures = 0
+            local_recovery = 0
+
             path = resolve_real_path(action.path)
             action_type = action.action_type
             now = time.time()
@@ -217,11 +272,16 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 calc_new_path = None
                 calc_rollback_supported = True
             elif action_type == "move":
-                dest_dir = parent_dir / (
-                    "Authenticated"
-                    if is_sensitive
-                    else ("WeeklyReview" if policy.safe_mode else "Organized")
-                )
+                if is_sensitive:
+                    matching_ap = _find_matching_allowed_path(path, policy)
+                    dest_parent = Path(matching_ap) if matching_ap else parent_dir
+                    auth_dir = dest_parent / "Authenticated_Secure"
+                    dest_dir = auth_dir / "_data_"
+                    os.makedirs(dest_dir, exist_ok=True)
+                else:
+                    dest_dir = parent_dir / (
+                        "WeeklyReview" if policy.safe_mode else "Organized"
+                    )
                 calc_backup_path = None
                 calc_new_path = str(dest_dir / p.name)
                 calc_rollback_supported = True
@@ -248,7 +308,6 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 is_sensitive=is_sensitive,
                 calc_rollback_supported=calc_rollback_supported,
             ) -> None:
-                import json
                 entry_dict = {
                     "node": "ExecutionNode",
                     "action_type": action_type,
@@ -264,14 +323,14 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     "backup_path": backup,
                     "tool_name": "write_log",
                 }
-                test_tool("write_log", entry=json.dumps(entry_dict))
+                local_audit_logs.append(entry_dict)
 
             if rollback_enabled_flag and not dry_run:
                 log_exec_action("pending", "Starting execution with rollback enabled.")
 
             # Guard 1: Blocked path double-guard
             if _is_path_blocked(path, policy):
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -285,16 +344,16 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=False,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Target path is inside blocked directories.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Guard 2: Allowed path double-guard
             if not _is_path_allowed(path, policy):
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -308,16 +367,16 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=False,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Target path is outside allowed directories.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Guard 3: System folder double-guard
             if _is_system_folder(path):
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -331,16 +390,16 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=False,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Modifying system directories is prohibited.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Guard 4: Sensitive file deletion double-guard
             if action_type == "delete" and _is_sensitive_file(path, sensitive_files):
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -354,16 +413,16 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=False,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Sensitive files must never be deleted.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Guard 5: safe_mode double-guard against deletes and compressions
             if policy.safe_mode and action_type in ("delete", "compress"):
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -377,22 +436,21 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=False,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Deletions and compression are prohibited in safe mode.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Guard 6: Prevent overwrite guard for target destinations
             dest_exists = False
             if calc_new_path and not dry_run:
-                meta_res = test_tool("read_file_metadata", path=calc_new_path)
-                if "error" not in meta_res:
+                if os.path.exists(calc_new_path):
                     dest_exists = True
 
             if calc_new_path and not dry_run and dest_exists:
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -406,22 +464,45 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=calc_rollback_supported,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action(
                     "failure",
                     "Runtime Safety Check: Overwrite prevention. Target path is occupied.",
                 )
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
+
+            # Guard 7: Ensure sensitive files ONLY move to Authenticated_Secure
+            if is_sensitive and action_type == "move":
+                if calc_new_path and "Authenticated_Secure" not in Path(calc_new_path).parts:
+                    local_log.append(
+                        ExecutionLogEntry(
+                            path=path,
+                            action_type=action_type,
+                            status="failure",
+                            timestamp=now,
+                            reasoning="Runtime Safety Check: Sensitive files must only be moved to Authenticated_Secure.",
+                            dry_run=dry_run,
+                            original_path=path,
+                            new_path=calc_new_path,
+                            backup_path=calc_backup_path,
+                            rollback_supported=False,
+                        )
+                    )
+                    local_failure += 1
+                    log_exec_action(
+                        "failure",
+                        "Runtime Safety Check: Sensitive files must only be moved to Authenticated_Secure.",
+                    )
+                    return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # File presence check (for dry-run=False)
             file_exists = False
             if not dry_run:
-                meta_res = test_tool("read_file_metadata", path=path)
-                if "error" not in meta_res:
+                if os.path.exists(path):
                     file_exists = True
 
             if not dry_run and not file_exists:
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -435,13 +516,13 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=calc_rollback_supported,
                     )
                 )
-                failure_count += 1
+                local_failure += 1
                 log_exec_action("failure", "File not found on disk at time of execution.")
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Simulate execution in dry-run mode
             if dry_run:
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -455,10 +536,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=calc_rollback_supported,
                     )
                 )
-                success_count += 1
-                estimated_recovery_sum += action.estimated_space_recovered
+                local_success += 1
+                local_recovery += action.estimated_space_recovered
                 log_exec_action("skipped", "dry_run")
-                continue
+                return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
 
             # Real execution (dry_run=False)
             try:
@@ -473,7 +554,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         del_res = test_tool("delete_file", path=path, hitl_approved=True)
                         if "error" in del_res:
                             raise ValueError(f"DeleteFailed: {del_res['error']['message']}")
-                    log.append(
+                    local_log.append(
                         ExecutionLogEntry(
                             path=path,
                             action_type="delete",
@@ -498,7 +579,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     if "error" in move_res:
                         raise ValueError(f"MoveFailed: {move_res['error']['message']}")
 
-                    log.append(
+                    local_log.append(
                         ExecutionLogEntry(
                             path=path,
                             action_type="move",
@@ -523,7 +604,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     if "error" in del_res:
                         raise ValueError(f"OriginalDeleteFailed: {del_res['error']['message']}")
 
-                    log.append(
+                    local_log.append(
                         ExecutionLogEntry(
                             path=path,
                             action_type="compress",
@@ -545,7 +626,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     if "error" in move_res:
                         raise ValueError(f"ArchiveFailed: {move_res['error']['message']}")
 
-                    log.append(
+                    local_log.append(
                         ExecutionLogEntry(
                             path=path,
                             action_type="archive",
@@ -562,8 +643,8 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 else:
                     raise ValueError(f"Unknown action type: {action_type}")
 
-                success_count += 1
-                estimated_recovery_sum += action.estimated_space_recovered
+                local_success += 1
+                local_recovery += action.estimated_space_recovered
                 log_exec_action(
                     "success",
                     f"Action {action_type} completed successfully.",
@@ -571,7 +652,7 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                 )
 
             except Exception as e:
-                log.append(
+                local_log.append(
                     ExecutionLogEntry(
                         path=path,
                         action_type=action_type,
@@ -585,9 +666,23 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                         rollback_supported=calc_rollback_supported,
                     )
                 )
-                failure_count += 1
-                actual_failures_count += 1
+                local_failure += 1
+                local_actual_failures += 1
                 log_exec_action("failure", f"Execution error: {e}", backup=calc_backup_path)
+
+            return local_log, local_audit_logs, local_success, local_failure, local_actual_failures, local_recovery
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=64) as executor:
+            results = list(executor.map(_process_action, approved_actions))
+
+        for r_log, r_audit, r_succ, r_fail, r_act, r_rec in results:
+            log.extend(r_log)
+            success_count += r_succ
+            failure_count += r_fail
+            actual_failures_count += r_act
+            estimated_recovery_sum += r_rec
+            for entry_dict in r_audit:
+                test_tool("write_log", entry=json.dumps(entry_dict))
 
         reasoning = (
             f"Executed {len(approved_actions)} action(s). "

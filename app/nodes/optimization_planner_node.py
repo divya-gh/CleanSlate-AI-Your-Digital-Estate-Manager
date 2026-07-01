@@ -15,6 +15,9 @@ from typing import Literal
 
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.agents.context import Context
+from app.nodes.organize_state import OrganizerSessionStore
+import hashlib
 from pydantic import BaseModel, Field
 
 from app.nodes.classification_node import ClassifiedFile
@@ -260,6 +263,7 @@ _COMPRESSED_EXTENSIONS = {
 
 def optimization_planner_node(
     node_input: SensitiveDetectionOutput,
+    ctx: Context | None = None,
 ) -> Event:
     """OptimizationPlannerNode — generates recommended cleanup action plan."""
     inventory = node_input.file_inventory
@@ -267,6 +271,27 @@ def optimization_planner_node(
     duplicate_groups = node_input.duplicate_groups
     classified_lookup = {cf.path: cf for cf in node_input.classified_files}
     sensitive_lookup = {sf.path: sf for sf in node_input.sensitive_files}
+
+    # ── CHECK CACHE ──
+    session_id = None
+    if ctx:
+        session_id = (
+            getattr(ctx.session, "id", None)
+            or getattr(ctx.session, "session_id", None)
+            or str(id(ctx.session))
+        )
+
+    policy_hash = None
+    if policy:
+        paths_str = ",".join(sorted(policy.allowed_paths)) + "|" + ",".join(sorted(policy.blocked_paths)) + f"|{policy.safe_mode}"
+        policy_hash = hashlib.sha256(paths_str.encode("utf-8")).hexdigest()
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        cached_hash = store.get("discovery_policy_hash")
+        if cached_hash == policy_hash and store.has("planner_output"):
+            cached_event = store.get("planner_output")
+            return Event(output=cached_event.output, actions=cached_event.actions)
 
     safe_mode = node_input.safe_mode or policy.safe_mode
     search_mode = node_input.search_mode or getattr(policy, "search_mode", False)
@@ -302,14 +327,14 @@ def optimization_planner_node(
         sf = sensitive_lookup.get(path_str)
         is_sensitive = sf.sensitive if sf else False
 
-        # If the file is sensitive, we ALWAYS suggest moving it to Authenticated (never delete, compress, or archive it)
+        # If the file is sensitive, we ALWAYS suggest moving it to Authenticated_Secure (never delete, compress, or archive it)
         if is_sensitive:
             if is_allowed:
                 actions.append(
                     CleanupAction(
                         path=path_str,
                         action_type="move",
-                        reasoning="Sensitive file moved to Authenticated",
+                        reasoning="Sensitive file moved to Authenticated_Secure",
                         action_reason="Safe isolation of sensitive file.",
                         requires_user_confirmation=True,
                         risk_level="low",
@@ -494,14 +519,18 @@ def optimization_planner_node(
 
     # Route configuration
     if len(actions) == 0:
-        return Event(
+        event = Event(
             output=output_payload,
             actions=EventActions(
                 route=None,
             ),
         )
-
-    if safe_mode:
-        return Event(output=output_payload, actions=EventActions(route="execute"))
+    elif safe_mode:
+        event = Event(output=output_payload, actions=EventActions(route="execute"))
     else:
-        return Event(output=output_payload, actions=EventActions())
+        event = Event(output=output_payload, actions=EventActions())
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        store.set("planner_output", event)
+    return event

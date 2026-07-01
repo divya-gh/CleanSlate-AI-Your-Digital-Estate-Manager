@@ -213,8 +213,10 @@ def test_optimization_planner() -> None:
     assert actions_lookup[file_dup2.path].safe_to_delete is True
     assert actions_lookup[file_dup2.path].confidence == 0.95
 
-    # sensitive duplicates must NOT be scheduled for delete (they are sensitive)
-    assert file_sensitive_dup.path not in actions_lookup
+    # sensitive duplicates must be scheduled for move (they are sensitive)
+    assert file_sensitive_dup.path in actions_lookup
+    assert actions_lookup[file_sensitive_dup.path].action_type == "move"
+    assert "Sensitive file moved to Authenticated" in actions_lookup[file_sensitive_dup.path].reasoning
 
     # file_compress must be scheduled for compress
     assert file_compress.path in actions_lookup

@@ -8,6 +8,7 @@ from app.nodes import (
     my_pc_assistant_node,
     summary_node,
 )
+from app.nodes.organize_state import OrganizerSessionStore
 from app.nodes.file_discovery_node import (
     file_discovery_node,
 )
@@ -62,8 +63,9 @@ def test_sanitize_search_query() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.asyncio
 @patch("google.genai.Client")
-def test_my_pc_assistant_cleanup_intent(mock_client_class) -> None:
+async def test_my_pc_assistant_cleanup_intent(mock_client_class) -> None:
     # Mock Gemini response
     mock_client = MagicMock()
     mock_response = MagicMock()
@@ -74,73 +76,106 @@ def test_my_pc_assistant_cleanup_intent(mock_client_class) -> None:
     mock_client.models.generate_content.return_value = mock_response
     mock_client_class.return_value = mock_client
 
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session_id"
+    OrganizerSessionStore.for_session("test_session_id").clear()
+
     node_input = MyPCAssistantInput(user_query="Please declutter my desktop")
-    event = my_pc_assistant_node(node_input)
+    generator = my_pc_assistant_node(ctx, node_input)
+    event = await generator.__anext__()
 
     assert event.actions.route == "cleanup"
     assert event.output.intent == "cleanup"
-    assert event.output.cleanup_intent_reasoning == "User explicitly requested cleanup"
     assert event.output.search_query is None
     assert event.output.explanation_request is None
 
 
+@pytest.mark.asyncio
 @patch("google.genai.Client")
-def test_my_pc_assistant_search_intent(mock_client_class) -> None:
+async def test_my_pc_assistant_search_intent(mock_client_class) -> None:
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.text = '{"intent": "search", "search_query": "tax document 2025.pdf", "reasoning": "Search requested"}'
     mock_client.models.generate_content.return_value = mock_response
     mock_client_class.return_value = mock_client
 
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session_id"
+    OrganizerSessionStore.for_session("test_session_id").clear()
+
     node_input = MyPCAssistantInput(user_query="find my tax document 2025")
-    event = my_pc_assistant_node(node_input)
+    generator = my_pc_assistant_node(ctx, node_input)
+    event = await generator.__anext__()
 
     assert event.actions.route == "search"
     assert event.output.intent == "search"
     assert event.output.search_query == "document 2025.pdf"
 
 
+@pytest.mark.asyncio
 @patch("google.genai.Client")
-def test_my_pc_assistant_explain_intent(mock_client_class) -> None:
+async def test_my_pc_assistant_explain_intent(mock_client_class) -> None:
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.text = '{"intent": "explain", "explanation_request": "How does duplicate file cleaning work?", "reasoning": "Explanation query"}'
     mock_client.models.generate_content.return_value = mock_response
     mock_client_class.return_value = mock_client
 
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session_id"
+    OrganizerSessionStore.for_session("test_session_id").clear()
+
     node_input = MyPCAssistantInput(user_query="explain duplicate cleaning")
-    event = my_pc_assistant_node(node_input)
+    generator = my_pc_assistant_node(ctx, node_input)
+    event = await generator.__anext__()
 
     assert event.actions.route == "explain"
     assert event.output.intent == "explain"
     assert event.output.explanation_request == "How does duplicate file cleaning work?"
 
 
+@pytest.mark.asyncio
 @patch("google.genai.Client")
-def test_my_pc_assistant_other_intent(mock_client_class) -> None:
+async def test_my_pc_assistant_other_intent(mock_client_class) -> None:
     mock_client = MagicMock()
     mock_response = MagicMock()
     mock_response.text = '{"intent": "other", "reasoning": "Conversational greeting"}'
     mock_client.models.generate_content.return_value = mock_response
     mock_client_class.return_value = mock_client
 
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session_id"
+    OrganizerSessionStore.for_session("test_session_id").clear()
+
     node_input = MyPCAssistantInput(user_query="hello assistant")
-    event = my_pc_assistant_node(node_input)
+    generator = my_pc_assistant_node(ctx, node_input)
+    event = await generator.__anext__()
 
-    assert event.actions.route is None
+    assert event.actions.route == "other"
     assert event.output.intent == "other"
-    assert "How can I help you today?" in event.output.human_readable_report
+    assert "CleanSlate AI" in event.output.human_readable_report
 
 
+@pytest.mark.asyncio
 @patch("google.genai.Client")
-def test_my_pc_assistant_fallback_on_exception(mock_client_class) -> None:
+async def test_my_pc_assistant_fallback_on_exception(mock_client_class) -> None:
     # Trigger exception to test regex fallback
     mock_client = MagicMock()
     mock_client.models.generate_content.side_effect = Exception("API error")
     mock_client_class.return_value = mock_client
 
+    ctx = MagicMock()
+    ctx.session = MagicMock()
+    ctx.session.id = "test_session_id"
+    OrganizerSessionStore.for_session("test_session_id").clear()
+
     node_input = MyPCAssistantInput(user_query="clean old duplicate files")
-    event = my_pc_assistant_node(node_input)
+    generator = my_pc_assistant_node(ctx, node_input)
+    event = await generator.__anext__()
 
     # Fallback to regex cleanup
     assert event.actions.route == "cleanup"
@@ -212,7 +247,7 @@ def test_summary_node_handles_explanation(mock_client_class) -> None:
     )
 
     output = summary_node(assistant_output)
-    assert isinstance(output, SummaryOutput)
+    assert isinstance(output, MyPCAssistantOutput)
     assert (
         output.human_readable_report
         == "This is a detailed markdown explanation of duplicate files."

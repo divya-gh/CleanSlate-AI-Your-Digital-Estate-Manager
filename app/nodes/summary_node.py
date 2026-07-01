@@ -16,9 +16,12 @@ from google import genai
 from pydantic import BaseModel, Field
 
 from app.nodes.execution_node import ExecutionOutput
-from app.nodes.file_discovery_node import FolderScopePolicy
+from app.nodes.file_discovery_node import FolderScopePolicy, FileDiscoveryOutput
 from app.nodes.my_pc_assistant_node import MyPCAssistantOutput
 from app.nodes.rollback_node import RollbackOutput
+from app.nodes.weekly_organizer_node import WeeklySummary
+from app.nodes.optimization_planner_node import OptimizationPlannerOutput
+from app.nodes.hitl_approval_node import HITLApprovalOutput
 from app.nodes.sensitive_detection_node import SensitiveFileEntry
 from app.mcp_tools.registry import test_tool
 
@@ -146,9 +149,86 @@ def _clean_reasoning(reasoning: str) -> str:
 
 
 def summary_node(
-    node_input: ExecutionOutput | RollbackOutput | MyPCAssistantOutput,
-) -> SummaryOutput:
+    node_input: ExecutionOutput
+    | RollbackOutput
+    | MyPCAssistantOutput
+    | FileDiscoveryOutput
+    | WeeklySummary
+    | OptimizationPlannerOutput
+    | HITLApprovalOutput,
+) -> MyPCAssistantOutput:
     """SummaryNode — aggregates and reports execution outcomes safely."""
+    if isinstance(node_input, FileDiscoveryOutput):
+        report = node_input.reasoning
+        is_error = (
+            "error" in report.lower()
+            or "not found" in report.lower()
+            or "symlink" in report.lower()
+            or "overlap" in report.lower()
+        )
+        return MyPCAssistantOutput(
+            intent="cleanup",
+            total_actions=0,
+            successful_actions=0,
+            failed_actions=0,
+            skipped_actions=0,
+            estimated_recovery=0,
+            dry_run=node_input.safe_mode,
+            sensitive_files_protected=0,
+            rollback_supported_actions=0,
+            rollback_unsupported_actions=0,
+            human_readable_report=report,
+            errors=[report] if is_error else [],
+        )
+
+    if isinstance(node_input, WeeklySummary):
+        return MyPCAssistantOutput(
+            intent="cleanup",
+            total_actions=node_input.actions_attempted,
+            successful_actions=node_input.actions_completed,
+            failed_actions=len(node_input.errors),
+            skipped_actions=node_input.skipped,
+            estimated_recovery=0,
+            dry_run=node_input.dry_run,
+            sensitive_files_protected=node_input.sensitive_files_moved,
+            rollback_supported_actions=0,
+            rollback_unsupported_actions=0,
+            human_readable_report=node_input.human_readable_report,
+            errors=node_input.errors,
+        )
+
+    if isinstance(node_input, OptimizationPlannerOutput):
+        return MyPCAssistantOutput(
+            intent="cleanup",
+            total_actions=0,
+            successful_actions=0,
+            failed_actions=0,
+            skipped_actions=0,
+            estimated_recovery=0,
+            dry_run=node_input.safe_mode,
+            sensitive_files_protected=0,
+            rollback_supported_actions=0,
+            rollback_unsupported_actions=0,
+            human_readable_report=node_input.reasoning,
+            errors=[],
+        )
+
+    if isinstance(node_input, HITLApprovalOutput):
+        return MyPCAssistantOutput(
+            intent="cleanup",
+            total_actions=0,
+            successful_actions=0,
+            failed_actions=0,
+            skipped_actions=0,
+            estimated_recovery=0,
+            dry_run=node_input.dry_run,
+            sensitive_files_protected=0,
+            rollback_supported_actions=0,
+            rollback_unsupported_actions=0,
+            human_readable_report=node_input.reasoning,
+            errors=[],
+        )
+
     if isinstance(node_input, MyPCAssistantOutput):
         if node_input.conversational_response:
             report = node_input.conversational_response
@@ -189,7 +269,8 @@ def summary_node(
         else:
             report = "No details to display."
 
-        return SummaryOutput(
+        return MyPCAssistantOutput(
+            intent="explain",
             total_actions=0,
             successful_actions=0,
             failed_actions=0,
@@ -254,112 +335,115 @@ def summary_node(
 
     # Formulate sectioned markdown report
     report_lines: list[str] = []
-    if dry_run:
-        report_lines.append("Dry Run Mode — No changes were made.\n")
-
-    report_lines.append("## Cleanup Summary")
-    report_lines.append(f"- Total Actions: {total_actions}")
-    report_lines.append(f"- Successful Actions: {successful_actions}")
-    report_lines.append(f"- Failed Actions: {failed_actions}")
-    report_lines.append(f"- Skipped Actions: {skipped_actions}")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    report_lines.append("🧹  CLEANSLATE AI — CLEANUP SUMMARY REPORT")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    report_lines.append("")
+    report_lines.append("📊 OVERVIEW")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append(f"• Total Actions:            {total_actions}")
+    report_lines.append(f"• Successful Actions:       {successful_actions}   🟢")
+    report_lines.append(f"• Failed Actions:           {failed_actions}       🔴")
+    report_lines.append(f"• Skipped Actions:          {skipped_actions}      ⚪")
+    report_lines.append("")
+    report_lines.append("💾 STORAGE RECOVERY")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append(f"• Total Space Recovered:    {estimated_recovery} bytes  📦")
+    report_lines.append("")
+    report_lines.append("🔐 SENSITIVE FILE PROTECTION")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append(f"• Sensitive Files Protected: {sensitive_files_protected}")
+    report_lines.append("• Status:                   🛡️ All protected safely")
+    report_lines.append("• Details:                  Hidden for privacy")
+    report_lines.append("")
+    report_lines.append("♻️ ROLLBACK CAPABILITY")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append(f"• Rollback Supported:       {rollback_supported_actions}   🔄")
+    report_lines.append(f"• Rollback Unsupported:     {rollback_unsupported_actions} ✔️")
+    report_lines.append("")
+    report_lines.append("🧪 DRY-RUN MODE")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append(f"• Dry-Run Active:           {dry_run}  🚫")
+    report_lines.append("")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    report_lines.append("📜  CLEANUP ACTION LOG — DETAILED REPORT")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     report_lines.append("")
 
-    if rollback_summary is not None:
-        report_lines.append("## Rollback Summary")
-        report_lines.append(f"- Restored Files: {rollback_summary.succeeded}")
-        report_lines.append(f"- Unsupported Reversals: {rollback_summary.unsupported}")
-        report_lines.append(f"- Rollback Failures: {rollback_summary.failed}")
-        report_lines.append(f"- Rollback Dry-Run Status: {rollback_summary.dry_run}")
-        report_lines.append("")
-        report_lines.append(rollback_summary.human_readable_report)
-        report_lines.append("")
+    success_logs = []
+    failed_logs = []
+    skipped_logs = []
 
-    report_lines.append("## Storage Recovery")
-    report_lines.append(
-        f"- Total Estimated Storage Recovered: {estimated_recovery} bytes"
-    )
-    report_lines.append("")
-
-    report_lines.append("## Sensitive File Protection")
-    if sensitive_files_protected > 0:
-        report_lines.append(
-            f"- Protected {sensitive_files_protected} sensitive file(s) (details hidden for privacy)"
+    for entry in execution_log:
+        is_skipped = (
+            "safety check" in entry.reasoning.lower()
+            or "prohibited" in entry.reasoning.lower()
         )
+        is_sensitive = _is_sensitive_file(entry.path, sensitive_files)
+        cleaned_path = "[Protected Sensitive File]" if is_sensitive else _clean_path(entry.path, policy)
+        
+        action_type = entry.action_type.upper()
+        details = _clean_reasoning(entry.reasoning)
+        
+        if entry.status == "success":
+            success_logs.append((action_type, cleaned_path, details))
+        elif is_skipped:
+            skipped_logs.append((action_type, cleaned_path, details))
+        else:
+            failed_logs.append((action_type, cleaned_path, details))
+
+    report_lines.append("🟢 SUCCESSFUL ACTIONS")
+    report_lines.append("──────────────────────────────────────────────")
+    if not success_logs:
+        report_lines.append("No successful actions.")
     else:
-        report_lines.append("- No sensitive files were processed.")
+        for action_type, f_name, details in success_logs:
+            report_lines.append(f"🟢 {action_type} • {f_name}")
+            if details:
+                report_lines.append(f"    └─ {details}")
+                
     report_lines.append("")
-
-    report_lines.append("## Rollback Capability")
-    report_lines.append(f"- Rollback Supported Actions: {rollback_supported_actions}")
-    report_lines.append(
-        f"- Rollback Unsupported Actions: {rollback_unsupported_actions}"
-    )
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     report_lines.append("")
+    
+    report_lines.append("🔴 FAILED ACTIONS")
+    report_lines.append("──────────────────────────────────────────────")
+    if not failed_logs:
+        report_lines.append("No failed actions.")
+    else:
+        for action_type, f_name, details in failed_logs:
+            report_lines.append(f"🔴 {action_type} • {f_name}")
+            report_lines.append(f"    └─ ❗ {details}")
 
-    report_lines.append("## Dry-Run Status")
-    report_lines.append(f"- Dry-Run Active: {dry_run}")
+    if skipped_logs:
+        report_lines.append("")
+        report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        report_lines.append("")
+        report_lines.append("⚪ SKIPPED ACTIONS")
+        report_lines.append("──────────────────────────────────────────────")
+        for action_type, f_name, details in skipped_logs:
+            report_lines.append(f"⚪ {action_type} • {f_name}")
+            report_lines.append(f"    └─ {details}")
+
     report_lines.append("")
-
-    # Detail logs
-    if execution_log:
-        import json as _json3
-        columns = ["Action", "Category", "File Path", "Status", "Details"]
-        rows = []
-        for entry in execution_log:
-            file_is_sensitive = _is_sensitive_file(entry.path, sensitive_files)
-
-            # Category
-            reason_lower = entry.reasoning.lower()
-            if file_is_sensitive:
-                category = "sensitive"
-            elif "exact duplicate" in reason_lower or "duplicate" in reason_lower:
-                category = "duplicate"
-            else:
-                ext = os.path.splitext(entry.path)[1].lower()
-                if ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"]:
-                    category = "image"
-                elif ext in [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".pptx"]:
-                    category = "document"
-                else:
-                    category = "other"
-
-            # Action Display
-            if file_is_sensitive:
-                action_display = "SENSITIVE"
-            elif "near duplicate" in reason_lower:
-                action_display = "NEAR_DUPLICATE"
-            elif category == "duplicate":
-                action_display = "DELETE"
-            else:
-                action_display = entry.action_type.upper()
-
-            # Path
-            clean_p = "[Protected Sensitive File]" if file_is_sensitive else _clean_path(entry.path, policy)
-            # Details
-            clean_reason = "Runtime Safety Check: Sensitive file protection." if file_is_sensitive else _clean_reasoning(entry.reasoning)
-
-            rows.append([
-                action_display,
-                category,
-                clean_p.replace("\\", "/"),
-                entry.status.upper(),
-                clean_reason
-            ])
-
-        table_json = _json3.dumps({
-            "__TABLE__": {
-                "columns": columns,
-                "rows": rows
-            }
-        })
-
-        report_lines.append("### Action Log Details")
-        report_lines.append(f"__TABLE__\n{table_json}")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    report_lines.append("")
+    
+    report_lines.append("📌 NOTES")
+    report_lines.append("──────────────────────────────────────────────")
+    report_lines.append("• “File not found” failures indicate the file was moved, renamed,")
+    report_lines.append("  or deleted before execution.")
+    report_lines.append("• “PathNotAllowed” failures indicate archive destination violated")
+    report_lines.append("  safety or traversal policy.")
+    report_lines.append("• Sensitive files remain protected and hidden by design.")
+    report_lines.append("")
+    report_lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     human_readable_report = "\n".join(report_lines)
 
     # Audit log planning / safety overrides if any actions were skipped
-    plan_id = hashlib.sha256(node_input.reasoning.encode()).hexdigest()[:8]
+    reasoning_str = getattr(node_input, "reasoning", "Rollback execution")
+    plan_id = hashlib.sha256(reasoning_str.encode()).hexdigest()[:8]
     if skipped_actions > 0:
         entry_dict = {
             "node": "SummaryNode",
@@ -375,7 +459,8 @@ def summary_node(
         }
         test_tool("write_log", entry=json.dumps(entry_dict))
 
-    return SummaryOutput(
+    return MyPCAssistantOutput(
+        intent="cleanup",
         total_actions=total_actions,
         successful_actions=successful_actions,
         failed_actions=failed_actions,

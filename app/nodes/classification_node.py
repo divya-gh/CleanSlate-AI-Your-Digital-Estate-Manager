@@ -14,6 +14,9 @@ from typing import Literal
 from google import genai
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.agents.context import Context
+from app.nodes.organize_state import OrganizerSessionStore
+import hashlib
 from google.genai import types as genai_types
 from pydantic import BaseModel, Field
 
@@ -303,11 +306,35 @@ def _get_local_category_from_keyword(name: str, parent_folder: str) -> tuple[Fil
     return None
 
 
-def classification_node(node_input: FileDiscoveryOutput) -> Event:
+def classification_node(
+    node_input: FileDiscoveryOutput,
+    ctx: Context | None = None,
+) -> Event:
     """ClassificationNode — classifies each file in the inventory using safety-biased Gemini (metadata only)."""
     safe_mode = node_input.safe_mode
     search_mode = node_input.search_mode
     policy = node_input.folder_scope_policy
+
+    # ── CHECK CACHE ──
+    session_id = None
+    if ctx:
+        session_id = (
+            getattr(ctx.session, "id", None)
+            or getattr(ctx.session, "session_id", None)
+            or str(id(ctx.session))
+        )
+
+    policy_hash = None
+    if policy:
+        paths_str = ",".join(sorted(policy.allowed_paths)) + "|" + ",".join(sorted(policy.blocked_paths)) + f"|{policy.safe_mode}"
+        policy_hash = hashlib.sha256(paths_str.encode("utf-8")).hexdigest()
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        cached_hash = store.get("discovery_policy_hash")
+        if cached_hash == policy_hash and store.has("classification_output"):
+            cached_event = store.get("classification_output")
+            return Event(output=cached_event.output, actions=cached_event.actions)
 
     # Initialize Gemini client
     client = genai.Client()
@@ -510,4 +537,8 @@ def classification_node(node_input: FileDiscoveryOutput) -> Event:
         reasoning=reasoning,
     )
 
-    return Event(output=output, actions=EventActions(route="dedupe"))
+    event = Event(output=output, actions=EventActions(route="dedupe"))
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        store.set("classification_output", event)
+    return event

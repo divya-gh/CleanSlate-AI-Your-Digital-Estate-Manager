@@ -16,6 +16,8 @@ from typing import Any
 
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
+from google.adk.agents.context import Context
+from app.nodes.organize_state import OrganizerSessionStore
 from pydantic import BaseModel, Field
 
 from app.mcp_tools.registry import test_tool
@@ -86,6 +88,11 @@ class FolderScopePolicy(BaseModel):
         default="interactive_cleanup",
         description="Policy source.",
     )
+    pin_hash: str | None = Field(
+        default=None,
+        description="Hash of the PIN for secure folder locking.",
+    )
+
 
 
 class FileDiscoveryInput(BaseModel):
@@ -246,87 +253,74 @@ def _scan_directory_recursive(
     if depth >= 10:
         return
 
-    res = test_tool("list_files", path=dir_path)
-    if "error" in res:
-        stats["skipped_dirs"] += 1
-        return
-
     stats["scanned_dirs"] += 1
-    files = res["result"]["files"]
 
-    for entry in files:
-        if len(inventory) >= 5000:
-            return
+    try:
+        with os.scandir(dir_path) as it:
+            for entry in it:
+                if len(inventory) >= 5000:
+                    return
 
-        entry_name = entry["name"]
-        entry_abs_path = os.path.abspath(os.path.join(dir_path, entry_name))
+                entry_name = entry.name
+                entry_abs_path = os.path.abspath(entry.path)
 
-        if _is_blocked(entry_abs_path, effective_blocks):
-            stats["skipped_dirs"] += 1
-            continue
+                if _is_blocked(entry_abs_path, effective_blocks):
+                    stats["skipped_dirs"] += 1
+                    continue
 
-        if entry["is_directory"]:
-            _scan_directory_recursive(
-                entry_abs_path,
-                base_depth,
-                effective_blocks,
-                search_query,
-                search_mode,
-                safe_mode,
-                inventory,
-                stats,
-            )
-        else:
-            # list_files already retrieves size and timestamps in its directory scan.
-            # We directly use these values to avoid sequential MCP tool calls for every single file.
-            meta_data = {
-                "size": entry.get("size", 0),
-                "modified_at": entry.get("modified_at", ""),
-                "created_at": entry.get("created_at", ""),
-            }
+                if entry.is_dir(follow_symlinks=False):
+                    _scan_directory_recursive(
+                        entry_abs_path,
+                        base_depth,
+                        effective_blocks,
+                        search_query,
+                        search_mode,
+                        safe_mode,
+                        inventory,
+                        stats,
+                    )
+                elif entry.is_file(follow_symlinks=False):
+                    try:
+                        stat_info = entry.stat(follow_symlinks=False)
+                        size = stat_info.st_size
+                        mod_ts = stat_info.st_mtime
+                        cre_ts = stat_info.st_ctime
+                    except OSError:
+                        size, mod_ts, cre_ts = 0, 0.0, 0.0
 
-            if search_query and not fnmatch.fnmatch(
-                entry_name.lower(), search_query.lower()
-            ):
-                continue
+                    if search_query and not fnmatch.fnmatch(
+                        entry_name.lower(), search_query.lower()
+                    ):
+                        continue
 
-            display_path = entry_abs_path
-            if search_mode or safe_mode:
-                display_name = entry_name
-                if _is_sensitive_filename(entry_name):
-                    display_name = _mask_filename(entry_name)
-                display_path = f"[RESTRICTED]/{display_name}"
-            else:
-                if _is_sensitive_filename(entry_name):
-                    display_name = _mask_filename(entry_name)
-                    parent_dir = os.path.dirname(entry_abs_path)
-                    display_path = os.path.join(parent_dir, display_name)
+                    display_path = entry_abs_path
+                    if search_mode or safe_mode:
+                        display_name = entry_name
+                        if _is_sensitive_filename(entry_name):
+                            display_name = _mask_filename(entry_name)
+                        display_path = f"[RESTRICTED]/{display_name}"
+                    else:
+                        if _is_sensitive_filename(entry_name):
+                            display_name = _mask_filename(entry_name)
+                            parent_dir = os.path.dirname(entry_abs_path)
+                            display_path = os.path.join(parent_dir, display_name)
 
-            _PATH_REGISTRY[display_path.replace("\\", "/").lower()] = entry_abs_path
+                    _PATH_REGISTRY[display_path.replace("\\", "/").lower()] = entry_abs_path
 
-            ext = Path(entry_abs_path).suffix
-            try:
-                mod_dt = datetime.fromisoformat(meta_data["modified_at"].rstrip("Z"))
-                mod_ts = mod_dt.timestamp()
-            except Exception:
-                mod_ts = 0.0
-
-            try:
-                cre_dt = datetime.fromisoformat(meta_data["created_at"].rstrip("Z"))
-                cre_ts = cre_dt.timestamp()
-            except Exception:
-                cre_ts = 0.0
-
-            inventory.append(
-                FileMetadata(
-                    path=display_path,
-                    size=meta_data["size"],
-                    extension=ext,
-                    last_modified=mod_ts,
-                    last_accessed=cre_ts,
-                    real_path=entry_abs_path,
-                )
-            )
+                    ext = Path(entry_abs_path).suffix
+                    
+                    inventory.append(
+                        FileMetadata(
+                            path=display_path,
+                            size=size,
+                            extension=ext,
+                            last_modified=mod_ts,
+                            last_accessed=cre_ts,
+                            real_path=entry_abs_path,
+                        )
+                    )
+    except OSError:
+        stats["skipped_dirs"] += 1
 
 
 def _scan_allowed_paths(
@@ -398,6 +392,7 @@ def _scan_allowed_paths(
 
 def file_discovery_node(
     node_input: Any,
+    ctx: Context | None = None,
 ) -> Event:
     """FileDiscoveryNode — scans allowed directories recursively and returns Event."""
     input_type = type(node_input).__name__
@@ -421,10 +416,6 @@ def file_discovery_node(
             "system32",
             "programdata",
             "appdata",
-            "ssn",
-            "password",
-            "tax",
-            "banking",
         }
         if any(kw in q_lower for kw in blocked_keywords):
             raise ValueError("search_query contains blocked system/sensitive keywords.")
@@ -462,6 +453,31 @@ def file_discovery_node(
     # Enforce validation checks on policy
     if not policy.allowed_paths:
         raise ValueError("allowed_paths must not be empty.")
+
+    # ── CHECK CACHE ──
+    session_id = None
+    if ctx:
+        session_id = (
+            getattr(ctx.session, "id", None)
+            or getattr(ctx.session, "session_id", None)
+            or str(id(ctx.session))
+        )
+
+    policy_hash = None
+    if policy:
+        paths_str = ",".join(sorted(policy.allowed_paths)) + "|" + ",".join(sorted(policy.blocked_paths)) + f"|{policy.safe_mode}|{search_query}"
+        policy_hash = hashlib.sha256(paths_str.encode("utf-8")).hexdigest()
+
+    if session_id and policy_hash:
+        store = OrganizerSessionStore.for_session(session_id)
+        cached_hash = store.get("discovery_policy_hash")
+        if cached_hash == policy_hash and store.has("discovery_output"):
+            # Re-register paths in _PATH_REGISTRY
+            cached_registry = store.get("discovery_registry", {})
+            for k, v in cached_registry.items():
+                _PATH_REGISTRY[k] = v
+            cached_event = store.get("discovery_output")
+            return Event(output=cached_event.output, actions=cached_event.actions)
 
     from app.config import set_policy_override
     set_policy_override(policy.model_dump())
@@ -542,7 +558,19 @@ def file_discovery_node(
         elif safe_mode:
             route = "weekly_scan"
 
-        return Event(output=output, actions=EventActions(route=route))
+        event = Event(output=output, actions=EventActions(route=route))
+        if session_id and policy_hash:
+            store = OrganizerSessionStore.for_session(session_id)
+            # Capture current keys/values from _PATH_REGISTRY related to this inventory
+            registry_snapshot = {}
+            for file in inventory:
+                key = file.path.replace("\\", "/").lower()
+                if key in _PATH_REGISTRY:
+                    registry_snapshot[key] = _PATH_REGISTRY[key]
+            store.set("discovery_registry", registry_snapshot)
+            store.set("discovery_policy_hash", policy_hash)
+            store.set("discovery_output", event)
+        return event
     finally:
         from app.config import set_policy_override
         set_policy_override(None)

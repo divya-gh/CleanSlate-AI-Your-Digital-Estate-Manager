@@ -69,8 +69,9 @@ def test_interactive_mode_path_validation(tmp_path) -> None:
     non_existent = str(tmp_path / "does_not_exist")
     policy = FolderScopePolicy(allowed_paths=[non_existent], blocked_paths=[])
     disc_input = FileDiscoveryInput(folder_scope_policy=policy)
-    with pytest.raises(ValueError, match="does not exist"):
-        file_discovery_node(disc_input)
+    res = file_discovery_node(disc_input)
+    assert res.actions.route == "error"
+    assert "Folder not found" in res.output.reasoning
 
     # 3. Overlap with blocked path
     allowed = tmp_path / "allowed"
@@ -79,8 +80,9 @@ def test_interactive_mode_path_validation(tmp_path) -> None:
         allowed_paths=[str(allowed)], blocked_paths=[str(allowed)]
     )
     disc_input = FileDiscoveryInput(folder_scope_policy=policy)
-    with pytest.raises(ValueError, match="overlaps with or is inside blocked path"):
-        file_discovery_node(disc_input)
+    res = file_discovery_node(disc_input)
+    assert res.actions.route == "error"
+    assert "overlaps with blocked path" in res.output.reasoning
 
 
 def test_symlink_rejection(tmp_path) -> None:

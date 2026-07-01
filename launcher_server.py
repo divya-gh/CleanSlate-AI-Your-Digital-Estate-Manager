@@ -15,9 +15,9 @@ import http.client
 import http.server
 import pathlib
 
-LAUNCHER_PORT  = 8001
+LAUNCHER_PORT  = 8000
 BACKEND_HOST   = "127.0.0.1"
-BACKEND_PORT   = 8000
+BACKEND_PORT   = 8080
 ROOT           = pathlib.Path(__file__).parent
 
 # Headers we must not forward blindly (hop-by-hop)
@@ -33,7 +33,7 @@ class ReverseProxyHandler(http.server.BaseHTTPRequestHandler):
     #  Serve the launcher HTML for the root path                         #
     # ------------------------------------------------------------------ #
     def do_GET(self):
-        if self.path in ("/", "", "/launcher.html"):
+        if self.path in ("/", "", "/launcher.html", "/chat"):
             self._serve_html()
         else:
             self._proxy("GET", body=None)

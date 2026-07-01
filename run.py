@@ -32,6 +32,6 @@ async def chat_ui():
 
 if __name__ == "__main__":
     print("CleanSlate AI starting...")
-    print("  Custom chat UI  ->  http://127.0.0.1:8000/chat")
-    print("  ADK dev UI      ->  http://127.0.0.1:8000/dev-ui/")
-    uvicorn.run(fast_app, host="127.0.0.1", port=8000)
+    print("  Custom chat UI  ->  run `python launcher_server.py` (port 8000)")
+    print("  ADK dev UI      ->  http://127.0.0.1:8080/dev-ui/")
+    uvicorn.run(fast_app, host="127.0.0.1", port=8080)
