@@ -36,7 +36,7 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 ---
 
 ## ✨ 2. What CleanSlate AI Does (Features & Workflow)
-CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven PC assistant that executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0):
+CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven ambient PC assistant with:
 
 - **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
 - **Intelligent File Discovery**: Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
@@ -72,7 +72,7 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 ## 🏗️ 3. System Architecture Overview
 CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
 
-**CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
+**CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, Skills.md, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
 
 ##### High‑Level Architecture Diagram (ASCII)
 ```
@@ -107,8 +107,8 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 └──────────────────────────────┘
 ```
 
-## 🟦 4. Technologies Used
-#### CleanSlate AI demonstrates:
+##  🛠️  4. Technologies Used
+### Core Technologies
 
 ### ✔ ADK Agent 2.0
 •	Multi step workflows
