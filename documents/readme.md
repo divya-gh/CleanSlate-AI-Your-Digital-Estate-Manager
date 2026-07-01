@@ -108,7 +108,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ```
 ---
 
-##  🛠️  4. Core Technologies Used
+###  🛠️  4. Core Technologies Used
 
 #### ✔ ADK Agent 2.0
 Multi step workflows
@@ -174,13 +174,14 @@ File scanning
 ---
 
 ## 🛡️ Security Architecture
-#### CleanSlate adheres strictly to the 7 Pillars of Security (Design Philosophy) as well as 7-Layers of  AI Agent Security Architecture (Operational Controls):
+#### CleanSlate AI adheres strictly to the 7-Pillars of Security & 7-Layers of AI Agent Security Architecture:
 
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
     <tr>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🧱 07 SECURITY PILLARS</th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">.
+🔒 07 SECURITY PILLARS<br>--Design Philosophy</th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br>--Operational Controls</th>
     </tr>
   </thead>
   <tbody>
