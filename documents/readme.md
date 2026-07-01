@@ -180,17 +180,17 @@ File scanning
   <thead>
     <tr>
       <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">.
-🔒 07 SECURITY PILLARS<br>--Design Philosophy<br></th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br>--Operational Controls<br></th>
+🔒 07 SECURITY PILLARS<br><i>--Design Philosophy</i><br></th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br><i>--Operational Controls</i><br></th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. SECURE_BY_DESIGN🔒</span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Sensitive File Isolation</i></span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Authenticated Secure Vault</i></span><br>
-        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Access Recovery-PIN + security question</i></span><br>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Sensitive File Isolation</i></span><br>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Authenticated Secure Vault</i></span><br>
+        <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i> • Access Recovery-PIN + security question</i></span><br>
         <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i></span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
