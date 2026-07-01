@@ -257,7 +257,40 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 </table>
 
 ----
+<div align="center">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="width:100%; border:none;">
+  <tr style="border:none; background:none;">
+    <td width="50%" valign="top" style="border:none; padding-right:12px;">
 
+| 🏛️ // 07_SECURITY_PILLARS |
+| :--- |
+| **🛡️ 1. SECURE_BY_DESIGN**<br> *• Sensitive content detection*<br> *• Authenticated Secure vault*<br> *• PIN + security question*<br> • Runtime safety gates |
+| **⚙️ 2. SECURE_BY_DEFAULT**<br> • Sensitive files never deleted or moved to unsafe folders<br> • Safety-first execution flow with dry-run<br> • Rollback enabled for all destructive actions |
+| **🚀 3. SECURE_IN_DEPLOYMENT**<br> • Sandbox‑safe file operations<br> • No external network calls<br> • No unsafe path traversal |
+| **🔑 4. ZERO_TRUST**<br> • Every file validated<br> • Sensitive files require authentication<br> • No implicit trust of user input |
+| **👁️‍🗨️ 5. CONTINUOUS_MONITORING**<br> • Automated active background validation |
+| **📝 6. ENCRYPTED_STATE_LOGS**<br> • Tamper-proof transaction logging history |
+| **⚡ 7. FAILURE_ISOLATION**<br> • Process sandboxing during structural faults |
+
+    </td>
+    <td width="50%" valign="top" style="border:none; padding-left:12px;">
+
+| 🛡️ // 07_SECURITY_LAYERS |
+| :--- |
+| **🌐 1. PHYSICAL_LAYER**<br> • Local host hardware machine boundary |
+| **📊 2. DATA_LAYER**<br> • Isolated environment asset & state directory |
+| **💻 3. OPERATING_SYSTEM_LAYER**<br> • Scoped system-level path & OS access hooks |
+| **🔌 4. NETWORK_LAYER**<br> • Air-gapped boundary limits (Zero cloud APIs) |
+| **💎 5. APPLICATION_LAYER**<br> • Cryptographic vault isolation runtime |
+| **🧠 6. AI_AGENT_LAYER**<br> • LLM prompt guardrails and validation rules |
+| **👤 7. USER_ACCESS_LAYER**<br> • Multifactor identity verification (PIN + Prompt) |
+
+    </td>
+  </tr>
+</table>
+</div>
+
+---
 * **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
 * **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
 * **Runtime Constraints**: Strict runtime safety gates preventing unauthorized system calls.
