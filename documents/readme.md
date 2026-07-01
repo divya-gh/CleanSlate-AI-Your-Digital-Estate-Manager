@@ -180,8 +180,8 @@ File scanning
   <thead>
     <tr>
       <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">.
-🔒 07 SECURITY PILLARS<br>--Design Philosophy</th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br>--Operational Controls</th>
+🔒 07 SECURITY PILLARS<br>--Design Philosophy<br></th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br>--Operational Controls<br></th>
     </tr>
   </thead>
   <tbody>
