@@ -169,20 +169,20 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
   <thead>
     <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
-      <th style="width: 50%; padding: 12px; text-align: left; font-family:Consolas, Monaco, 'Courier New', monospace; font-size: 16px; border-right: 1px solid #cbd5e1;">7 Pillars of Security</th>
-      <th style="width: 50%; padding: 12px; text-align: left; font-family:Consolas, Monaco, 'Courier New', monospace; font-size: 16px;">7 Layers of Security</th>
+      <th style="width: 50%; padding: 12px; text-align: left; font-family:Consolas, Monaco, 'Courier New', monospace; font-size: 18px; border-right: 1px solid #cbd5e1;">7 Pillars of Security</th>
+      <th style="width: 50%; padding: 12px; text-align: left; font-family:Consolas, Monaco, 'Courier New', monospace; font-size: 18px;">7 Layers of Security</th>
     </tr>
   </thead>
   <tbody>
     <tr style="border-bottom: 1px solid #e2e8f0;">
-      <td style="padding: 12px; vertical-align: top; border-right: 1px solid #cbd5e1;">
+      <td style="padding: 10px; vertical-align: top; border-right: 1px solid #cbd5e1;">
         <b>1. Secure by Design:</b><br>
           <small<i>• Sensitive File Isolation</i></small><br>
           <small<i>• Authenticated Secure vault</i></small><br>
           <small<i>• PIN + security question</i></small><br>
           <small<i>• Runtime safety gates</small</i></small>
       </td>
-      <td style="padding: 12px; vertical-align: top;">
+      <td style="padding: 10px; vertical-align: top;">
         <b>1. Physical Layer</b><br>
         • Local host hardware machine boundary
       </td>
