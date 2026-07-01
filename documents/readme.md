@@ -191,7 +191,7 @@ File scanning
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Sensitive File Isolation</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Authenticated Secure Vault</i></span><br>
         <span style="font-size: 11px; color: #8a99ad; padding-left: 20px; display: inline-block;"><i>  • Access Recovery-PIN + security question</i></span><br>
-        <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i>i></span>
+        <span style="padding-left: 20px; display: inline-block;"><i>• Runtime Safety Gates</i></span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">1. Infrastructure & Networking🌐</span><br>
@@ -210,7 +210,6 @@ File scanning
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. DATA_LAYER📊</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Encrypts sensitive context</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Least‑privilege access: No content Preview</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Logs/Summary redact sensitive path</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Partitions storage to avoid cross‑tenant exposure</span>
@@ -221,6 +220,7 @@ File scanning
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">3. SECURE_IN_DEPLOYMENT🚀</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Runs safely in sandboxed environments</span><br>
         <span style="padding-left: 20px; display: inline-block;">• No Exfiltration: Zero external network</span><br>
+         <span style="padding-left: 20px; display: inline-block;">•Safety enforcement in logging</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Traversal Defense: Absolute path enforcement</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
@@ -243,8 +243,7 @@ File scanning
         <span style="padding-left: 20px; display: inline-block;">• Uses LLM firewalls and pre/post tool‑call hooks</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Gateways prevent unrestricted agent calls.</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep rules enforce runtime safety</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Enforces safe-mode in run time</span>
-      </td>
+       </td>
     </tr>
     <tr>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
@@ -275,7 +274,6 @@ File scanning
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. Observability & Security Ops🧠</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Continuous monitoring via logs, traces, and metrics</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Detects drift or infinite loops</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Implementing JSONL structured logs</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Semgrep ensures no sensitive leakage</span><br>        
         <span style="padding-left: 20px; display: inline-block;">• STRIDE v2.0 includes observability threats</span>
       </td>
