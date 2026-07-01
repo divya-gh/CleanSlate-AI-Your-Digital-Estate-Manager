@@ -33,9 +33,9 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 •	Rollback guarantees
 **This project showcases your ability to design, build, secure, and communicate a modern AI agent system using ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, and Spec‑Driven Development (SDD).**
 
-----------------------
+---
 
-## 🟦 2. What CleanSlate AI Does (Features & The Agentic Workflow)
+## 🟦 2. What CleanSlate AI Does (Features & Workflow)
 CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven PC assistant that executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0):
 
 - **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
@@ -50,8 +50,24 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 - **Conversational Assistant**: Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
 - **sandbox environments**: Runs safely in the sandox environment (Kaggle, cloud VMs)
 
-----------------------
+---
 
+## 🔄 The Agentic Workflow
+
+CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0). 
+
+1. **Intent Routing (`MyPCAssistantNode`)**: Routes conversational queries to the right sub-flow (cleanup vs. search).
+2. **Folder Scope Security (`FolderScopeNode`)**: Establishes the mandatory explicit security perimeter for the operation.
+3. **File Discovery (`FileDiscoveryNode`)**: High-speed, metadata-only recursive traversal of approved directories.
+4. **Classification (`ClassificationNode`)**: LLM-driven reasoning to categorize each file (e.g. Resume, Tax, Code, Media).
+5. **Sensitive Detection (`SensitiveDetectionNode`)**: Uses strict heuristic and LLM checks to isolate highly sensitive files (SSNs, Passwords).
+6. **Duplicate Detection (`DuplicateDetectionNode`)**: Groups identical files by tracking metadata and exact hashes.
+7. **Optimization Planning (`OptimizationPlannerNode`)**: Generates an actionable cleanup plan (Move, Archive, Delete).
+8. **HITL Approval (`HITLApprovalNode`)**: Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
+9. **Execution (`ExecutionNode`)**: Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
+10. **Summary & Dashboard (`SummaryNode`)**: Outputs the final recovery statistics and the secure pin-protected vault status.
+
+---
 
 ## 🟦 3. System Architecture Overview
 **CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, Semgrep Rules, STRIDE Threat MODEL and Antigravity.** **CleanSlate AI is built using Spec‑Driven Development (SDD) and follows a modular, enterprise‑grade architecture.**
