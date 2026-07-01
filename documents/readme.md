@@ -109,49 +109,49 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ##  🛠️  4. Core Technologies Used
 
-### ✔ ADK Agent 2.0
+#### ✔ ADK Agent 2.0
 •	Multi step workflows
 •	Interrupt driven UI
 •	Node graph architecture
 •	Ambient agent state
 
-### ✔ MCP Server
+#### ✔ MCP Server
 •	Tool orchestration
 •	File operations
 •	Secure execution
 
-### ✔ Agent CLI
+#### ✔ Agent CLI
 •	Rapid scaffolding
 •	Building, evaluating and deploying the agent
 •	Node debugging, Local testing
 •	Workflow validation
 
-### ✔ Pub/Sub (Ambient Agent)
+#### ✔ Pub/Sub (Ambient Agent)
 •	Event driven communication
 •	State propagation
 •	Interrupt handling
 •	Triggers autonomous weekly background organization
 
-### ✔ Antigravity
+#### ✔ Antigravity
 •	Node graph editor
 •	Agent manifest
 •	Logging console
 •	SDD workflow
 
-### ✔ Logging & Traceability
+#### ✔ Logging & Traceability
 •	Full action logs
 •	Audibility & Rollback capability
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
-### ✔ Semgrep Security Hooks
+#### ✔ Semgrep Security Hooks
 •	Statistically safe CI/CD and commit pipeline.
 
-### ✔ STRIDE Threat Model
+#### ✔ STRIDE Threat Model
 •	Enforces SDD safety rule
 • Reason about threats at design time.
 
-### ✔ SKILLS.md
+#### ✔ SKILLS.md
 •	File scanning
 •	Sensitive classification
 •	Duplicate detection
