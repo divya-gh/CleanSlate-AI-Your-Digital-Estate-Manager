@@ -257,6 +257,8 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 </table>
 
 ----
+----------------------------------------------------------------------------------------------------------------------
+
 <div align="center">
 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="width:100%; border:none;">
   <tr style="border:none; background:none;">
