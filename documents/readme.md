@@ -169,7 +169,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">
   <thead>
     <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
-<th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#00F5D4; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border:1px solid #1C2541;">🏛️ // 07_SECURITY_PILLARS</th>
+<th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#0000FF; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:18px; font-weight:bold; letter-spacing:0.5px; border:1px solid #1C2541;">🏛️ 7 SECURITY PILLARS</th>
 <th style="width: 50%; padding: 12px; text-align: left; font-family:Consolas, Monaco, 'Courier New', monospace; font-size: 18px;">7 Layers of Security</th>
     </tr>
   </thead>
