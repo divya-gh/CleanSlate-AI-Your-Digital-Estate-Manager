@@ -179,10 +179,7 @@ This table shows them **side‑by‑side** for clarity.
 | **5. Defense in Depth** 👁️‍🗨️ <br>• Discovery → Classification → Vault → Logging <br>• Heuristics + LLM co‑verification <br>• Fallback regex rules | **5. IAM Management** 💎 <br>• Unique agent identity <br>• HITL approval required <br>• IAM‑safe file handling <br>• STRIDE IAM threats |
 | **6. Operational Security** 📝 <br>• Structured logs <br>• Sensitive redaction <br>• Rollback records <br>• Graceful degradation | **6. Observability & Security Ops** 🧠 <br>• Logs, traces, metrics <br>• Drift detection <br>• Infinite loop detection <br>• Semgrep leakage protection |
 | **7. Privacy by Design** ⚡ <br>• Filename masking <br>• No PII in logs <br>• Metadata‑only operations <br>• Safe‑mode execution | **7. Governance** 👤 <br>• AI‑risk compliance <br>• STRIDE v2.0 (404+ lines) <br>• Semgrep safety contract <br>• Residual risk documentation |
-
-
 </div>
----
 #### **Note:** Every principle and layer is implemented, tested, and documented.
 ---
 
