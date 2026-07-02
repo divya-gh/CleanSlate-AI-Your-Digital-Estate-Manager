@@ -73,35 +73,69 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ##### High‑Level Architecture Diagram (ASCII)
 ```
-                   ┌──────────────────────────────┐
-                   │        User Interface         │
-                   │  (Checkboxes, Toggles, Table) │
-                   └───────────────┬──────────────┘
-                                   │ Interrupts
-                                   ▼
-                    ┌──────────────────────────────┐
-                    │        ADK Agent 2.0          │
-                    │   (Ambient, Pub/Sub Driven)   │
-                    └───────────────┬──────────────┘
-                                   │
-        ┌───────────────────────────┼───────────────────────────┐
-        ▼                           ▼                           ▼
-┌──────────────┐          ┌────────────────┐          ┌──────────────────┐
-│ FolderScope  │          │ Optimization   │          │   Execution       │
-│ Node         │          │ Planner Node   │          │   Node            │
-└──────────────┘          └────────────────┘          └──────────────────┘
-        │                           │                           │
-        ▼                           ▼                           ▼
-┌──────────────┐          ┌────────────────┐          ┌──────────────────┐
-│ Sensitive     │          │ Table Renderer │          │ Rollback Engine  │
-│ Detector      │          └────────────────┘          └──────────────────┘
-└──────────────┘
-        │
-        ▼
-┌──────────────────────────────┐
-│        Summary Node           │
-│ (Professional Dashboard UI)   │
-└──────────────────────────────┘
+                                        ┌──────────────────────────────┐
+                           │      Conversational UI       │
+                           │  (Launcher Server, Web UI)   │
+                           └──────────────┬───────────────┘
+                                          │ User Query / Weekly Timer
+                                          ▼
+                           ┌──────────────────────────────┐
+                           │      MyPCAssistantNode       │
+                           │  (Intent Router & Dispatch)  │
+                           └──────────────┬───────────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+      ┌──────────────────────┐                        ┌──────────────────────┐
+      │   FolderScopeNode    │                        │  WeeklyOrganizerNode │
+      │ (Security Perimeter) │                        │ (Ambient Background) │
+      └───────────┬──────────┘                        └───────────┬──────────┘
+                  │                                               │
+                  └───────────────────────┬───────────────────────┘
+                                          ▼
+                              ┌──────────────────────┐
+                              │  FileDiscoveryNode   │
+                              │ (Traverses FS / OS)  │
+                              └───────────┬──────────┘
+                                          │ File Metadata
+                                          ▼
+                              ┌──────────────────────┐
+                              │  ClassificationNode  │
+                              │  (LLM Semantic Tag)  │
+                              └───────────┬──────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+      ┌──────────────────────┐                        ┌──────────────────────┐
+      │  SensitiveDetection  │                        │  DuplicateDetection  │
+      │  (PII / Secret Scan) │                        │  (Exact/Near Hash)   │
+      └───────────┬──────────┘                        └───────────┬──────────┘
+                  │                                               │
+                  └───────────────────────┬───────────────────────┘
+                                          ▼
+                              ┌──────────────────────┐
+                              │  OptimizationNode    │
+                              │  (Action Planner)    │
+                              └───────────┬──────────┘
+                                          │ Proposed Plan
+                                          ▼
+                              ┌──────────────────────┐
+                              │   HITLApprovalNode   │
+                              │ (User Interruption)  │
+                              └───────────┬──────────┘
+                                          │ User Approved
+                                          ▼
+                              ┌──────────────────────┐
+                              │    ExecutionNode     │
+                              │  (MCP File Ops)      │
+                              └───────────┬──────────┘
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+      ┌──────────────────────┐                        ┌──────────────────────┐
+      │     SummaryNode      │                        │     RollbackNode     │
+      │ (Dashboard Metrics)  │                        │  (Revert State)      │
+      └──────────────────────┘                        └──────────────────────┘
 ```
 ---
 ###  🛠️  4. Core Technologies Used
