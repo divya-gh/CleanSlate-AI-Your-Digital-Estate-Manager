@@ -1,185 +1,257 @@
-# 🧹 CleanSlate AI – My PC Assistant
-
+# 🧹 CleanSlate AI — My PC Assistant
 > **"Your AI Chief of Staff for Digital Organization and Storage Management."**
-
+#### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](assets/cleanslate_corporate_banner.png)
+---
+## 📖 Problem Statement: Why CleanSlate AI??
+**Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
-## 📖 Problem Statement: Why We Built It
-Modern computers accumulate massive digital clutter: downloads folders with thousands of files, duplicate documents and photos, old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.
+- Security risks (exposed identity documents, financial files)
+- Productivity loss (hard to find important files)
+- Storage inefficiency (duplicates, unused content)
+- Organizational chaos (no structure, no cleanup habits)
 
-This clutter wastes time, increases cognitive load, and creates privacy risks. The problem is universal. Everyone experiences it, and no existing tool solves it intelligently. 
-
-**CleanSlate AI** is an autonomous, multi-agent system that intelligently manages digital clutter, protects sensitive files, organizes storage, and provides a conversational PC assistant—all with strict human-in-the-loop safety. It is not just a “cleanup tool.” It is a **Digital Estate Manager**.
+This clutter wastes time, increases cognitive load, and creates privacy risks. While everyone experiences it, and no existing tool solves it intelligently.
 
 ---
+## 🌟 The Vision & Technical Philosophy
+CleanSlate AI was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 
-## 🌟 The Vision & Technical Decisions (Competition Highlights)
-This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. Our design philosophy centers around building a highly capable autonomous agent that prioritizes **safety, transparency, and user value**.
+**The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
 
-* **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
-* **Solution Design**: We built a highly modular, multi-agent graph architecture. We separated concerns into discrete ADK nodes (File Discovery, Classification, Sensitive Detection, Optimization Planner) to ensure reasoning is traceable and debuggable.
-* **Effective Use of Agent Technologies**: 
-  * **Ambient Agents**: Using Pub/Sub, the agent can trigger weekly background organization tasks completely autonomously without user prompting.
-  * **MCP (Model Context Protocol)**: We built native filesystem manipulation tools via MCP, giving the LLM secure, sandboxed access to local files without executing arbitrary code.
-  * **Spec-Driven Development**: Every line of code traces back to the Master Specification, ensuring robust implementation quality and architectural integrity.
-* **Overall User Value**: By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
+#### CleanSlate AI demonstrates:
+•	Safe automation
+•	Intelligent file organization
+•	Sensitive file protection
+•	Multi step workflows
+•	Interrupt driven UI
+•	Enterprise grade security
+•	Full traceability
+•	Rollback guarantees
+
+**Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
 
 ---
+## ✨ 2. What CleanSlate AI Does (Features & Workflow)
+CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven ambient PC assistant with:
 
-## ✨ What It Does (Features & Workflows)
-CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy.
-
-- **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action.
-- **Intelligent File Discovery**: Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
-- **AI-Powered Classification**: Uses LLM reasoning to categorize files (Resume, Tax document, Medical record, Source code, Media, etc.).
-- **Duplicate & Sensitive Detection**: Identifies exact/near duplicates and detects sensitive information (SSNs, Banking docs, Passwords) to protect them from deletion.
-- **Storage Optimization**: Suggests archiving, compressing, moving, or deleting safe items to recover storage space.
+- **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
+- **Intelligent File Discovery**     : Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
+- **AI-Powered Classification**      : Uses LLM reasoning to categorize files (Resume, Tax document, Medical record, Source code, Media, etc.).
+- **Duplicate & Sensitive Detection**: Identifies exact/near duplicates and detects sensitive information (SSNs, DL, Banking docs, Passport, Passwords,API Keys) to protect them from deletion. 
+- **Storage Optimization**           : Suggests archiving old content, compressing, moving, or deleting duplicates and safe items to recover storage space.
 - **Human-In-The-Loop (HITL) Review**: Provides explanations, confidence scores, and reasoning before requesting user approval for any destructive actions.
+- **Execution & Rollback**           : Executes approved actions with safety checks, rollback metadata, and logging.** Moves `sensitive files` safely **Authenticated Secure Folder**. Organizes files into structured categories and rovides rollback for all destructive actions.
+- **Summary & Logging                :** Produces a professional, color‑coded action log and cleanup summary and centralized logging capturing every proposed & executed action, failure & rollback, Sensitive file detections, Node transitions and pub/sub events for traceability.
 - **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
-- **Conversational Assistant**: Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
-
+- **Conversational Assistant**       : Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
+- **Sandbox Environments**           : Runs safely in the sandox environment (Kaggle, cloud VMs)
+  
 ---
-
-## 🔄 The Agentic Workflow
-
+## 🔄 The Agentic Routing
 CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0). 
 
-1. **Intent Routing (`MyPCAssistantNode`)**: Routes conversational queries to the right sub-flow (cleanup vs. search).
-2. **Folder Scope Security (`FolderScopeNode`)**: Establishes the mandatory explicit security perimeter for the operation.
-3. **File Discovery (`FileDiscoveryNode`)**: High-speed, metadata-only recursive traversal of approved directories.
-4. **Classification (`ClassificationNode`)**: LLM-driven reasoning to categorize each file (e.g. Resume, Tax, Code, Media).
-5. **Sensitive Detection (`SensitiveDetectionNode`)**: Uses strict heuristic and LLM checks to isolate highly sensitive files (SSNs, Passwords).
-6. **Duplicate Detection (`DuplicateDetectionNode`)**: Groups identical files by tracking metadata and exact hashes.
-7. **Optimization Planning (`OptimizationPlannerNode`)**: Generates an actionable cleanup plan (Move, Archive, Delete).
-8. **HITL Approval (`HITLApprovalNode`)**: Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
-9. **Execution (`ExecutionNode`)**: Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
-10. **Summary & Dashboard (`SummaryNode`)**: Outputs the final recovery statistics and the secure pin-protected vault status.
+1. **Intent Routing:** - `MyPCAssistantNode` - Routes conversational queries to the right sub-flow (cleanup vs. search).
+2. **Folder Scope Security:** - `FolderScopeNode` - Establishes the mandatory explicit security perimeter for the operation.
+3. **File Discovery:** - `FileDiscoveryNode` - High-speed, metadata-only recursive traversal of approved directories.
+4. **Classification:** - `ClassificationNode` - LLM-driven reasoning to categorize each file (e.g. Resume, Tax, Code, Media).
+5. **Sensitive Detection:** - `SensitiveDetectionNode` - Uses strict heuristic and LLM checks to isolate highly sensitive files (SSNs, Passwords).
+6. **Duplicate Detection:** - `DuplicateDetectionNode` - Groups identical files by tracking metadata and exact hashes.
+7. **Optimization Planning:** - `OptimizationPlannerNode` - Generates an actionable cleanup plan (Move, Archive, Delete).
+8. **HITL Approval:** - `HITLApprovalNode` - Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
+9. **Execution:** - `ExecutionNode` - Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
+10. **Summary & Dashboard:** - `SummaryNode` - Outputs the final recovery statistics and the secure pin-protected vault status.
+    
+---
+## 🏗️ 3. System Architecture Overview
+CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
+- **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
+
+**CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, ADK SKILLS, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
+
+##### High‑Level Architecture Diagram (ASCII)
+```
+                   ┌──────────────────────────────┐
+                   │        User Interface         │
+                   │  (Checkboxes, Toggles, Table) │
+                   └───────────────┬──────────────┘
+                                   │ Interrupts
+                                   ▼
+                    ┌──────────────────────────────┐
+                    │        ADK Agent 2.0          │
+                    │   (Ambient, Pub/Sub Driven)   │
+                    └───────────────┬──────────────┘
+                                   │
+        ┌───────────────────────────┼───────────────────────────┐
+        ▼                           ▼                           ▼
+┌──────────────┐          ┌────────────────┐          ┌──────────────────┐
+│ FolderScope  │          │ Optimization   │          │   Execution       │
+│ Node         │          │ Planner Node   │          │   Node            │
+└──────────────┘          └────────────────┘          └──────────────────┘
+        │                           │                           │
+        ▼                           ▼                           ▼
+┌──────────────┐          ┌────────────────┐          ┌──────────────────┐
+│ Sensitive     │          │ Table Renderer │          │ Rollback Engine  │
+│ Detector      │          └────────────────┘          └──────────────────┘
+└──────────────┘
+        │
+        ▼
+┌──────────────────────────────┐
+│        Summary Node           │
+│ (Professional Dashboard UI)   │
+└──────────────────────────────┘
+```
+---
+###  🛠️  4. Core Technologies Used
+
+#### ✔ ADK Agent 2.0
+Multi step workflows
+•	Interrupt driven UI
+•	Node graph architecture
+•	Ambient agent state
+
+#### ✔ MCP Server
+Tool orchestration
+•	File operations
+•	Secure execution
+
+#### ✔ Agent CLI
+Rapid scaffolding
+•	Building, evaluating and deploying the agent
+•	Node debugging, Local testing
+•	Workflow validation
+
+#### ✔ Pub/Sub (Ambient Agent)
+Event driven communication
+•	State propagation
+•	Interrupt handling
+•	Triggers autonomous weekly background organization
+
+#### ✔ Antigravity
+Node graph editor
+•	Agent manifest
+•	Logging console
+•	SDD workflow
+
+#### ✔ Logging & Traceability
+Full action logs
+•	Audibility & Rollback capability
+•	Sensitive file & error logs
+•	Node transitions and pub/sub events
+
+#### ✔ Semgrep Security Hooks(static analysis)
+Detect unsafe file operations
+•	Prevent path traversal & accidental PII exposure
+•	Prevent insecure regex patternsc& logging 
+•	Enforce ADK node safety patterns
+•	Safe CI/CD and commit pipeline.
+
+#### ✔ STRIDE Threat Model(Threat	Mitigation)
+•	S – Spoofing	PIN + security question
+•	T – Tampering	Rollback + secure folder
+•	R – Repudiation	Full action logs
+•	I – Information Disclosure	Sensitive file masking
+•	D – Denial of Service	Bounded folder scanning
+•	E – Elevation of Privilege	No privileged operations
+•	Enforces SDD safety rule to reason about threats at design time.
+
+#### ✔ SKILLS.md
+File scanning
+•	Sensitive classification
+•	Duplicate detection
+•	Archive & Rollback skill
+•	Logging & Table rendering skill
 
 ---
+## 🛡️ Security Architecture
+#### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
 
-## 🏗️ Architecture & Technologies Used
+The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
-CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification.
+#### This table shows them **side‑by‑side** for clarity.
 
-### Core Technologies
-- **ADK 2.0 (Agent Development Kit)**: The backbone of the agent graph workflow, managing complex state and multi-node decision-making.
-- **Agent is Ambient**: Uses Pub/Sub mechanisms to trigger weekly background organization tasks completely autonomously.
-- **MCP (Model Context Protocol)**: Exposes tools like filesystem scanners and file movers natively to the agent.
-- **Agent CLI**: For rapid scaffolding, building, evaluating, and deploying the agent.
-- **ADK SKILLS**: Leveraged for building specialized capabilities into the AI workflows.
-- **Semgrep Security Hooks**: Enforces SDD safety rules (like preventing LLM file content uploads) statically during the CI/CD and commit pipeline.
-- **Antigravity**: Used for deep integration, observability, and complex agent interactions.
-- **Logging & Traceability**: Comprehensive telemetry ensuring every action is recorded for auditability and rollback capabilities.
+|🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
+|------------------------------------------------|----------------------------------------------------------|
+| **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
+| **2. Secure by Default** ⚙️ <br>• Sensitive files never deleted <br>• Safety‑first dry‑run <br>• Rollback for all destructive actions | **2. Data Layer** 📊 <br>• Least‑privilege access <br>• Sensitive path redaction <br>• Partitioned storage |
+| **3. Secure in Deployment** 🚀 <br>• Sandbox‑safe <br>• Zero external network <br>• Logging safety enforcement <br>• Absolute path traversal defense | **3. Model Security** 💻 <br>• Prompts treated as source code <br>• Injection protection <br>• Semgrep model rules <br>• STRIDE model‑level threats |
+| **4. Zero Trust** 🔑 <br>• Explicit scoping <br>• Authentication required <br>• Input sanitization | **4. Application & Runtime** 🔌 <br>• LLM firewalls <br>• Pre/post tool‑call hooks <br>• Runtime gateways <br>• Semgrep runtime safety |
+| **5. Defense in Depth** 👁️‍🗨️ <br>• Discovery → Classification → Vault → Logging <br>• Heuristics + LLM co‑verification <br>• Fallback regex rules | **5. IAM Management** 💎 <br>• Unique agent identity <br>• HITL approval required <br>• IAM‑safe file handling <br>• STRIDE IAM threats |
+| **6. Operational Security** 📝 <br>• Structured logs <br>• Sensitive redaction <br>• Rollback records <br>• Graceful degradation | **6. Observability & Security Ops** 🧠 <br>• Logs, traces, metrics <br>• Drift detection <br>• Infinite loop detection <br>• Semgrep leakage protection |
+| **7. Privacy by Design** ⚡ <br>• Filename masking <br>• No PII in logs <br>• Metadata‑only operations <br>• Safe‑mode execution | **7. Governance** 👤 <br>• AI‑risk compliance <br>• STRIDE v2.0 (404+ lines) <br>• Semgrep safety contract <br>• Residual risk documentation |
 
----
-
-## 🔒 7-Pillar Security Architecture (The 7 Principles & STRIDE)
-
-CleanSlate AI was designed using the **STRIDE Threat Model** (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege) to harden the agent against prompt injections, unauthorized filesystem access, and exfiltration.
-
-![Security Architecture Diagram](assets/security_architecture.png)
-
-It adheres strictly to the **7 Pillars of Security**:
-
-### 1. Secure by Design
-* **Sensitive File Isolation**: Proactive identification of sensitive content (SSNs, API keys, tax forms).
-* **Secure Vault**: Protected `Authenticated_Secure` directory with localized access controls.
-* **Access Recovery**: Dual-factor authentication using a localized PIN and customizable security question.
-* **Runtime Constraints**: Strict runtime safety gates preventing unauthorized system calls.
-
-### 2. Secure by Default
-* **Non-Destructive Vaulting**: Sensitive files are never deleted; they are securely moved to the vault.
-* **Implicit Dry-Run**: Safety-first execution flow presenting proposed changes prior to making modifications.
-* **Universal Rollback**: Complete transaction logs recorded to revert any file system operations (rename, move, delete).
-
-### 3. Secure in Deployment
-* **Sandbox Integration**: Tested and verified to operate safely in restricted cloud sandboxes (e.g., Kaggle, remote VMs).
-* **No Exfiltration**: Zero external network requests allowed during execution, retaining all sensitive data locally.
-* **Traversal Defense**: Absolute path enforcement and blocking of parent directory traversal (`..`).
-
-### 4. Zero Trust
-* **Explicit Scoping**: The Folder Scope Policy acts as a hard boundary—unapproved directories are completely invisible to the agent.
-* **Authentication Boundaries**: Re-authenticates requests targeting the secure vault to prevent privilege creep.
-* **Input Sanitization**: Rejects and sanitizes raw user inputs, including leading/trailing quote stripping and slash normalization.
-
-### 5. Defense in Depth
-* **Layered Pipeline**: Executes in distinct sequential phases: Discovery ➔ Local Pattern Matching ➔ LLM Classification ➔ Vault Encryption ➔ Transaction Logging.
-* **Heuristics & LLM Co-Verification**: Fallback regex rules verify classification to ensure security even when API connections are degraded.
-
-### 6. Operational Security
-* **Full Auditability**: Logs every node transition, LLM decision, user input, and file modification.
-* **Telemetry Protection**: Erases sensitive file details from execution summaries and telemetry outputs.
-* **Graceful Degradation**: Recovers safely from file locks, permissions issues, or API timeout failures without leaving partial transactions.
-
-### 7. Privacy by Design
-* **Filename Masking**: Redacts and masks sensitive filenames (e.g., `[RESTRICTED]/SSN_****.txt`) in logs and UI lists.
-* **Content Blindness**: Restricts the LLM from reading file content; the agent works exclusively with metadata.
-* **PII Redaction**: Auto-filters any personally identifiable information (PII) from user-facing reports.
+#### **Note:** Every principle and layer is implemented, tested, and documented.
 
 ---
-
 ## 🚀 Getting Started
 
-### Prerequisites
+### 👉 Prerequisites
 - **Python 3.11+** and **uv** (recommended)
 - **Google AI Studio Gemini API Key**
 
-### 🟦 10. Setup Instructions
+### 📐 Setup Instructions
 
-#### 1. Clone the Repository
+ #### 1. Clone the Repository
 ```bash
 git clone https://github.com/divya-gh/CleanSlate-AI-PC-Assistant.git
 cd CleanSlate-AI-PC-Assistant
 ```
-
-#### 2. Set up the Python Virtual Environment & Install Dependencies
+ #### 2. Set up the Python Virtual Environment & Install Dependencies
 * **Using `uv` (Recommended)**:
-  ```bash
+```bash
   # This will automatically create the virtual environment and install all dependencies
   uv sync
   ```
-
 * **OR using standard `pip`**:
   ```bash
   python -m venv .venv
-  source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+  
+  # source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
   pip install -r requirements.txt
   ```
-
 #### 3. Configure Environment Variables
-Create a `.env` file and add your Gemini API Key:
 ```bash
+Create a `.env` file and add your Gemini API Key:
 echo "GEMINI_API_KEY=your_api_key_here" > .env
 ```
-
-#### 4. Run the ADK Backend Server
+#### 4. Run the **ADK Backend Server**
 ```bash
 python run.py
+Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```
-
-#### 5. Launching the UIs
+#### 5. Launching the **UIs**
+```bash
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
-* **ADK Dev UI (Built-in)**:
+ADK Dev UI (Built-in):
   Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
-* **Custom Web UI**:
+Custom Web UI:
   Run the custom chat interface:
-  ```bash
   python launcher_server.py
-  ```
+
   Access via `http://localhost:8000`
-
+```
+#### 6. Run in **Playground**
+```
+Upload the agent ➔ test interrupts ➔ validate UI.
+```
 ---
+## 🟦 11. Demo Video Placeholder
+(Insert your YouTube demo link here)
 
-## 🎥 Demos
-
-| Custom Web UI | ADK Dev UI |
-| :---: | :---: |
-| <video width="100%" controls><source src="docs/assets/custom-ui-demo.mp4" type="video/mp4"></video><br>_Showcasing the premium Chat Interface_ | <video width="100%" controls><source src="docs/assets/adk-dev-ui-demo.mp4" type="video/mp4"></video><br>_Showcasing the Developer ADK Dashboard_ |
+🟦 12. Demo Tables (Side‑by‑Side)
+Kaggle Demo	GitHub Demo
+Kaggle Notebook URL	GitHub Repo URL
+Kaggle Writeup URL	README.md
+Kaggle Video	GitHub Video
 
 ### 🖥️ User Interface Screenshots
 
 | 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
 | :---: | :---: |
 | ![Welcome Chat](assets/welcome_chat_ui.png) | ![HITL Approval Table](assets/hitl_approval_table.png) |
+
+
+### 🟦 17. License
+MIT License 
