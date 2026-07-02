@@ -73,7 +73,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 
 ##### High‑Level Architecture Diagram (ASCII)
 ```
-                                        ┌──────────────────────────────┐
+                           ┌──────────────────────────────┐
                            │      Conversational UI       │
                            │  (Launcher Server, Web UI)   │
                            └──────────────┬───────────────┘
