@@ -3,7 +3,7 @@
 
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](Images/CleanSlate_AI.png)
-
+---
 ## 📖 Problem Statement: Why CleanSlate AI??
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
@@ -13,8 +13,7 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 - Organizational chaos (no structure, no cleanup habits)
 
 This clutter wastes time, increases cognitive load, and creates privacy risks. While everyone experiences it, and no existing tool solves it intelligently.
-
-
+---
 ## 🌟 The Vision & Technical Philosophy
 CleanSlate AI was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 
@@ -31,7 +30,6 @@ CleanSlate AI was built to showcase the effective use of Agentic AI technologies
 •	Rollback guarantees
 
 **Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
-
 ---
 
 ## ✨ 2. What CleanSlate AI Does (Features & Workflow)
@@ -48,7 +46,6 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 - **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
 - **Conversational Assistant**: Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
 - **Sandbox Environments**: Runs safely in the sandox environment (Kaggle, cloud VMs)
-
 ---
 
 ## 🔄 The Agentic Routing
@@ -65,7 +62,6 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 8. **HITL Approval:** - `HITLApprovalNode` - Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
 9. **Execution:** - `ExecutionNode` - Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
 10. **Summary & Dashboard:** - `SummaryNode` - Outputs the final recovery statistics and the secure pin-protected vault status.
-
 ---
 
 ## 🏗️ 3. System Architecture Overview
@@ -107,7 +103,6 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 └──────────────────────────────┘
 ```
 ---
-
 ###  🛠️  4. Core Technologies Used
 
 #### ✔ ADK Agent 2.0
@@ -167,9 +162,8 @@ File scanning
 •	Duplicate detection
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
+---
 
----
----
 ## 🛡️ Security Architecture
 #### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
 
@@ -191,7 +185,8 @@ This table shows them **side‑by‑side** for clarity.
 </div>
 ---
 #### **Note:** Every principle and layer is implemented, tested, and documented.
-------------------------------------------------------------------------------------------------------------------------------------------------------
+---
+
 ## 🚀 Getting Started
 
 ### 👉 Prerequisites
