@@ -52,7 +52,7 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 
 ---
 
-## 🔄 The Agentic Workflow
+## 🔄 The Agentic Routing
 
 CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0). 
 
@@ -195,7 +195,7 @@ Developed entirely in Antigravity, using:
   <thead>
     <tr>
       <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">.
-🔒 07 SECURITY PILLARS<br><i>--Design Philosophy</i><br></th>
+🏛️ 07 SECURITY PILLARS<br><i>--Design Philosophy</i><br></th>
       <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br><i>--Operational Controls</i><br></th>
     </tr>
   </thead>
@@ -324,7 +324,7 @@ Developed entirely in Antigravity, using:
 - **Python 3.11+** and **uv** (recommended)
 - **Google AI Studio Gemini API Key**
 
-## 🟦 10. Setup Instructions
+## 📐 10. Setup Instructions
 
  ### 1. Clone the Repository
 ```bash
@@ -349,12 +349,12 @@ cd CleanSlate-AI-PC-Assistant
 Create a `.env` file and add your Gemini API Key:
 echo "GEMINI_API_KEY=your_api_key_here" > .env
 ```
-### 4. Run the ADK Backend Server
+### 4. Run the **ADK Backend Server**
 ```bash
 python run.py
 Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```
-### 5. Launching the UIs
+### 5. Launching the **UIs**
 ```bash
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
@@ -367,7 +367,7 @@ Custom Web UI:
 
   Access via `http://localhost:8000`
 ```
-### 6. Run in Playground
+### 6. Run in **Playground**
 ```
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
