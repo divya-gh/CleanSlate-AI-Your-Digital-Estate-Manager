@@ -15,7 +15,7 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 This clutter wastes time, increases cognitive load, and creates privacy risks. The problem is universal. Everyone experiences it, and no existing tool solves it intelligently.
 
 
-## 🌟 The Vision & Technical Decisions (Competition Highlights)
+## 🌟 The Vision & Technical Decisions
 This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 
 **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
