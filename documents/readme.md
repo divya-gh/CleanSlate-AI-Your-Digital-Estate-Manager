@@ -344,10 +344,9 @@ cd CleanSlate-AI-PC-Assistant
   # source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
   pip install -r requirements.txt
   ```
-
 ### 3. Configure Environment Variables
-Create a `.env` file and add your Gemini API Key:
 ```bash
+Create a `.env` file and add your Gemini API Key:
 echo "GEMINI_API_KEY=your_api_key_here" > .env
 ```
 ### 4. Run the ADK Backend Server
@@ -362,14 +361,14 @@ CleanSlate AI supports two interfaces. Open a new terminal to start your preferr
   Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
 * **Custom Web UI**:
-  Run the custom chat interface:
  ```bash 
+  Run the custom chat interface:
   python launcher_server.py
 ```
   Access via `http://localhost:8000`
 
 ### 6. Run in Playground
-- Upload the agent ➔ test interrupts ➔ validate UI.
+Upload the agent ➔ test interrupts ➔ validate UI.
 
 ---
 
