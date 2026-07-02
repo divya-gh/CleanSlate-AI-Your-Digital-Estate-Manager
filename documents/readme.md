@@ -177,7 +177,7 @@ The Pillars define **why** security decisions are made, while the Layers define 
 
 This table shows them **side‑by‑side** for clarity.
 
-|🔒 **7-PILLARS** *(Design Philosophy)*  | 🧩 **7-LAYERS- AI AGENT SECURITY ** *(Operational Controls)* |
+|🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
 |------------------------------------------------|----------------------------------------------------------|
 | **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
 | **2. Secure by Default** ⚙️ <br>• Sensitive files never deleted <br>• Safety‑first dry‑run <br>• Rollback for all destructive actions | **2. Data Layer** 📊 <br>• Least‑privilege access <br>• Sensitive path redaction <br>• Partitioned storage |
