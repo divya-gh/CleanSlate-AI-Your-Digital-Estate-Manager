@@ -121,28 +121,31 @@ It adheres strictly to the **7 Pillars of Security**:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.10+
-- Node.js (for custom Web UI)
-- Gemini API Key
+- **Python 3.11+** (specified by `requires-python` in `pyproject.toml`)
+- **Gemini API Key** (set as `GEMINI_API_KEY` in environment or `.env` file)
 
 ### Clone and Run
+We recommend using **`uv`** (Astral's fast Python package manager) to install dependencies, but standard **`pip`** works as well.
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/your-org/cleanslate-ai-my-pc-assistant.git
 cd cleanslate-ai-my-pc-assistant
 
-# 2. Set up the Python Virtual Environment
+# 2. Set up the Environment & Install Dependencies
+# Using uv (Recommended):
+uv sync
+
+# OR using standard pip:
 python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e .
 
-# 3. Install Dependencies
-pip install -r requirements.txt
-
-# 4. Configure Environment Variables
+# 3. Configure Environment Variables
 # Create a .env file and add your Gemini API Key
 echo "GEMINI_API_KEY=your_api_key_here" > .env
 
-# 5. Run the ADK Backend Server
+# 4. Run the ADK Backend Server
 python run.py
 ```
 

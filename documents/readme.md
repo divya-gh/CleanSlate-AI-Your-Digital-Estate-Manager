@@ -191,6 +191,11 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
 ---
 
 ## 🟦 10. Setup Instructions
+
+#### Prerequisites
+- **Python 3.11+** (specified by `requires-python` in `pyproject.toml`)
+- **Gemini API Key** (set as `GEMINI_API_KEY` in environment or `.env` file)
+
 #### Clone the Repository
 ```
 git clone https://github.com/<your-username>/CleanSlate-AI-PC-Assistant.git
@@ -198,19 +203,29 @@ cd CleanSlate-AI-PC-Assistant
 ```
 
 #### Install Dependencies
+We recommend using **`uv`** (Astral's fast Python package manager) to install dependencies, but standard **`pip`** works as well.
+
+Using `uv` (Recommended):
 ```
-pip install -r requirements.txt
+uv sync
 ```
 
-#### Run the Agent (Agent CLI)
+OR using standard `pip`:
 ```
-agent run cleanslate_agent
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e .
 ```
-- Run in Antigravity
-- Open the project folder → run the agent → test nodes → inspect logs.
+
+#### Run the Agent (Agent CLI / Python)
+You can run the agent backend via:
+```
+python run.py
+```
+- Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 
 #### Run in Playground
-- Upload the agent → test interrupts → validate UI.
+- Upload the agent ➔ test interrupts ➔ validate UI.
 
 ## 🟦 11. Demo Video Placeholder
 (Insert your YouTube demo link here)
