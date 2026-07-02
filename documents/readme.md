@@ -368,8 +368,9 @@ Custom Web UI:
   Access via `http://localhost:8000`
 ```
 ### 6. Run in Playground
+```
 Upload the agent ➔ test interrupts ➔ validate UI.
-
+```
 ---
 
 ## 🟦 11. Demo Video Placeholder
