@@ -4,7 +4,7 @@
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](Images/CleanSlate_AI.png)
 
-## 📖 Problem Statement: Why I Built It
+## 📖 Problem Statement: Why ?
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
 - Security risks (exposed identity documents, financial files)
