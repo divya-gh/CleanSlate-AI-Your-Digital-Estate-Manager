@@ -35,16 +35,16 @@ CleanSlate AI was built to showcase the effective use of Agentic AI technologies
 CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven ambient PC assistant with:
 
 - **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
-- **Intelligent File Discovery**: Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
-- **AI-Powered Classification**: Uses LLM reasoning to categorize files (Resume, Tax document, Medical record, Source code, Media, etc.).
+- **Intelligent File Discovery**     : Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
+- **AI-Powered Classification**      : Uses LLM reasoning to categorize files (Resume, Tax document, Medical record, Source code, Media, etc.).
 - **Duplicate & Sensitive Detection**: Identifies exact/near duplicates and detects sensitive information (SSNs, DL, Banking docs, Passport, Passwords,API Keys) to protect them from deletion. 
-- **Storage Optimization**: Suggests archiving old content, compressing, moving, or deleting duplicates and safe items to recover storage space.
+- **Storage Optimization**           : Suggests archiving old content, compressing, moving, or deleting duplicates and safe items to recover storage space.
 - **Human-In-The-Loop (HITL) Review**: Provides explanations, confidence scores, and reasoning before requesting user approval for any destructive actions.
-- **Execution & Rollback**: Executes approved actions with safety checks, rollback metadata, and logging.** Moves `sensitive files` safely **Authenticated Secure Folder**. Organizes files into structured categories and rovides rollback for all destructive actions.
-- **Summary & Logging:** Produces a professional, color‑coded action log and cleanup summary and centralized logging capturing every proposed & executed action, failure & rollback, Sensitive file detections, Node transitions and pub/sub events for traceability.
+- **Execution & Rollback**           : Executes approved actions with safety checks, rollback metadata, and logging.** Moves `sensitive files` safely **Authenticated Secure Folder**. Organizes files into structured categories and rovides rollback for all destructive actions.
+- **Summary & Logging                :** Produces a professional, color‑coded action log and cleanup summary and centralized logging capturing every proposed & executed action, failure & rollback, Sensitive file detections, Node transitions and pub/sub events for traceability.
 - **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
-- **Conversational Assistant**: Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
-- **Sandbox Environments**: Runs safely in the sandox environment (Kaggle, cloud VMs)
+- **Conversational Assistant**       : Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
+- **Sandbox Environments**           : Runs safely in the sandox environment (Kaggle, cloud VMs)
 ---
 
 ## 🔄 The Agentic Routing
@@ -168,7 +168,7 @@ File scanning
 
 The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
-This table shows them **side‑by‑side** for clarity.
+#### This table shows them **side‑by‑side** for clarity.
 ---
 |🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
 |------------------------------------------------|----------------------------------------------------------|
