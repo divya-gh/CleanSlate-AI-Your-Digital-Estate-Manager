@@ -188,7 +188,7 @@ Developed entirely in Antigravity, using:
 ---
 
 ## 🛡️ Security Architecture
-#### CleanSlate AI adheres strictly to the 7-Pillars of Security & 7-Layers of AI Agent Security Architecture:
+#### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security :
 
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
