@@ -347,8 +347,7 @@ python run.py
 - Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
 2. **Custom Web UI**:
-
-# Run the custom chat interface
+-  Run the custom chat interface
 ```
 python launcher_server.py
 ```
