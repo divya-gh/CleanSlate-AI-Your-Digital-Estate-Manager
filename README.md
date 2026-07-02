@@ -146,15 +146,6 @@ Detect unsafe file operations
 •	Enforce ADK node safety patterns
 •	Safe CI/CD and commit pipeline.
 
-#### ✔ STRIDE Threat Model(Threat	Mitigation)
-•	S – Spoofing	PIN + security question
-•	T – Tampering	Rollback + secure folder
-•	R – Repudiation	Full action logs
-•	I – Information Disclosure	Sensitive file masking
-•	D – Denial of Service	Bounded folder scanning
-•	E – Elevation of Privilege	No privileged operations
-•	Enforces SDD safety rule to reason about threats at design time.
-
 #### ✔ Custom Agent Skills (Skills.md)
 CleanSlate AI utilizes specialized local agent skills to automate secure workflows:
 * **`git-mini`**: A secure, automated git commit-and-push workflow that prevents accidental commits of secrets/PII (such as `.env` or key files), validates that commit messages are meaningful and concise (≤10 characters), and automatically rebases upstream changes.
@@ -164,6 +155,15 @@ CleanSlate AI utilizes specialized local agent skills to automate secure workflo
 •	Duplicate detection
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
+
+#### ✔ STRIDE Threat Model(Threat	Mitigation)
+Enforces SDD safety rule to reason about threats at design time:
+•	S – Spoofing	PIN + security question
+•	T – Tampering	Rollback + secure folder
+•	R – Repudiation	Full action logs
+•	I – Information Disclosure	Sensitive file masking
+•	D – Denial of Service	Bounded folder scanning
+•	E – Elevation of Privilege	No privileged operations
 
 ---
 ## 🛡️ Security Architecture
