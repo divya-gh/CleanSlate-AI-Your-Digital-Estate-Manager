@@ -359,12 +359,12 @@ Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
 ADK Dev UI (Built-in):
-
   Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
 Custom Web UI:
   Run the custom chat interface:
   python launcher_server.py
+
   Access via `http://localhost:8000`
 ```
 ### 6. Run in Playground
