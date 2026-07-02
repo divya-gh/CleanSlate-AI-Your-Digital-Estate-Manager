@@ -341,8 +341,8 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env
 python run.py
 ```
 
-#### Launching the UIs
-CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
+#### 6. Launching the UIs
+-  CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 1. **ADK Dev UI (Built-in)**:
 - Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
