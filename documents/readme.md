@@ -161,8 +161,8 @@ File scanning
 •	Duplicate detection
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
----
 
+---
 ## 🛡️ Security Architecture
 #### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
 
