@@ -169,14 +169,14 @@ File scanning
 •	Logging & Table rendering skill
 
 ---
-
+---
 ## 🛡️ Security Architecture
 #### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
 
 The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
 This table shows them **side‑by‑side** for clarity.
-
+---
 |🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
 |------------------------------------------------|----------------------------------------------------------|
 | **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
@@ -189,11 +189,9 @@ This table shows them **side‑by‑side** for clarity.
 
 
 </div>
-
-#### **Note:** Every principle and layer is implemented, tested, and documented.
-
 ---
-
+#### **Note:** Every principle and layer is implemented, tested, and documented.
+------------------------------------------------------------------------------------------------------------------------------------------------------
 ## 🚀 Getting Started
 
 ### Prerequisites
