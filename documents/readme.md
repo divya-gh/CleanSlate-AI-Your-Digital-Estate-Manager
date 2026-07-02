@@ -55,16 +55,26 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 
 CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0). 
 
-1. **Intent Routing (`MyPCAssistantNode`)**: Routes conversational queries to the right sub-flow (cleanup vs. search).
-2. **Folder Scope Security (`FolderScopeNode`)**: Establishes the mandatory explicit security perimeter for the operation.
-3. **File Discovery (`FileDiscoveryNode`)**: High-speed, metadata-only recursive traversal of approved directories.
-4. **Classification (`ClassificationNode`)**: LLM-driven reasoning to categorize each file (e.g. Resume, Tax, Code, Media).
-5. **Sensitive Detection (`SensitiveDetectionNode`)**: Uses strict heuristic and LLM checks to isolate highly sensitive files (SSNs, Passwords).
-6. **Duplicate Detection (`DuplicateDetectionNode`)**: Groups identical files by tracking metadata and exact hashes.
-7. **Optimization Planning (`OptimizationPlannerNode`)**: Generates an actionable cleanup plan (Move, Archive, Delete).
-8. **HITL Approval (`HITLApprovalNode`)**: Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
-9. **Execution (`ExecutionNode`)**: Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
-10. **Summary & Dashboard (`SummaryNode`)**: Outputs the final recovery statistics and the secure pin-protected vault status.
+1. **Intent Routing:** - `MyPCAssistantNode`
+     - Routes conversational queries to the right sub-flow (cleanup vs. search).
+2. **Folder Scope Security:** - `FolderScopeNode`
+     -  Establishes the mandatory explicit security perimeter for the operation.
+3. **File Discovery:** - `FileDiscoveryNode`
+     -  High-speed, metadata-only recursive traversal of approved directories.
+4. **Classification:** - `ClassificationNode`
+     -  LLM-driven reasoning to categorize each file (e.g. Resume, Tax, Code, Media).
+5. **Sensitive Detection:** - `SensitiveDetectionNode`
+     -  Uses strict heuristic and LLM checks to isolate highly sensitive files (SSNs, Passwords).
+6. **Duplicate Detection:** - `DuplicateDetectionNode`
+     -  Groups identical files by tracking metadata and exact hashes.
+7. **Optimization Planning:** - `OptimizationPlannerNode`
+     -  Generates an actionable cleanup plan (Move, Archive, Delete).
+8. **HITL Approval:** - `HITLApprovalNode`
+     -  Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
+9. **Execution:** - `ExecutionNode`
+    -  Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
+10. **Summary & Dashboard:** - `SummaryNode`
+    -  Outputs the final recovery statistics and the secure pin-protected vault status.
 
 ---
 
@@ -180,7 +190,7 @@ The Pillars define **why** security decisions are made, while the Layers define 
 
 This table shows them **side‑by‑side** for clarity.
 
-|🔒**Security Pillars** *(Design Philosophy)* | 🧩 **AI Agent Security Layers** *(Operational Controls)* |
+|🔒 **Security Pillars** *(Design Philosophy)*  | 🧩 **AI Agent Security Layers** *(Operational Controls)* |
 |------------------------------------------------|----------------------------------------------------------|
 | **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
 | **2. Secure by Default** ⚙️ <br>• Sensitive files never deleted <br>• Safety‑first dry‑run <br>• Rollback for all destructive actions | **2. Data Layer** 📊 <br>• Least‑privilege access <br>• Sensitive path redaction <br>• Partitioned storage |
