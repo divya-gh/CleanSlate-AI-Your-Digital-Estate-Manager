@@ -194,9 +194,8 @@ Developed entirely in Antigravity, using:
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
     <tr>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">.
-🏛️ 07 SECURITY PILLARS<br><i>--Design Philosophy</i><br></th>
-      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br><i>--Operational Controls</i><br></th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF; border-right:1px solid #FFFFFF;">🔒 07 SECURITY PILLARS<br><i>-- Design Philosophy</i><br></th>
+      <th width="50%" align="left" style="padding:14px; background-color:#0B132B; color:#6A5ACD; font-family:Consolas, Monaco, 'Courier New', monospace; font-size:20px; font-weight:bold; letter-spacing:0.5px; border-bottom:3px double #FFFFFF;">🧩 07 SECURITY LAYERS<br><i>-- Operational Controls</i><br></th>
     </tr>
   </thead>
   <tbody>
