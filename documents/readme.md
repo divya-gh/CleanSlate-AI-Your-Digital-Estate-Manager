@@ -1,5 +1,6 @@
-# 🟦 CleanSlate AI — Your PC Assistant
+# 🟦 CleanSlate AI — My PC Assistant
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
+![CleanSlate AI](Images/CleanSlate_AI.png)
 
 ## 🖼️ Project Cover Image
 (Insert your image here — /assets/cleanslate-banner.png)
