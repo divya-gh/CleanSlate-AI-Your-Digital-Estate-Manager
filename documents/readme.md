@@ -20,7 +20,7 @@ This project was built to showcase the effective use of Agentic AI technologies 
 
 **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
 
-#### CleanSlate AI was built to demonstrate how modern AI agents can deliver:
+#### CleanSlate AI demonstrates:
 •	Safe automation
 •	Intelligent file organization
 •	Sensitive file protection
