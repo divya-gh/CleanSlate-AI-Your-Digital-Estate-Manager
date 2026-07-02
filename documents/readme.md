@@ -30,8 +30,8 @@ CleanSlate AI was built to showcase the effective use of Agentic AI technologies
 •	Rollback guarantees
 
 **Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
----
 
+---
 ## ✨ 2. What CleanSlate AI Does (Features & Workflow)
 CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven ambient PC assistant with:
 
