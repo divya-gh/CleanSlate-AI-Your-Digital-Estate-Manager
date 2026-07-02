@@ -31,7 +31,7 @@ CleanSlate AI was built to showcase the effective use of Agentic AI technologies
 •	Full traceability
 •	Rollback guarantees
 
-**Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
+**Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, CleanSlate AI delivers a premium, zero-anxiety digital cleanup experience.
 
 ---
 ## ✨ 2. What CleanSlate AI Does (Features & Workflow)
