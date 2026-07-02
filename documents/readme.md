@@ -4,7 +4,7 @@
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](Images/CleanSlate_AI.png)
 
-## 📖 Problem Statement: Why ?
+## 📖 Problem Statement: Why CleanSlate AI??
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
 - Security risks (exposed identity documents, financial files)
@@ -12,11 +12,11 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 - Storage inefficiency (duplicates, unused content)
 - Organizational chaos (no structure, no cleanup habits)
 
-This clutter wastes time, increases cognitive load, and creates privacy risks. The problem is universal. Everyone experiences it, and no existing tool solves it intelligently.
+This clutter wastes time, increases cognitive load, and creates privacy risks. While everyone experiences it, and no existing tool solves it intelligently.
 
 
-## 🌟 The Vision & Technical Decisions
-This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
+## 🌟 The Vision & Technical Philosophy
+CleanSlate AI was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 
 **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
 
@@ -71,7 +71,7 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 ## 🏗️ 3. System Architecture Overview
 CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
 - **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
-- **Full traceability from spec to implementation**
+- **Every feature traces directly back to a unified Master Specification.**
 
 **CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, ADK SKILLS, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
 
@@ -146,16 +146,10 @@ Full action logs
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
-#### ✔ Ambient Agent (Pub/Sub)
-Pub/Sub channels for node communication
-•	Ambient state propagation
-•	Interrupt driven UI updates
-
 #### ✔ Semgrep Security Hooks(static analysis)
 Detect unsafe file operations
 •	Prevent path traversal & accidental PII exposure
-•	Prevent insecure regex patternsc& logging
-•	Prevent insecure 
+•	Prevent insecure regex patternsc& logging 
 •	Enforce ADK node safety patterns
 •	Safe CI/CD and commit pipeline.
 
@@ -172,18 +166,11 @@ Detect unsafe file operations
 File scanning
 •	Sensitive classification
 •	Duplicate detection
-•	Archive skill
-•	Rollback skill
-•	Logging skill
-•	Table rendering skill
+•	Archive & Rollback skill
+•	Logging & Table rendering skill
 
 #### ✔ Antigravity
-Developed entirely in Antigravity, using:
-•	Node graph editor
-•	Agent manifest
-•	Interrupt testing
-•	Logging console
-•	Spec Driven Development workflow
+Developed entirely in Antigravity, using `Spec Driven Development` workflow
 
 ---
 
@@ -217,7 +204,7 @@ Developed entirely in Antigravity, using:
     <tr style="background-color:rgba(255,255,255,0.03);">
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF; border-right:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">2. SECURE_BY_DEFAULT⚙️</span><br>
-        <span style="padding-left: 20px; display: inline-block;">• Sensitive files never deleted or moved to vault</span><br>
+        <span style="padding-left: 20px; display: inline-block;">• Sensitive files never deleted</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Implicit dry-run: Safety-first execution</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Rollback enabled for all destructive actions</span>
       </td>
@@ -281,7 +268,7 @@ Developed entirely in Antigravity, using:
         <span style="padding-left: 20px; display: inline-block;">• Full traceability through structured logs</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Telemetry Protection:Erases sensitive file details in summary and logs</span><br>
         <span style="padding-left: 20px; display: inline-block;">• Rollback records, and audit trails</span><br>        
-        <span style="padding-left: 20px; display: inline-block;">• Graceful Degradation: Recovers safely timeout failures</span>
+        <span style="padding-left: 20px; display: inline-block;">• Graceful Degradation: Recovers safely from timeout failures</span>
       </td>
       <td valign="top" style="padding:12px; border-bottom:1px solid #FFFFFF;">
         <span style="font-family:Consolas, Monaco, 'Courier New', monospace; font-size:14px; font-weight:bold; color:#FFFFFF;">6. OBSERVABILITY_&_SECURITY_OPS🧠</span><br>
