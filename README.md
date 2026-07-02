@@ -2,7 +2,7 @@
 
 > **"Your AI Chief of Staff for Digital Organization and Storage Management."**
 
-![CleanSlate AI](docs/assets/cleanslate-ai.png)
+![CleanSlate AI](assets/cleanslate_corporate_banner.png)
 
 ## 📖 Problem Statement: Why We Built It
 Modern computers accumulate massive digital clutter: downloads folders with thousands of files, duplicate documents and photos, old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.
