@@ -312,27 +312,48 @@ File scanning
 - Google AI Studio Gemini API Key
 
 
-## 🟦 10. Setup Instructions
-#### Clone the Repository
+### 🟦 10. Setup Instructions
+#### 1. Clone the Repository
 ```
-git clone https://github.com/<your-username>/CleanSlate-AI-PC-Assistant.git
+git clone https://github.com/divya-gh/CleanSlate-AI-PC-Assistant.git
 cd CleanSlate-AI-PC-Assistant
 ```
 
-#### Install Dependencies
+##### 2. Set up the Python Virtual Environment
+```
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+```
+
+#### 3. Install Dependencies
 ```
 pip install -r requirements.txt
 ```
 
-#### Run the Agent (Agent CLI)
+#### 4. Configure Environment Variables
+- Create a .env file and add your Gemini API Key
 ```
-agent run cleanslate_agent
+echo "GEMINI_API_KEY=your_api_key_here" > .env
 ```
-- Run in Antigravity
-- Open the project folder → run the agent → test nodes → inspect logs.
 
-#### Run in Playground
-- Upload the agent → test interrupts → validate UI.
+#### 5. Run the ADK Backend Server
+```
+python run.py
+```
+
+#### Launching the UIs
+CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
+1. **ADK Dev UI (Built-in)**:
+- Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
+
+2. **Custom Web UI**:
+
+# Run the custom chat interface
+```
+python launcher_server.py
+```
+- Access via `http://localhost:8000`
+
 
 ## 🟦 11. Demo Video Placeholder
 (Insert your YouTube demo link here)
