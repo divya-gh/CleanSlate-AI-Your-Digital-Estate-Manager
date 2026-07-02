@@ -194,11 +194,11 @@ This table shows them **side‑by‑side** for clarity.
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 ## 🚀 Getting Started
 
-### Prerequisites
+### 👉 Prerequisites
 - **Python 3.11+** and **uv** (recommended)
 - **Google AI Studio Gemini API Key**
 
-### 📐 10. Setup Instructions
+### 📐 Setup Instructions
 
  #### 1. Clone the Repository
 ```bash
