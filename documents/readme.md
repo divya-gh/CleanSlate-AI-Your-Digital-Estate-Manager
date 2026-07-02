@@ -71,6 +71,8 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 
 ## 🏗️ 3. System Architecture Overview
 CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
+- **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
+- **Full traceability from spec to implementation**
 
 **CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, ADK SKILLS, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
 
@@ -145,6 +147,11 @@ Full action logs
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
+#### ✔ Ambient Agent (Pub/Sub)
+Pub/Sub channels for node communication
+•	Ambient state propagation
+•	Interrupt driven UI updates
+
 #### ✔ Semgrep Security Hooks(static analysis)
 Detect unsafe file operations
 •	Prevent path traversal & accidental PII exposure
@@ -170,6 +177,14 @@ File scanning
 •	Rollback skill
 •	Logging skill
 •	Table rendering skill
+
+#### ✔ Antigravity
+Developed entirely in Antigravity, using:
+•	Node graph editor
+•	Agent manifest
+•	Interrupt testing
+•	Logging console
+•	Spec Driven Development workflow
 
 ---
 
@@ -357,9 +372,7 @@ CleanSlate AI supports two interfaces. Open a new terminal to start your preferr
 #### 6. Run in Playground
 - Upload the agent ➔ test interrupts ➔ validate UI.
 
-```
-
-
+---
 
 ## 🟦 11. Demo Video Placeholder
 (Insert your YouTube demo link here)
@@ -375,37 +388,6 @@ Kaggle Video	GitHub Video
 | 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
 | :---: | :---: |
 | ![Welcome Chat](Images/welcome_chat_ui.png) | ![HITL Approval Table](Images/hitl_approval_table.png) |
-
-
-## 🟦 13. Logging & Traceability
-#### CleanSlate AI logs:
-•	Every action
-•	Every failure
-•	Every rollback
-•	Every sensitive file detection
-•	Every optimization decision
-•	Every node transition
-
-## 🟦 14. Built with Spec‑Driven Development (SDD)
-#### CleanSlate AI follows:
-
-- **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
-
-- **Full traceability from spec to implementation**
-
-## 🟦 15. Ambient Agent (Pub/Sub)
-#### CleanSlate AI uses:
-•	Pub/Sub channels for node communication
-•	Ambient state propagation
-•	Interrupt driven UI updates
-
-## 🟦 16. Antigravity
-#### Developed entirely in Antigravity, using:
-•	Node graph editor
-•	Agent manifest
-•	Interrupt testing
-•	Logging console
-•	Spec Driven Development workflow
 
 
 ### 🟦 17. License
