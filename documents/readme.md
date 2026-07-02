@@ -1,7 +1,7 @@
 # 🧹 CleanSlate AI — My PC Assistant
 > **"Your AI Chief of Staff for Digital Organization and Storage Management."**
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
-![CleanSlate AI](assets/cleanslate_corporate_banner.png)
+![CleanSlate AI](Images/cleanslate_corporate_banner.png)
 ---
 ## 📖 Problem Statement: Why CleanSlate AI??
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
