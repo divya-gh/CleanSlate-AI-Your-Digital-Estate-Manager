@@ -5,7 +5,7 @@
 ---
 ## 🛎️ Track: `Concierge Agents`
 
-## 📖 Problem Statement: Why CleanSlate AI??
+## 📖 Problem Statement: Why CleanSlate AI?
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
 - Security risks (exposed identity documents, financial files)
