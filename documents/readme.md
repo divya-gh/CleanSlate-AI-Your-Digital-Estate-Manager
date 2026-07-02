@@ -353,9 +353,8 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env
 ### 4. Run the ADK Backend Server
 ```bash
 python run.py
+Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```
-- Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
-
 ### 5. Launching the UIs
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
