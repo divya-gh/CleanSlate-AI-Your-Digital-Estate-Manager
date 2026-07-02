@@ -168,9 +168,6 @@ File scanning
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
 
-#### ✔ Antigravity
-Developed entirely in Antigravity, using `Spec Driven Development` workflow
-
 ---
 
 ## 🛡️ Security Architecture
@@ -223,17 +220,17 @@ cd CleanSlate-AI-PC-Assistant
   # source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
   pip install -r requirements.txt
   ```
-### 3. Configure Environment Variables
+#### 3. Configure Environment Variables
 ```bash
 Create a `.env` file and add your Gemini API Key:
 echo "GEMINI_API_KEY=your_api_key_here" > .env
 ```
-### 4. Run the **ADK Backend Server**
+#### 4. Run the **ADK Backend Server**
 ```bash
 python run.py
 Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```
-### 5. Launching the **UIs**
+#### 5. Launching the **UIs**
 ```bash
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
@@ -246,7 +243,7 @@ Custom Web UI:
 
   Access via `http://localhost:8000`
 ```
-### 6. Run in **Playground**
+#### 6. Run in **Playground**
 ```
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
