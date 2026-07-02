@@ -16,9 +16,9 @@ This clutter wastes time, increases cognitive load, and creates privacy risks. T
 
 
 ## 🌟 The Vision & Technical Decisions (Competition Highlights)
-This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. Our design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
+This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 
-* **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
+**The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
 
 #### CleanSlate AI was built to demonstrate how modern AI agents can deliver:
 •	Safe automation
