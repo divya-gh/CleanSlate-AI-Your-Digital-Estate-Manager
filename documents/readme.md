@@ -12,6 +12,7 @@
 - Organizational chaos (no structure, no cleanup habits)
 
 This clutter wastes time, increases cognitive load, and creates privacy risks. While everyone experiences it, and no existing tool solves it intelligently.
+
 ---
 ## 🌟 The Vision & Technical Philosophy
 CleanSlate AI was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. The design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
@@ -45,10 +46,9 @@ CleanSlate AI acts autonomously but respects strict boundaries to ensure user sa
 - **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
 - **Conversational Assistant**       : Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
 - **Sandbox Environments**           : Runs safely in the sandox environment (Kaggle, cloud VMs)
+  
 ---
-
 ## 🔄 The Agentic Routing
-
 CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with the Agent Development Kit (ADK 2.0). 
 
 1. **Intent Routing:** - `MyPCAssistantNode` - Routes conversational queries to the right sub-flow (cleanup vs. search).
@@ -61,8 +61,8 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
 8. **HITL Approval:** - `HITLApprovalNode` - Formats the plan into an interactive UI and halts the graph execution until the user explicitly approves.
 9. **Execution:** - `ExecutionNode` - Employs MCP tools to safely execute the approved plan (with built-in rollback logic).
 10. **Summary & Dashboard:** - `SummaryNode` - Outputs the final recovery statistics and the secure pin-protected vault status.
+    
 ---
-
 ## 🏗️ 3. System Architecture Overview
 CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
 - **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
@@ -169,7 +169,7 @@ File scanning
 The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
 #### This table shows them **side‑by‑side** for clarity.
----
+
 |🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
 |------------------------------------------------|----------------------------------------------------------|
 | **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
@@ -181,8 +181,8 @@ The Pillars define **why** security decisions are made, while the Layers define 
 | **7. Privacy by Design** ⚡ <br>• Filename masking <br>• No PII in logs <br>• Metadata‑only operations <br>• Safe‑mode execution | **7. Governance** 👤 <br>• AI‑risk compliance <br>• STRIDE v2.0 (404+ lines) <br>• Semgrep safety contract <br>• Residual risk documentation |
 
 #### **Note:** Every principle and layer is implemented, tested, and documented.
----
 
+---
 ## 🚀 Getting Started
 
 ### 👉 Prerequisites
@@ -237,7 +237,6 @@ Custom Web UI:
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
-
 ## 🟦 11. Demo Video Placeholder
 (Insert your YouTube demo link here)
 
