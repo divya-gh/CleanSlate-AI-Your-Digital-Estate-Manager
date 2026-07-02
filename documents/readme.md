@@ -2,7 +2,7 @@
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](Images/CleanSlate_AI.png)
 
-## 🟦 1. Vision & Problem Statement
+## 📖 Problem Statement: Why I Built It
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
 - Security risks (exposed identity documents, financial files)
@@ -17,8 +17,9 @@ This clutter wastes time, increases cognitive load, and creates privacy risks. T
 This project was built to showcase the effective use of Agentic AI technologies to solve a universal user problem: digital clutter. Our design philosophy centers around building a highly capable autonomous agent that prioritizes safety, transparency, and user value.
 * **The Project Story & Vision**: We wanted an AI Chief of Staff that acts as a proactive digital estate manager. Instead of just answering questions, the agent needed to take agency over background maintenance while respecting strict privacy boundaries.
 * **Solution Design**: We built a highly modular, multi-agent graph architecture. We separated concerns into discrete ADK nodes (File Discovery, Classification, Sensitive Detection, Optimization Planner) to ensure reasoning is traceable and debuggable.
+  
 #### CleanSlate AI was built to demonstrate how modern AI agents can deliver:
-Safe automation
+•	Safe automation
 •	Intelligent file organization
 •	Sensitive file protection
 •	Multi step workflows
