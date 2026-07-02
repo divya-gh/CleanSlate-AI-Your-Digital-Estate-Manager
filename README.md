@@ -162,6 +162,11 @@ File scanning
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
 
+#### ✔ Custom Agent Skills (Workspace Customizations)
+CleanSlate AI utilizes specialized local agent skills to automate secure workflows:
+* **`git-mini`**: A secure, automated git commit-and-push workflow that prevents accidental commits of secrets/PII (such as `.env` or key files), validates that commit messages are meaningful and concise (≤10 characters), and automatically rebases upstream changes.
+* **`stride-threat-model`**: A systematic threat modeling assessment tool mapping security boundaries, entry points, and data flows to identify and mitigate Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege (STRIDE) risks across all agent nodes.
+
 ---
 ## 🛡️ Security Architecture
 #### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
