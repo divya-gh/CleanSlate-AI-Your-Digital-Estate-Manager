@@ -121,46 +121,54 @@ It adheres strictly to the **7 Pillars of Security**:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Python 3.11+** (specified by `requires-python` in `pyproject.toml`)
-- **Gemini API Key** (set as `GEMINI_API_KEY` in environment or `.env` file)
+- **Python 3.11+** and **uv** (recommended)
+- **Google AI Studio Gemini API Key**
 
-### Clone and Run
-We recommend using **`uv`** (Astral's fast Python package manager) to install dependencies, but standard **`pip`** works as well.
+### 🟦 10. Setup Instructions
 
+#### 1. Clone the Repository
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/cleanslate-ai-my-pc-assistant.git
-cd cleanslate-ai-my-pc-assistant
+git clone https://github.com/divya-gh/CleanSlate-AI-PC-Assistant.git
+cd CleanSlate-AI-PC-Assistant
+```
 
-# 2. Set up the Environment & Install Dependencies
-# Using uv (Recommended):
-uv sync
+#### 2. Set up the Python Virtual Environment & Install Dependencies
+* **Using `uv` (Recommended)**:
+  ```bash
+  # This will automatically create the virtual environment and install all dependencies
+  uv sync
+  ```
 
-# OR using standard pip:
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -e .
+* **OR using standard `pip`**:
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+  pip install -r requirements.txt
+  ```
 
-# 3. Configure Environment Variables
-# Create a .env file and add your Gemini API Key
+#### 3. Configure Environment Variables
+Create a `.env` file and add your Gemini API Key:
+```bash
 echo "GEMINI_API_KEY=your_api_key_here" > .env
+```
 
-# 4. Run the ADK Backend Server
+#### 4. Run the ADK Backend Server
+```bash
 python run.py
 ```
 
-### Launching the UIs
+#### 5. Launching the UIs
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
-**ADK Dev UI (Built-in)**:
-Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
+* **ADK Dev UI (Built-in)**:
+  Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
-**Custom Web UI**:
-```bash
-# Run the custom chat interface
-python launcher_server.py
-# Access via http://localhost:8000
-```
+* **Custom Web UI**:
+  Run the custom chat interface:
+  ```bash
+  python launcher_server.py
+  ```
+  Access via `http://localhost:8000`
 
 ---
 
