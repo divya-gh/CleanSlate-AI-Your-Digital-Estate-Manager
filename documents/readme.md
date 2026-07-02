@@ -370,6 +370,12 @@ Kaggle Notebook URL	GitHub Repo URL
 Kaggle Writeup URL	README.md
 Kaggle Video	GitHub Video
 
+### 🖥️ User Interface Screenshots
+
+| 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
+| :---: | :---: |
+| ![Welcome Chat](Images/welcome_chat_ui.png) | ![HITL Approval Table](Images/hitl_approval_table.png) |
+
 
 ## 🟦 13. Logging & Traceability
 #### CleanSlate AI logs:

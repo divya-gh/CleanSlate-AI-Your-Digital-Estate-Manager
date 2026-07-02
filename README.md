@@ -177,3 +177,9 @@ CleanSlate AI supports two interfaces. Open a new terminal to start your preferr
 | Custom Web UI | ADK Dev UI |
 | :---: | :---: |
 | <video width="100%" controls><source src="docs/assets/custom-ui-demo.mp4" type="video/mp4"></video><br>_Showcasing the premium Chat Interface_ | <video width="100%" controls><source src="docs/assets/adk-dev-ui-demo.mp4" type="video/mp4"></video><br>_Showcasing the Developer ADK Dashboard_ |
+
+### 🖥️ User Interface Screenshots
+
+| 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
+| :---: | :---: |
+| ![Welcome Chat](assets/welcome_chat_ui.png) | ![HITL Approval Table](assets/hitl_approval_table.png) |
