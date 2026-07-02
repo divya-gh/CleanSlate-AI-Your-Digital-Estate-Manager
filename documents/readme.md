@@ -399,20 +399,37 @@ This table shows them **side‑by‑side** for clarity.
 <p>CleanSlate AI implements <b>both</b> the 7 Security Pillars (Design Philosophy) and the 7 AI Agent Security Layers (Operational Controls).  
 This table shows them <b>side‑by‑side</b> for clarity.</p>
 
-<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-  <tr>
-    <th style="width:50%; text-align:center;">🔒 Security Pillars (Design Philosophy)</th>
-    <th style="width:50%; text-align:center;">🧩 AI Agent Security Layers (Operational Controls)</th>
+<table
+  border="1"
+  cellpadding="10"
+  cellspacing="0"
+  style="
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #3b82f6;
+    background-color: #0b1120;
+    color: #e5e7eb;
+  "
+>
+  <tr style="background-color: #111827;">
+    <th style="width:50%; text-align:center; border: 1px solid #3b82f6;">
+      🔒 Security Pillars (Design Philosophy)
+    </th>
+    <th style="width:50%; text-align:center; border: 1px solid #3b82f6;">
+      🧩 AI Agent Security Layers (Operational Controls)
+    </th>
   </tr>
 
   <tr>
-    <td><b>1. Secure by Design 🔒</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>1. Secure by Design 🔒</b><br>
       • Sensitive file isolation<br>
       • Authenticated Secure Vault<br>
       • PIN + security question<br>
       • Runtime safety gates
     </td>
-    <td><b>1. Infrastructure & Networking 🌐</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>1. Infrastructure & Networking 🌐</b><br>
       • Sandboxed execution<br>
       • MCP‑only file access<br>
       • Network isolation<br>
@@ -421,12 +438,14 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>2. Secure by Default ⚙️</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>2. Secure by Default ⚙️</b><br>
       • Sensitive files never deleted<br>
       • Safety‑first dry‑run<br>
       • Rollback for destructive actions
     </td>
-    <td><b>2. Data Layer 📊</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>2. Data Layer 📊</b><br>
       • Least‑privilege access<br>
       • Sensitive path redaction<br>
       • Partitioned storage
@@ -434,13 +453,15 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>3. Secure in Deployment 🚀</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>3. Secure in Deployment 🚀</b><br>
       • Sandbox‑safe<br>
       • Zero external network<br>
       • Logging safety enforcement<br>
       • Absolute path traversal defense
     </td>
-    <td><b>3. Model Security 💻</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>3. Model Security 💻</b><br>
       • Prompts treated as source code<br>
       • Injection protection<br>
       • Semgrep model rules<br>
@@ -449,12 +470,14 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>4. Zero Trust 🔑</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>4. Zero Trust 🔑</b><br>
       • Explicit scoping<br>
       • Authentication required<br>
       • Input sanitization
     </td>
-    <td><b>4. Application & Runtime 🔌</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>4. Application & Runtime 🔌</b><br>
       • LLM firewalls<br>
       • Pre/post tool‑call hooks<br>
       • Runtime gateways<br>
@@ -463,12 +486,14 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>5. Defense in Depth 👁️‍🗨️</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>5. Defense in Depth 👁️‍🗨️</b><br>
       • Discovery → Classification → Vault → Logging<br>
       • Heuristics + LLM co‑verification<br>
       • Fallback regex rules
     </td>
-    <td><b>5. IAM Management 💎</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>5. IAM Management 💎</b><br>
       • Unique agent identity<br>
       • HITL approval required<br>
       • IAM‑safe file handling<br>
@@ -477,13 +502,15 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>6. Operational Security 📝</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>6. Operational Security 📝</b><br>
       • Structured logs<br>
       • Sensitive redaction<br>
       • Rollback records<br>
       • Graceful degradation
     </td>
-    <td><b>6. Observability & Security Ops 🧠</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>6. Observability & Security Ops 🧠</b><br>
       • Logs, traces, metrics<br>
       • Drift detection<br>
       • Infinite loop detection<br>
@@ -492,13 +519,15 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
   </tr>
 
   <tr>
-    <td><b>7. Privacy by Design ⚡</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>7. Privacy by Design ⚡</b><br>
       • Filename masking<br>
       • No PII in logs<br>
       • Metadata‑only operations<br>
       • Safe‑mode execution
     </td>
-    <td><b>7. Governance 👤</b><br>
+    <td style="border: 1px solid #1f2937;">
+      <b>7. Governance 👤</b><br>
       • AI‑risk compliance<br>
       • STRIDE v2.0 (404+ lines)<br>
       • Semgrep safety contract<br>
@@ -506,5 +535,6 @@ This table shows them <b>side‑by‑side</b> for clarity.</p>
     </td>
   </tr>
 </table>
+
 ---
 MIT License 
