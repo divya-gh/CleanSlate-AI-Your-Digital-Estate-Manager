@@ -1,28 +1,19 @@
-# 🟦 CleanSlate AI — My PC Assistant
+# 🧹 CleanSlate AI — My PC Assistant
 A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](Images/CleanSlate_AI.png)
 
-## 🖼️ Project Cover Image
-(Insert your image here — /assets/cleanslate-banner.png)
-
 ## 🟦 1. Vision & Problem Statement
-**Modern users accumulate thousands of files across their PCs — resumes, identity documents, downloads, screenshots, schoolwork, work artifacts, and duplicates. Over time, this creates:**
+**Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
 
-•	Security risks (exposed identity documents, financial files)
-•	Productivity loss (hard to find important files)
-•	Storage inefficiency (duplicates, unused content)
-•	Organizational chaos (no structure, no cleanup habits)
+- Security risks (exposed identity documents, financial files)
+- Productivity loss (hard to find important files)
+- Storage inefficiency (duplicates, unused content)
+- Organizational chaos (no structure, no cleanup habits)
 
-
-## Traditional cleanup tools are:
-•	Manual
-•	Unsafe
-•	Non intelligent
-•	Not privacy aware
-•	Not rollback capable
+This clutter wastes time, increases cognitive load, and creates privacy risks. The problem is universal. Everyone experiences it, and no existing tool solves it intelligently.
 
 
-## Our Vision
+## 🌟 The Vision & Technical Decisions (Competition Highlights)
 #### CleanSlate AI was built to demonstrate how modern AI agents can deliver:
 •	Safe automation
 •	Intelligent file organization
@@ -32,7 +23,8 @@ A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protec
 •	Enterprise grade security
 •	Full traceability
 •	Rollback guarantees
-**This project showcases your ability to design, build, secure, and communicate a modern AI agent system using ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, and Spec‑Driven Development (SDD).**
+
+**Overall User Value:** By blending conversational UX with ambient background processing and strict Human-In-The-Loop (HITL) safeguards, we deliver a premium, zero-anxiety digital cleanup experience.
 
 ---
 
