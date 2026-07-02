@@ -203,7 +203,7 @@ This table shows them **side‑by‑side** for clarity.
 - **Python 3.11+** and **uv** (recommended)
 - **Google AI Studio Gemini API Key**
 
-## 📐 10. Setup Instructions
+### 📐 10. Setup Instructions
 
  ### 1. Clone the Repository
 ```bash
