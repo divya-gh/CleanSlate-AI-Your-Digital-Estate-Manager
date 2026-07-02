@@ -174,7 +174,9 @@ Developed entirely in Antigravity, using `Spec Driven Development` workflow
 ---
 
 ## 🛡️ Security Architecture
-#### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. The Pillars define why security decisions are made, while the Layers define where those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
+#### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
+
+The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
 <table border="5" width="100%" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:separate; border-style:double; border-width:6px; border-color:#FFFFFF; font-family:sans-serif;">
   <thead>
