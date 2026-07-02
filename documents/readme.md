@@ -205,12 +205,12 @@ This table shows them **side‑by‑side** for clarity.
 
 ### 📐 10. Setup Instructions
 
- ### 1. Clone the Repository
+ #### 1. Clone the Repository
 ```bash
 git clone https://github.com/divya-gh/CleanSlate-AI-PC-Assistant.git
 cd CleanSlate-AI-PC-Assistant
 ```
- ### 2. Set up the Python Virtual Environment & Install Dependencies
+ #### 2. Set up the Python Virtual Environment & Install Dependencies
 * **Using `uv` (Recommended)**:
 ```bash
   # This will automatically create the virtual environment and install all dependencies
