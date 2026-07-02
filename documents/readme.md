@@ -358,7 +358,8 @@ Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```bash
 CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
 
- ADK Dev UI (Built-in):
+ADK Dev UI (Built-in):
+
   Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
 
 Custom Web UI:
