@@ -358,8 +358,9 @@ async def folder_scope_node(
     # Log execution for debugging
     import datetime as _dt
     try:
-        os.makedirs("C:/Users/divya/OneDrive/Desktop/Learn/AI/Google Vibe Coding/Capstone Project/cleanslate-ai-your-digital-estate-manager/cleanslate-pc-assistant/scratch", exist_ok=True)
-        with open("C:/Users/divya/OneDrive/Desktop/Learn/AI/Google Vibe Coding/Capstone Project/cleanslate-ai-your-digital-estate-manager/cleanslate-pc-assistant/scratch/run_log.txt", "a", encoding="utf-8") as f:
+        scratch_dir = os.path.join(os.getcwd(), "scratch")
+        os.makedirs(scratch_dir, exist_ok=True)
+        with open(os.path.join(scratch_dir, "run_log.txt"), "a", encoding="utf-8") as f:
             f.write(f"[{_dt.datetime.now().isoformat()}] session={session_id} query={node_input.user_query!r} store={store.as_dict()!r}\n")
     except Exception as e:
         pass
