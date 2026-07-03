@@ -210,39 +210,42 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     auth_dir = dest_parent / "Authenticated_Secure"
                     if str(auth_dir) not in auth_dirs_seen:
                         auth_dirs_seen.add(str(auth_dir))
-                        data_dir = auth_dir / "_data_"
-                        os.makedirs(data_dir, exist_ok=True)
-                        if os.name == "nt":
-                            # Hide the data folder initially
-                            os.system(f'attrib +h +s "{data_dir}"')
-                        
-                        unlock_py = (
-                            "import hashlib, os, getpass\n\n"
-                            f"EXPECTED = '{policy.pin_hash}'\n"
-                            "pin = getpass.getpass('Enter 4-digit PIN: ')\n"
-                            "if hashlib.sha256(pin.encode()).hexdigest() == EXPECTED:\n"
-                            "    script_dir = os.path.dirname(os.path.abspath(__file__))\n"
-                            "    data_dir = os.path.join(script_dir, '_data_')\n"
-                            "    if os.name == 'nt': os.system(f'attrib -h -s \"{data_dir}\"')\n"
-                            "    print('Folder unlocked! You can now access _data_')\n"
-                            "    if os.name == 'nt': os.system(f'explorer \"{data_dir}\"')\n"
-                            "    input('Press Enter to exit...')\n"
-                            "else:\n"
-                            "    print('Invalid PIN.')\n"
-                            "    input('Press Enter to exit...')\n"
-                        )
-                        lock_py = (
-                            "import os\n"
-                            "script_dir = os.path.dirname(os.path.abspath(__file__))\n"
-                            "data_dir = os.path.join(script_dir, '_data_')\n"
-                            "if os.name == 'nt': os.system(f'attrib +h +s \"{data_dir}\"')\n"
-                            "print('Folder locked!')\n"
-                            "import time; time.sleep(1)\n"
-                        )
-                        with open(auth_dir / "Unlock.py", "w") as f:
-                            f.write(unlock_py)
-                        with open(auth_dir / "Lock.py", "w") as f:
-                            f.write(lock_py)
+                        try:
+                            data_dir = auth_dir / "_data_"
+                            os.makedirs(data_dir, exist_ok=True)
+                            if os.name == "nt":
+                                # Hide the data folder initially
+                                os.system(f'attrib +h +s "{data_dir}"')
+                            
+                            unlock_py = (
+                                "import hashlib, os, getpass\n\n"
+                                f"EXPECTED = '{policy.pin_hash}'\n"
+                                "pin = getpass.getpass('Enter 4-digit PIN: ')\n"
+                                "if hashlib.sha256(pin.encode()).hexdigest() == EXPECTED:\n"
+                                "    script_dir = os.path.dirname(os.path.abspath(__file__))\n"
+                                "    data_dir = os.path.join(script_dir, '_data_')\n"
+                                "    if os.name == 'nt': os.system(f'attrib -h -s \"{data_dir}\"')\n"
+                                "    print('Folder unlocked! You can now access _data_')\n"
+                                "    if os.name == 'nt': os.system(f'explorer \"{data_dir}\"')\n"
+                                "    input('Press Enter to exit...')\n"
+                                "else:\n"
+                                "    print('Invalid PIN.')\n"
+                                "    input('Press Enter to exit...')\n"
+                            )
+                            lock_py = (
+                                "import os\n"
+                                "script_dir = os.path.dirname(os.path.abspath(__file__))\n"
+                                "data_dir = os.path.join(script_dir, '_data_')\n"
+                                "if os.name == 'nt': os.system(f'attrib +h +s \"{data_dir}\"')\n"
+                                "print('Folder locked!')\n"
+                                "import time; time.sleep(1)\n"
+                            )
+                            with open(auth_dir / "Unlock.py", "w") as f:
+                                f.write(unlock_py)
+                            with open(auth_dir / "Lock.py", "w") as f:
+                                f.write(lock_py)
+                        except Exception as e:
+                            print(f"Warning: Could not setup secure folder at {auth_dir}: {e}")
 
         def _process_action(action):
             local_log = []
@@ -277,7 +280,10 @@ def execution_node(node_input: HITLApprovalOutput | OptimizationPlannerOutput) -
                     dest_parent = Path(matching_ap) if matching_ap else parent_dir
                     auth_dir = dest_parent / "Authenticated_Secure"
                     dest_dir = auth_dir / "_data_"
-                    os.makedirs(dest_dir, exist_ok=True)
+                    try:
+                        os.makedirs(dest_dir, exist_ok=True)
+                    except Exception:
+                        pass
                 else:
                     dest_dir = parent_dir / (
                         "WeeklyReview" if policy.safe_mode else "Organized"
