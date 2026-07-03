@@ -522,7 +522,7 @@
     }
     .file-subpath {
       font-size: 10px;
-      color: #facc15;
+      color: #818cf8;
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
@@ -1282,7 +1282,7 @@ function renderTableWithToggleWidget(tableData, toggleData, iid) {
     const actBadge = document.createElement('div');
     const actionLower = action.toLowerCase();
     actBadge.className = 'action-badge ' + (actionLower === 'move' ? 'vault' : actionLower);
-    actBadge.textContent = actionLower === 'move' ? 'Vault' : action.charAt(0).toUpperCase() + actionLower.slice(1);
+    actBadge.textContent = actionLower === 'move' ? 'Move' : action.charAt(0).toUpperCase() + actionLower.slice(1);
     actDiv.appendChild(actBadge);
     rowDiv.appendChild(actDiv);
 
