@@ -56,7 +56,7 @@ CleanSlate AI transforms digital chaos into an organized, secure environment, bl
 ### 1. Multi-Node Agent Graph (ADK 2.0)
 CleanSlate AI is built as a Directed Acyclic Graph (DAG) using the **Agent Development Kit (ADK 2.0)**. Each node represents a single responsibility, preventing the LLM from losing context or executing arbitrary actions.
 
-```
+`
                            ┌──────────────────────────────┐
                            │      Conversational UI       │
                            │  (Launcher Server, Web UI)   │
@@ -77,7 +77,7 @@ CleanSlate AI is built as a Directed Acyclic Graph (DAG) using the **Agent Devel
                   │                                               │
                   └───────────────────────┬───────────────────────┘
                                           ▼
-                              ┌──────────────────────┐
+                              ┌── MCP READ ONLY ─────┐
                               │  FileDiscoveryNode   │
                               │ (Traverses FS / OS)  │
                               └───────────┬──────────┘
@@ -109,9 +109,9 @@ CleanSlate AI is built as a Directed Acyclic Graph (DAG) using the **Agent Devel
                               └───────────┬──────────┘
                                           │ User Approved
                                           ▼
-                              ┌──────────────────────┐
+                              ┌─── MCP FILE OPs ─────┐
                               │    ExecutionNode     │
-                              │  (MCP File Ops)      │
+                              │ (MCP — Write Enabled)│
                               └───────────┬──────────┘
                                           │
                   ┌───────────────────────┴───────────────────────┐
