@@ -712,13 +712,14 @@ function renderCheckboxWidget(data, label, iid) {
   // Title: folder count
   const title = document.createElement('div');
   title.className = 'widget-title';
+  title.style.color = 'var(--accent)';
   title.textContent = String.fromCodePoint(0x1F4C1) + ' Select Folders to Organize (' + count + ' found)';
   card.appendChild(title);
 
   // Parent path subtitle
   if (parent) {
     const sub = document.createElement('div');
-    sub.style.cssText = 'font-size:12px;color:var(--text-dim);margin-bottom:10px;word-break:break-all;';
+    sub.style.cssText = 'font-size:12px;color:var(--accent2);margin-bottom:10px;word-break:break-all;';
     sub.textContent = String.fromCodePoint(0x1F4CD) + ' Scanning: ' + parent;
     card.appendChild(sub);
   }
