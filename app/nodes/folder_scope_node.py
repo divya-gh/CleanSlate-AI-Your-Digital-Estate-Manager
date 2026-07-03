@@ -275,38 +275,12 @@ def _parse_paths(input_val: Any) -> list[str]:
     return []
 
 def _get_default_safe_suggestions() -> str:
-    """Returns OS-appropriate safe folder suggestions, preferring OneDrive paths on Windows."""
+    """Returns OS-appropriate safe folder suggestions, preferring the CleanSlateAI folder."""
     if os.name == "nt":
-        username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
-        base = f"C:/Users/{username}"
-        onedrive_base = f"C:/Users/{username}/OneDrive"
-
-        # Prefer OneDrive paths if they exist (common with Microsoft 365)
-        if os.path.isdir(onedrive_base):
-            return (
-                f"  \u2705  {onedrive_base}/Desktop\n"
-                f"  \u2705  {onedrive_base}/Documents\n"
-                f"  \u2705  {base}/Downloads\n"
-                f"  \u2705  {onedrive_base}/Pictures\n"
-                f"  \u2705  {onedrive_base}/Videos"
-            )
-        return (
-            f"  \u2705  {base}/Desktop\n"
-            f"  \u2705  {base}/Documents\n"
-            f"  \u2705  {base}/Downloads\n"
-            f"  \u2705  {base}/Pictures\n"
-            f"  \u2705  {base}/Videos"
-        )
+        return "  \u2705  C:/Users/CleanSlateAI"
     else:
         username = os.environ.get("USER", "YourName")
-        base = f"/Users/{username}"
-        return (
-            f"  \u2705  {base}/Desktop\n"
-            f"  \u2705  {base}/Documents\n"
-            f"  \u2705  {base}/Downloads\n"
-            f"  \u2705  {base}/Pictures\n"
-            f"  \u2705  {base}/Videos"
-        )
+        return f"  \u2705  /Users/{username}/CleanSlateAI"
 
 
 def _hash_secret(value: str) -> str:
@@ -436,7 +410,7 @@ async def folder_scope_node(
         ) + ("\n  ... (and more system folders)" if len(system_blocked) > 6 else "")
 
         username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
-        example = f"C:/Users/{username}/Downloads" if os.name == "nt" else f"/Users/{username}/Downloads"
+        example = "C:/Users/CleanSlateAI" if os.name == "nt" else f"/Users/{username}/CleanSlateAI"
 
         msg = (
             "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
@@ -449,7 +423,7 @@ async def folder_scope_node(
             "   your secure Authenticated folder automatically.\n\n"
             + "\u2500" * 60 + "\n"
             "Please type the folder you want me to organize\n"
-            f"(e.g. C:/Users/{username}/Desktop \u2014 I\u2019ll list its sub-folders so you can pick which ones to clean):"
+            f"(e.g. {example} \u2014 I\u2019ll list its sub-folders so you can pick which ones to clean):"
         )
         yield RequestInput(interrupt_id="parent_folder", message=msg)
         return
