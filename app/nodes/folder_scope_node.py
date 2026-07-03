@@ -286,13 +286,16 @@ def _get_default_safe_suggestions() -> str:
             "  \u2705  C:/Users/user_name/Videos"
         )
     else:
+        import platform
+        is_mac = platform.system().lower() == "darwin"
+        home_base = "/Users" if is_mac else "/home"
         return (
-            "  \u2705  /Users/user_name/CleanSlateAI\n"
-            "  \u2705  /Users/user_name/Desktop\n"
-            "  \u2705  /Users/user_name/Documents\n"
-            "  \u2705  /Users/user_name/Downloads\n"
-            "  \u2705  /Users/user_name/Pictures\n"
-            "  \u2705  /Users/user_name/Videos"
+            f"  \u2705  {home_base}/user_name/CleanSlateAI\n"
+            f"  \u2705  {home_base}/user_name/Desktop\n"
+            f"  \u2705  {home_base}/user_name/Documents\n"
+            f"  \u2705  {home_base}/user_name/Downloads\n"
+            f"  \u2705  {home_base}/user_name/Pictures\n"
+            f"  \u2705  {home_base}/user_name/Videos"
         )
 
 
@@ -430,7 +433,10 @@ async def folder_scope_node(
             f"  \u26d4  {p}" for p in display_blocked[:6]
         ) + ("\n  ... (and more system folders)" if len(display_blocked) > 6 else "")
 
-        example = "C:/Users/CleanSlateAI" if os.name == "nt" else "/Users/user_name/CleanSlateAI"
+        import platform
+        is_mac = platform.system().lower() == "darwin"
+        home_base = "/Users" if is_mac else "/home"
+        example = "C:/Users/CleanSlateAI" if os.name == "nt" else f"{home_base}/user_name/CleanSlateAI"
 
         msg = (
             "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
