@@ -194,12 +194,24 @@ CleanSlate AI utilizes specialized local agent skills to automate secure workflo
 
 #### ✔ STRIDE Threat Model(Threat	Mitigation)
 Enforces SDD safety rule to reason about threats at design time:
-•	S – Spoofing	PIN + security question
-•	T – Tampering	Rollback + secure folder
-•	R – Repudiation	Full action logs
-•	I – Information Disclosure	Sensitive file masking
-•	D – Denial of Service	Bounded folder scanning
-•	E – Elevation of Privilege	No privileged operations
+#### S — Spoofing  
+`Risk:` Unauthorized triggers to organize files.  
+`Mitigation:`  Local PIN authentication required for any secure‑vault modification.
+#### T — Tampering  
+`Risk:` Folder‑scope policy altered to access system directories.  
+`Mitigation:` Policy is hashed and validated at runtime; changes require manual re‑authorization.
+#### R — Repudiation  
+`Risk:` User claims the agent deleted files without approval.  
+`Mitigation:` Cryptographically signed audit logs record timestamps, actions, and HITL approval IDs.
+#### I — Information Disclosure  
+`Risk:` LLM accidentally exposes sensitive file contents.  
+`Mitigation:` Nodes operate on metadata only; sensitive files are isolated in a local secure vault.
+#### D — Denial of Service  
+`Risk:` Infinite loops (e.g., symlinks) consuming CPU.  
+`Mitigation:` Bounded scanning limits depth to 10 and caps file count at 5,000 per run.  
+#### E — Elevation of Privilege  
+`Risk:` Prompt injection bypassing HITL approval.  
+`Mitigation:` ExecutionNode only processes actions validated by HITLApprovalNode, ensuring strict separation.
 
 ---
 ## 🛡️ Security Architecture
