@@ -277,10 +277,23 @@ def _parse_paths(input_val: Any) -> list[str]:
 def _get_default_safe_suggestions() -> str:
     """Returns OS-appropriate safe folder suggestions, preferring the CleanSlateAI folder."""
     if os.name == "nt":
-        return "  \u2705  C:/Users/CleanSlateAI"
+        return (
+            "  \u2705  C:/Users/CleanSlateAI\n"
+            "  \u2705  C:/Users/user_name/Desktop\n"
+            "  \u2705  C:/Users/user_name/Documents\n"
+            "  \u2705  C:/Users/user_name/Downloads\n"
+            "  \u2705  C:/Users/user_name/Pictures\n"
+            "  \u2705  C:/Users/user_name/Videos"
+        )
     else:
-        username = os.environ.get("USER", "YourName")
-        return f"  \u2705  /Users/{username}/CleanSlateAI"
+        return (
+            "  \u2705  /Users/user_name/CleanSlateAI\n"
+            "  \u2705  /Users/user_name/Desktop\n"
+            "  \u2705  /Users/user_name/Documents\n"
+            "  \u2705  /Users/user_name/Downloads\n"
+            "  \u2705  /Users/user_name/Pictures\n"
+            "  \u2705  /Users/user_name/Videos"
+        )
 
 
 def _hash_secret(value: str) -> str:
@@ -410,14 +423,14 @@ async def folder_scope_node(
         username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
         display_blocked = []
         for p in system_blocked:
-            disp_p = p.replace(username.lower(), "yourname")
+            disp_p = p.replace(username.lower(), "user_name")
             display_blocked.append(disp_p)
 
         blocked_preview = "\n".join(
             f"  \u26d4  {p}" for p in display_blocked[:6]
         ) + ("\n  ... (and more system folders)" if len(display_blocked) > 6 else "")
 
-        example = "C:/Users/CleanSlateAI" if os.name == "nt" else "/Users/YourName/CleanSlateAI"
+        example = "C:/Users/CleanSlateAI" if os.name == "nt" else "/Users/user_name/CleanSlateAI"
 
         msg = (
             "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
