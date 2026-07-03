@@ -48,7 +48,7 @@ def cmd_run():
         agent=root_agent, session_service=session_service, app_name="cleanslate"
     )
 
-    print("CleanSlate AI Your PC Assistant CLI (Interactive Mode)")
+    print("CleanSlate AI Your Digital Estate Manager CLI (Interactive Mode)")
     print("Type your message below. Type 'exit' or 'quit' to exit.")
     print("-" * 50)
 
@@ -537,7 +537,7 @@ def cmd_tools_test(tool_name: str, raw_args: list[str], json_opt: bool = False) 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CleanSlate AI - My PC Assistant CLI")
+    parser = argparse.ArgumentParser(description="CleanSlate AI - Your Digital Estate Manager CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # run
