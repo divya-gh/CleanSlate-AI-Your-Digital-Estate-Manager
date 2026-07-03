@@ -1368,8 +1368,19 @@ function renderTableWithToggleWidget(tableData, toggleData, iid) {
 }
 
 
+// --- DEMO PATH REMAPPING ---
+function mapToBackend(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/c:[\/\\]users[\/\\]cleanslateai/ig, 'C:/Users/divya/Desktop');
+}
+function mapToFrontend(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/C:[\/\\]Users[\/\\]divya[\/\\]Desktop/ig, 'c:/users/cleanslateai');
+}
+
 /* SSE runner */
 async function runSSE(message) {
+  message = mapToBackend(message);
   if (busy) return;
   busy = true;
   setReady(false);
@@ -1472,6 +1483,7 @@ async function runSSE(message) {
 
     if (requestIid !== null) {
       pendingIid = requestIid;
+      requestMsg = mapToFrontend(requestMsg);
       const parsed = parseInterruptMsg(requestMsg);
       if (parsed && parsed.type === 'checkbox') {
         renderCheckboxWidget(parsed.data, parsed.label, requestIid);
@@ -1484,7 +1496,7 @@ async function runSSE(message) {
         setReady(true);
       }
     } else if (bestResponse) {
-      addMsg('agent', bestResponse);
+      addMsg('agent', mapToFrontend(bestResponse));
       setReady(true);
     } else {
       addMsg('agent', '(No response received. Please try again.)');
