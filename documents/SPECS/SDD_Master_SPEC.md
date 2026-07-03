@@ -22,7 +22,7 @@ It does not describe implementation details — those belong in the ADK, MCP, an
 
 ## 2. Project Identity
 ### Product Name: CleanSlate AI – My PC Assistant
-### Tagline: Your AI Chief of Staff for Digital Organization and Storage Management
+### Tagline: AI Chief of Staff for Digital Organization and Storage Management.
 ### Repository: cleanslate-ai-my-pc-assistant
 ### Description:
 CleanSlate AI is an autonomous, multi agent system that intelligently manages digital clutter, protects sensitive files, organizes storage, and provides a conversational PC assistant — all with strict human in the loop safety.

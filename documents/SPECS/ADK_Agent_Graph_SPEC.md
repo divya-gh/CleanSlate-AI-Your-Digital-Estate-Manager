@@ -1,7 +1,7 @@
 # 📘 SPEC #2 — ADK AGENT GRAPH SPEC
 
 ## CleanSlate AI – My PC Assistant
-#### Your AI Chief of Staff for Digital Organization and Storage Management
+#### AI Chief of Staff for Digital Organization and Storage Management.
 
 =============================================================
 

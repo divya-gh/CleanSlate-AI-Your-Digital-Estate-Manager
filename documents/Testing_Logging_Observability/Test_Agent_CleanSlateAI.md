@@ -1,7 +1,7 @@
 #                   Running Agent in ADK Playground
 
 ## CleanSlate AI – My PC Assistant
-#### Your AI Chief of Staff for Digital Organization and Storage Management
+#### AI Chief of Staff for Digital Organization and Storage Management.
 
 **Goal:** Test whether the agent is actually working end‑to‑end in `ADK Playground`.
 ====================================================================================

@@ -1,5 +1,5 @@
 # 🧹 CleanSlate AI — Your Digital Estate Manager
-> **"Your AI Chief of Staff for Digital Organization and Storage Management."**
+> **"AI Chief of Staff for Digital Organization and Storage Management.."**
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](assets/cleanslate_corporate_banner.png)
 ---

@@ -1,7 +1,7 @@
 ## 📘 SPEC #3 — MCP TOOL CONTRACT SPEC (LOCAL TOOLS ONLY)
 
 ### CleanSlate AI – My PC Assistant
-#### Your AI Chief of Staff for Digital Organization and Storage Management
+#### AI Chief of Staff for Digital Organization and Storage Management.
 
 ==================================================================================
 
