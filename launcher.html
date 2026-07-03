@@ -1361,59 +1361,8 @@ function renderTableWithToggleWidget(tableData, toggleData, iid) {
   // Initialize summary based on default selected
   updateSummary();
   scrollBottom();
-});
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  // Tbody
-  const tbody = document.createElement('tbody');
-  (tableData.rows || []).forEach(row => {
-    const tr = document.createElement('tr');
-    row.forEach(val => {
-      const td = document.createElement('td');
-      td.textContent = val;
-      if (typeof val === 'string' && (val.includes('/') || val.includes('\\'))) {
-        td.title = val;
-      }
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  tableContainer.appendChild(table);
-  card.appendChild(tableContainer);
-
-  // 2. Render Toggle buttons if present
-  if (toggleData) {
-    const title = document.createElement('div');
-    title.className = 'widget-title';
-    title.style.marginTop = '15px';
-    title.textContent = toggleData.question || 'Choose an option';
-    card.appendChild(title);
-
-    const grid = document.createElement('div');
-    grid.className = 'toggle-grid';
-
-    (toggleData.options || []).forEach((opt, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'toggle-btn ' + (idx === 0 ? 'primary' : 'secondary');
-      btn.textContent = opt.label;
-      btn.addEventListener('click', () => {
-        grid.querySelectorAll('.toggle-btn').forEach(b => b.disabled = true);
-        dismissWidget();
-        addMsg('user', opt.label);
-        runSSE(opt.value);
-      });
-      grid.appendChild(btn);
-    });
-    card.appendChild(grid);
-  }
-
-  wrap.appendChild(av);
-  wrap.appendChild(card);
-  chat.appendChild(wrap);
-  scrollBottom();
 }
+
 
 /* SSE runner */
 async function runSSE(message) {
