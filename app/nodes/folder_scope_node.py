@@ -405,12 +405,19 @@ async def folder_scope_node(
     if "parent_folder" not in ri:
         suggestions = _get_default_safe_suggestions()
         system_blocked = _get_default_system_paths()
-        blocked_preview = "\n".join(
-            f"  \u26d4  {p}" for p in system_blocked[:6]
-        ) + ("\n  ... (and more system folders)" if len(system_blocked) > 6 else "")
-
+        
+        # Sanitize username out of the blocked preview to protect user privacy in demos
         username = os.environ.get("USERNAME") or os.environ.get("USER", "YourName")
-        example = "C:/Users/CleanSlateAI" if os.name == "nt" else f"/Users/{username}/CleanSlateAI"
+        display_blocked = []
+        for p in system_blocked:
+            disp_p = p.replace(username.lower(), "yourname")
+            display_blocked.append(disp_p)
+
+        blocked_preview = "\n".join(
+            f"  \u26d4  {p}" for p in display_blocked[:6]
+        ) + ("\n  ... (and more system folders)" if len(display_blocked) > 6 else "")
+
+        example = "C:/Users/CleanSlateAI" if os.name == "nt" else "/Users/YourName/CleanSlateAI"
 
         msg = (
             "\U0001f9f9 Great! Let\u2019s get your computer organized safely.\n"
