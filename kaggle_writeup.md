@@ -1,7 +1,7 @@
 # CleanSlate AI: A Secure, Ambient Concierge Agent for Autonomous Digital Estate Management
 
 > **Track:** Concierge Agents
-> **Submission:** [GitHub Repo](https://github.com/divya-gh/CleanSlate-AI-My-PC-Assistant)
+> **Submission:** [GitHub Repo](https://github.com/divya-gh/CleanSlate-AI-Your-PC-Assistant)
 > **Author:** Divya Shetty
 
 ---

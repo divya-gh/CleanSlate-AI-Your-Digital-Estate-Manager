@@ -1,4 +1,4 @@
-# STRIDE Threat Model — CleanSlate AI: My PC Assistant
+# STRIDE Threat Model — CleanSlate AI: Your PC Assistant
 
 **Version**: 2.0  
 **Date**: 2026-06-28  
