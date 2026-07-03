@@ -48,7 +48,7 @@ def cmd_run():
         agent=root_agent, session_service=session_service, app_name="cleanslate"
     )
 
-    print("CleanSlate AI My PC Assistant CLI (Interactive Mode)")
+    print("CleanSlate AI Your PC Assistant CLI (Interactive Mode)")
     print("Type your message below. Type 'exit' or 'quit' to exit.")
     print("-" * 50)
 
