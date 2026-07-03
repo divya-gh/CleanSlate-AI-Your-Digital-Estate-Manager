@@ -121,7 +121,73 @@ CleanSlate AI is built as a Directed Acyclic Graph (DAG) using the **Agent Devel
       │ (Dashboard Metrics)  │                        │  (Revert State)      │
       └──────────────────────┘                        └──────────────────────┘
 ```
+```
+                            ┌──────────────────────────────┐
+                            │      Conversational UI       │
+                            │  (Launcher Server, Web UI)   │
+                            └──────────────┬───────────────┘
+                                           │ User Query / Weekly Timer
+                                           ▼
+                            ┌──────────────────────────────┐
+                            │      MyPCAssistantNode       │
+                            │  (Intent Router & Dispatch)  │
+                            └──────────────┬───────────────┘
+                                           │
+                                 ┌─────────┴─────────┐
+                                 ▼                   ▼
+                            ┌──────────────────┐   ┌──────────────────┐
+                            │ FolderScopeNode  │   │ WeeklyOrganizer  │
+                            │(SecurityPerimeter)│   │ (Background)     │
+                            └─────────┬─────────┘   └─────────┬────────┘
+                                      │                       │
+                                      └─────────┬─────────────┘
+                                                ▼
+                                    ┌── MCP READ ONLY ──┐
+                                    │ FileDiscoveryNode │
+                                    │ (Traverses FS/OS) │
+                                    └─────────┬─────────┘
+                                              │ File Metadata
+                                              ▼
+                                    ┌──────────────────┐
+                                    │ Classification    │
+                                    │ (LLM Semantic Tag)│
+                                    └─────────┬─────────┘
+                                              │
+                                 ┌────────────┴────────────┐
+                                 ▼                         ▼
+                            ┌──────────────────┐     ┌──────────────────┐
+                            │ SensitiveDetect  │     │ DuplicateDetect  │
+                            │ (PII / Secrets)  │     │ (Exact/NearHash) │
+                            └─────────┬─────────┘     └─────────┬────────┘
+                                      │                         │
+                                      └─────────┬───────────────┘
+                                                ▼
+                                    ┌──────────────────┐
+                                    │ OptimizationNode │
+                                    │  (ActionPlanner) │
+                                    └─────────┬─────────┘
+                                              │ Proposed Plan
+                                              ▼
+                                    ┌──────────────────┐
+                                    │ HITLApprovalNode │
+                                    │ (User Checkpoint)│
+                                    └─────────┬─────────┘
+                                              │ User Approved
+                                              ▼
+                                    ┌── MCP FILE OPS ───┐
+                                    │  ExecutionNode    │
+                                    │ (Write Enabled)   │
+                                    └─────────┬─────────┘
+                                              │
+                                 ┌────────────┴────────────┐
+                                 ▼                         ▼
+                            ┌──────────────────┐     ┌──────────────────┐
+                            │   SummaryNode    │     │  RollbackNode    │
+                            │ (Metrics Output) │     │  (Revert State)  │
+                            └──────────────────┘     └──────────────────┘
 
+
+```
 #### Node-by-Node Specification
 1. **`MyPCAssistantNode` (Routing)**: Routes conversational queries to cleanup vs. rollback flows.
 2. **`FolderScopeNode` (Guardrail)**: Enforces allowed/blocked directories boundaries.
