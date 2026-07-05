@@ -1,5 +1,14 @@
 # 🧹 CleanSlate AI — Your Digital Estate Manager
-> **"AI Chief of Staff for Digital Organization and Storage Management.."**
+> **"AI Chief of Staff for Digital Organization and Storage Management."**
+
+[![Google Cloud Agent Runtime](https://img.shields.io/badge/Google%20Cloud-Agent%20Runtime-blue.svg)](https://cloud.google.com/vertex-ai)
+[![ADK 2.0](https://img.shields.io/badge/ADK-2.0-green.svg)](https://adk.dev)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-purple.svg)](https://modelcontextprotocol.io/)
+[![Google Gemini](https://img.shields.io/badge/Google-Gemini_AI-orange.svg)](https://deepmind.google/technologies/gemini/)
+[![Semgrep](https://img.shields.io/badge/Security-Semgrep-red.svg)](https://semgrep.dev/)
+[![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-black.svg)]()
+
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](assets/cleanslate_corporate_banner.png)
 ---
@@ -138,7 +147,7 @@ CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning e
       └──────────────────────┘                        └──────────────────────┘
 ```
 ---
-###  🛠️  4. Core Technologies Used
+###  🛠️  4. Core Technologies & Tools Used
 
 #### ✔ ADK Agent 2.0
 Multi step workflows
