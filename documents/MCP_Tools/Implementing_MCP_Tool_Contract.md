@@ -1,14 +1,17 @@
-# Implement MCP Tools — the Local Tool Layer of CleanSlate AI-My PC Assistant according to the MCP Tool Spec and Security Spec
-=======================================================================================
-## MCP Tools — the Local Tool Layer of CleanSlate AI
+# 🔗 Implementing MCP Tools — Local Tool Layer for CleanSlate AI: Your Digital Estate Manager
 
+Implement the MCP Tools layer in accordance with the **[MCP Tool Spec](../SPECS/MCP_Tool_SPEC_V2.md)** and **[Security Spec](../SPECS/Security_SPEC.md)**.
+
+------
+## 🔧 MCP Tools — the Local Tool Layer of CleanSlate AI
+
+---
 **This is the layer that makes our agent actually capable of interacting with the filesystem safely and securely. Sets the API contract between our agent and the local environment.**
 
-## Implement All MCP Tools(Local Tools Only) defined in MCP TOOL SPEC #3:
+## Implement All MCP Tools(Local Tools Only) defined in [MCP TOOL SPEC](../SPECS/MCP_Tool_SPEC_V2.md) #3:
+- Open antigravity cleanslate-pc-assistant directory,**
 
-**In the antigravity cleanslate-pc-assistant directory,**
-
-## Step1: — Create MCP Tool Package
+## Step1: — 🛠️ Create MCP Tool Package
 
 ### • Prompt:
 ```
@@ -47,12 +50,12 @@ Each tool must:
 Once done, I will provide instructions for step 2. Implement Tool Registry. Follow semgrep and git-mini skills to commit at every step.
 
 ```
-### • Confirm: 
-- MCP Tool Package Implemented
-- Tests Passed
+### Confirm: 
+- ✔ MCP Tool Package Implemented
+- ✔ Tests Passed
 
-
-## Step2: — Implement Tool Registry
+---
+## Step2: — ⚙️📜 Implement Tool Registry
 
 ### • Prompt:
 ```
@@ -96,11 +99,12 @@ Optional but helpful:
 •	Validate input schema before calling tool
 •	Validate output schema before returning
 This keeps MCP tools predictable.
+```
 
-	```
-### Confirm: Link - walkthrough_ MCP Tool Registry
+### Confirm: 
+✔ MCP Tool Registry implemented
 
-## Step3: — Tool Implementations (Exact Spec Compliance)
+## Step3: — 🔨 Tool Implementations (Exact Spec Compliance)
 
 ### • Prompt:
 ```
@@ -224,9 +228,10 @@ Verification
   - Body: "Refine MCP tool implementations to match Spec #3, policy enforcement, and Semgrep safety rules."
 
 ```
-###	Confirm: MCP layer is Built
+###	Confirm: 
+✔ MCP layer is Built
 
-## Step4: — Integrate Tools with ADK Nodes
+## Step4: — 🔗 Integrate Tools with ADK Nodes
 
 ### • Prompt: 
 ```
@@ -355,11 +360,13 @@ Verification
   - Body: "Integrate MCP tools with ADK nodes following Spec #3 and safety contract."
 
 ```
-### Confirm: Integrated with ADK Node. Tests Passed 
+### Confirm: 
+✔ Integrated with ADK Node.  
+🟢 Tests Passed 
 
-## Step5: — Update CLI (Developer Commands)
+## Step5: — 🤖 Update CLI (Developer Commands)
 
-### • Prompt: Complete
+### • Prompt:
 ```
 Using the MCP TOOL SPEC and the completed MCP tool implementations, update the CLI (Developer Commands) for CleanSlate AI – My PC Assistant.
 
@@ -414,9 +421,10 @@ Verification
   - Subject: "cli-tools"
   - Body: "Add developer CLI commands for MCP tool listing and testing."
 ```
-### Confirm: Agent CLI wired to MCP
+### Confirm: 
+✔ Agent CLI wired to MCP
 
-## Step6: — Semgrep Safety Enforcement
+## Step6: — 🛡️ Semgrep Safety Enforcement
 
 ### • Prompt:
 ```
@@ -488,9 +496,10 @@ Verification
   - Body: "Apply full Semgrep safety enforcement across MCP tools, nodes, and CLI."
 
 ```
-### Confirm: Semgrep is Implemented
+### Confirm: 
+✔  Semgrep is Implemented
 
-## Step7: — Tests (tests/test_mcp_tools.py)
+## Step7: — 🟢 Tests (tests/test_mcp_tools.py)
 
 ### • Prompt:
 ```
@@ -601,9 +610,10 @@ Verification
   Body: "Add full MCP tool and registry test coverage."
 
 ```
-### Confirm: MCP Tools Tests Complete
+### Confirm: 
+✔ MCP Tools Tests Complete
 
-## Step8: — STRIDE Threat Model Update
+## Step8: — 🛡️ STRIDE Threat Model Update
 
 ### • Prompt:
 ```
@@ -687,9 +697,10 @@ Verification
   - Body: "Refresh STRIDE threat model for MCP tools, ADK nodes, Semgrep safety, and audit logging."
 ```
 
-### Confirm: STRIDE TEst PAssed
+### Confirm: 
+✔ STRIDE TEst PAssed
 
-## Step9: —  Final Steps
+## Step9: — 🚀 Final Steps
 
 ### • Prompt:
 ```
@@ -716,7 +727,8 @@ Subject: "mcp"
 Body: "Implement all MCP tools, registry, node integration, CLI developer commands, Semgrep safety enforcement, and STRIDE threat model updates."
 
 ```
-### Confirm: MCP_Final_Steps Test Passed
+### Confirm: 
+✔  MCP_Final_Steps Test Passed
 
 
 
