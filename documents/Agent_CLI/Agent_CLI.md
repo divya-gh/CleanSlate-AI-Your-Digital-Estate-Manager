@@ -20,17 +20,18 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 •	Starts an interactive multi turn session with the agent.
 
 ##### 🔍 cleanslate search `"<query> "`
-•	Searches files using metadata only discovery. Options:
-o	--json
-o	--path <folder>
+•	Searches files using metadata only discovery. 
+- **Options:**
+	o	--json
+	o	--path <folder>
 
 ##### 🧹 cleanslate cleanup
-**Runs the full cleanup pipeline with:**
-•	FolderScopeNode
-•	Classification
-•	Sensitive detection
-•	HITL approval
-•	ExecutionNode
+•	Runs the full cleanup pipeline with:
+	•	FolderScopeNode
+	•	Classification
+	•	Sensitive detection
+	•	HITL approval
+	•	ExecutionNode
 
 ##### SummaryNode
 •	Supports:
