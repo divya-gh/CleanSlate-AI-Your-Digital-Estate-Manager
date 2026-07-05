@@ -304,7 +304,7 @@ Upload the agent ➔ test interrupts ➔ validate UI.
     <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" width="400" alt="Watch the CleanSlate AI Demo" />
   </a>
   <a href="INSERT_GIF_URL_HERE" target="_blank">
-    <img src="assets/cleanSateAI_Demo.gif" width="400" height= 500  alt="Playground Chat UI Demo" />
+    <img src="assets/cleanSateAI_Demo.gif" width="400" height= "500"  alt="Playground Chat UI Demo" />
   </a>
 </div>
 
