@@ -51,3 +51,7 @@
 
 ## Visual Flow
 `Assistant` -> `Scope` -> `Discovery` -> `Classify` -> `Dedupe` -> `Sensitive` -> `Planner` -> `HITL` -> `Execution` -> `Summary`
+
+| 📸 ADK DAG Architecture (Backend) | 📸 Playground Dev‑UI (DAG Frontend) |
+| :---: | :---: |
+| <img src="../../assets/System_Architecture.png" width="300" height= "400" alt="Agent_cli_implimentation"> | <img src="../../assets/DAG_ADK.png" width="300" height= "400" alt="Agent_cli_implimentation"> |
