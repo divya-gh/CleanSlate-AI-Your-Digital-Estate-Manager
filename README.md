@@ -311,6 +311,16 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 | :---: | :---: | :---: |
 | <img src="assets/welcome_chat_ui.png" height="400" alt="Welcome Chat"> | <img src="assets/hitl_approval_table.png" height="400" alt="HITL Approval Table"> | <img src="assets/summary.png" height="400" alt="Summary"> |
 
+---
+### 📂 12. Project Documentation & Specs
+All detailed specifications, architecture diagrams, and implementation plans are documented in the [`documents/`](documents/) directory.
+- 📄 [System Architecture & Master Specs](documents/SPECS/)
+- 🔒 [Security & Threat Modeling](documents/Security/)
+- 🛠️ [Model Context Protocol (MCP) Tools](documents/MCP_Tools/)
+- 💻 [Agent CLI Implementation](documents/Agent_CLI/)
+- 🧪 [Testing, Logging & Observability](documents/Testing_Logging_Observability/)
+- 📋 [Implementation Plan & Walkthrough](documents/ImplimentationPlan_And_Walkthrough/)
+
 ### 🟦 17. License
 Released under Attribution 4.0 International (CC BY 4.0).
 
