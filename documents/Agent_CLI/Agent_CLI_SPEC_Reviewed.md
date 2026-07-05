@@ -3,7 +3,7 @@
 ### CleanSlate AI – My PC Assistant
 #### AI Chief of Staff for Digital Organization and Storage Management.
 
-===================================================
+---
 
 **Note:** Full Compliance Check — **<img src="https://img.shields.io/badge/Status-Complete-brightgreen" />**
 
