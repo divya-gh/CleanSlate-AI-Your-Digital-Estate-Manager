@@ -2,6 +2,30 @@
 
 CleanSlate AI leverages the **Google Agent Development Kit (ADK 2.0)** to orchestrate a complex pipeline of language models, local tools, and user interrupts.
 
+```mermaid
+graph TD
+    classDef adk fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000;
+    classDef state fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
+    classDef user fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef interrupt fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
+
+    UI[Conversational UI]:::user -->|1. Initial Request| Engine[ADK 2.0 Engine]:::adk
+    
+    subgraph State Management & Routing
+        Engine --> InitState[(Centralized Context)]:::state
+        InitState --> NodeA[Execution Node]:::adk
+        
+        NodeA --> |2a. Yields Event| Route[Edge Routing]:::adk
+        Route --> |Updates Context| NodeB[Next Node]:::adk
+        
+        NodeA --> |2b. Yields RequestInput| Halt[Serialize State & Halt]:::interrupt
+    end
+    
+    Halt --> |3. Interrupt Prompt| UI
+    UI -.-> |4. resume_inputs| Resume[Deserialize & Resume]:::interrupt
+    Resume -.-> NodeA
+```
+
 ## Resumability and Interrupts
 
 A defining feature of CleanSlate AI's orchestration is its use of the `ResumabilityConfig`. Since the agent touches the user's personal filesystem, it strictly adheres to a Human-in-the-Loop (HITL) philosophy.
