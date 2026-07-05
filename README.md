@@ -7,13 +7,13 @@
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-purple.svg)](https://modelcontextprotocol.io/)
 [![Google Gemini](https://img.shields.io/badge/Google-Gemini_AI-orange.svg)](https://deepmind.google/technologies/gemini/)
 [![Semgrep](https://img.shields.io/badge/Security-Semgrep-red.svg)](https://semgrep.dev/)
+[![STRIDE](https://img.shields.io/badge/Security-STRIDE_Threat_Model-yellow.svg)]()
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-black.svg)]()
 
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](assets/cleanslate_corporate_banner.png)
 ---
 ## 🛎️ Track: `Concierge Agents`
-**Kaggle AI Agents: Google Intensive Vibe Coding Capstone Project**
 
 ## 📖 Problem Statement: Why CleanSlate AI?
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
@@ -316,3 +316,7 @@ Kaggle Video	GitHub Video
 
 ### 🟦 17. License
 Released under Attribution 4.0 International (CC BY 4.0).
+
+---
+### 📚 Citation
+**Kaggle AI Agents: Google Intensive Vibe Coding Capstone Project**
