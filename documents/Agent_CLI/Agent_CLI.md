@@ -19,7 +19,7 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 ##### ▶️ cleanslate run
 •	Starts an interactive multi turn session with the agent.
 
-##### 🔍 cleanslate search `"< query > "`
+##### 🔍 cleanslate search `"<query> "`
 •	Searches files using metadata only discovery. Options:
 o	--json
 o	--path <folder>
