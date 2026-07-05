@@ -300,7 +300,7 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ---
 ### 🎬 CleanSlate AI Demo Video  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/7bcbfde5-c8f0-4751-abe5-7251846d00cf"/> Playground Chat UI (GIF Demo)
 
-<div style="display: flex;  gap: 25px align-items: flex-start;">
+<div style="display: flex; gap: 25px; align-items: flex-start;">
   <a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
     <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" height="250" width= "400" alt="Watch the CleanSlate AI Demo" />
   </a>
@@ -311,9 +311,9 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 
 ### 🖥️ User Interface Screenshots
 
-| 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
-| :---: | :---: |  :---: |
-| ![Welcome Chat](<img src="assets/welcome_chat_ui.png" width="300" height="400">) | ![HITL Approval Table](<img src="assets/hitl_approval_table.png" width="300" height="400">) | ![Summary](<img src="assets/summary.png" width="300" height="400">) | 
+| 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval | 📊 Summary Report |
+| :---: | :---: | :---: |
+| <img src="assets/welcome_chat_ui.png" width="300" height="400" alt="Welcome Chat"> | <img src="assets/hitl_approval_table.png" width="300" height="400" alt="HITL Approval Table"> | <img src="assets/summary.png" width="300" height="400" alt="Summary"> |
 
 ### 🟦 17. License
 Released under Attribution 4.0 International (CC BY 4.0).
