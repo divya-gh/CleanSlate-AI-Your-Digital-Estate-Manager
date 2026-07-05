@@ -312,7 +312,7 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 | <img src="assets/welcome_chat_ui.png" height="400" alt="Welcome Chat"> | <img src="assets/hitl_approval_table.png" height="400" alt="HITL Approval Table"> | <img src="assets/summary.png" height="400" alt="Summary"> |
 
 ---
-### 📂 12. Project Documentation & Specs
+### 📂 Project Documentation & Specs
 All detailed specifications, architecture diagrams, and implementation plans are documented in the [`documents/`](documents/) directory.
 - 📄 [System Architecture & Master Specs](documents/SPECS/)
 - 🔒 [Security & Threat Modeling](documents/Security/)
