@@ -299,11 +299,10 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
 ## 🟦 CleanSlate AI Demo Video & Playground Chat UI
-<div style="display: flex;  align-items: flex-start;">
+<div style="display: flex;  gap: 25px align-items: flex-start;">
   <a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
     <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" height="250" width= "400" alt="Watch the CleanSlate AI Demo" />
   </a>
-  <div style="width: 25px;"></div>
   <a href="assets/cleanSateAI_Demo.gif" target="_blank">
     <img src="assets/cleanSateAI_Demo.gif" height="250" width= "300" alt="Playground Chat UI Demo" />
   </a>
