@@ -8,6 +8,29 @@ Implement the MCP Tools layer in accordance with the **[MCP Tool Spec](../SPECS/
 ---
 **This is the layer that makes our agent actually capable of interacting with the filesystem safely and securely. Sets the API contract between our agent and the local environment.**
 
+```mermaid
+graph TD
+    classDef agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000;
+    classDef contract fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
+    classDef policy fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef os fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
+    classDef reject fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
+
+    Agent[ADK 2.0 Agent Nodes]:::agent -->|Tool Call Request| Contract[MCP Tool Interface]:::contract
+    
+    Contract --> Check[FolderScopePolicy Guard]:::policy
+    
+    Check -->|Path is Blocked / Content Read| Deny[Reject & Fail Safely]:::reject
+    Check -->|Path is Allowed & Safe| Validated[Validated Execution]:::contract
+    
+    Validated --> OS[(Local File System)]:::os
+    
+    OS -->|Returns Metadata Only| Contract
+    
+    Contract -->|Records Action| Logger[Action Logger]:::contract
+    Contract -->|Returns Safe Result| Agent
+```
+
 ## Implement All MCP Tools(Local Tools Only) defined in [MCP TOOL SPEC](../SPECS/MCP_Tool_SPEC_V2.md) #3:
 - Open antigravity cleanslate-pc-assistant directory,**
 
