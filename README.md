@@ -13,6 +13,7 @@
 ![CleanSlate AI](assets/cleanslate_corporate_banner.png)
 ---
 ## 🛎️ Track: `Concierge Agents`
+**Kaggle AI Agents: Google Intensive Vibe Coding Capstone Project**
 
 ## 📖 Problem Statement: Why CleanSlate AI?
 **Modern users accumulate thousands of files across their PCs — multiple resumes, identity documents, photos, downloads, schoolwork, work artifacts, and duplicates old screenshots, large forgotten videos, unorganized project folders, cloud storage limits, and sensitive files stored in unsafe locations.. Over time, this creates:**
