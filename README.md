@@ -305,4 +305,4 @@ Kaggle Video	GitHub Video
 
 
 ### 🟦 17. License
-MIT License 
+Released under Attribution 4.0 International (CC BY 4.0).
