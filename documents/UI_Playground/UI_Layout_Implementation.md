@@ -3,22 +3,24 @@
 #### Your Personal PC Cleanup Assistant, Powered by ADK 2.0
 
 -----
-## UI Features:
+## ✨ UI Features:
 ### When the user opens CleanSlate AI agent Playground :
 
 #### 🎉 A centered `welcome message` appears at the top
-#### 🎉 The user is told exactly what to say - eg: You can say: `"Organize my computer"`
-#### 🎉 When they say “organize my computer” → the guided flow starts
+#### 🎉 The user is shown exactly what to say - eg: You can say: `"Organize my computer"`
+#### 🎉 Saying “organize my computer” triggers the guided flo
 #### 🎉 Allowed vs blocked paths are shown
-#### 🎉 User selects folder scope - eg: `C:/Users/divya/OneDrive/Desktop`
-#### 🎉 User selects folders clean in the selected path
+#### 🎉 User selects folder scope - eg: `C:/Users/user-name/Desktop`
+#### 🎉 User selects folders to clean in the selected path
 #### 🎉 User creates a PIN + security question
 #### 🎉 Sensitive files are moved to authenticated folder with PIN
-#### 🎉 User chooses weekly organizer enable/disable - `Ambient`
-#### 🎉 Agent asks the user if it can go ahead with the `Clean up Action` 
-#### 🎉 Agent generates beautiful `CLEANUP SUMMARY REPORT` and `ACTION LOG`
+#### 🎉 User chooses weekly organizer(`Ambient`) **enable/disable**
+#### 🎉 Agent asks for confirmation before executing the Clean Up Action
+#### 🎉 Agent generates a beautiful **`CLEANUP SUMMARY REPORT`** and **`ACTION LOG`**
+#### 🎉 User is guided with Rollback options and Vault location
 
-### Step 1. Implementation of Welcome Message:
+---
+## Step 1. 👋 Implementation of Welcome Message:
 - Prompt in Antigravity:
 ```
 
@@ -58,10 +60,10 @@ Would you like to enable Weekly Organizer?
 - Keep weekly cleanup disabled
 """
 ```
-Image- UI_layout1 and UI_layout2
+<img src="../Images/UI_layout1 and UI_layout2.png" width="500" height= "500" alt="Agent_cli_implimentation">
 
-========================================================================================
-# Adding check boxes to classify folders 
+---
+## Step 2. ✅📁 Adding icons to classify folders 
 
 Prompt: 
 ```
@@ -111,13 +113,12 @@ Do NOT reset to the welcome message.
 Do NOT use fallback responses while in ORGANIZE_MODE.
 
 ```
-
-Image - chat_checkbox
+<img src="../Images/chat_checkbox.png" width="500" height= "500" alt="Agent_cli_implimentation">
 
 ============================================================================================
-# Implementing Tabular output 
+## Step 3.  Implementing Tabular output 
 
-## Update OptimizationPlannerNode:
+#### Note: Update OptimizationPlannerNode:
 **Agent OptimizationPlannerNode (or SummaryNode) is currently emitting plain text:**
 
 ### Output:
@@ -133,7 +134,7 @@ Suggested Actions:
       Safe to delete: True | Confidence: 0.95 | Space: 153726 bytes
 ```
 
-## The fix: Emit a TABLE interrupt
+### **The fix:** - Emit a TABLE interrupt
 
 ### Prompt: 
 ```
@@ -179,10 +180,11 @@ Stop execution after emitting the table interrupt.
 Resume only after user selects confirm/cancel.
 
 ```
-=====================================================================================
-# Imnplementing Authentication Folder
 
-## Ensure `Authenticated_Secure folder`  is created in the root path.
+---
+## Step 4. 🛡️ Imlementing Authentication Folder
+
+#### Note: Ensure `Authenticated_Secure folder`  is created in the root path.
 
 ### Prompt:
 ```
@@ -210,9 +212,8 @@ This ensures:
 
 ```
 
-=================================================================================
-
-# FINAL SUMMARYNODE UPGRADE 
+---
+## Step 4. 📋 FINAL SUMMARYNODE UPGRADE 
 
 ## Prompt:
 ```
@@ -286,13 +287,13 @@ Implementation Requirements:
 
 ```
 
-Image -summary_dashboard
+<img src="../Images/summary_dashboard.png" width="500" height= "500" alt="Agent_cli_implimentation">
 
 =====================================================================================
 
-# Implementing Professional, Color‑Coded Action Log (Text‑UI Safe)
+## Step 5. 📜 Implementing Professional, Color‑Coded Action Log (Text‑UI Safe)
 
-**This prompt updates agents SummaryNode so every entry is grouped, color‑coded, and formatted cleanly.**
+#### Note: This prompt updates agents SummaryNode so every entry is grouped, color‑coded, and formatted cleanly.
 
 ### Prompt:
 ```
