@@ -37,19 +37,18 @@ It is the primary way to run and test the agent locally.
 ### 3.1 cleanslate run
 ### Purpose: Start My PC Assistant in interactive mode.
 ### Behavior:
-•	Launches the assistant UI (terminal or local app).
-•	Routes user queries through MyPCAssistantNode.
+•	Launches the assistant UI (terminal or local app).  
+•	Routes user queries through MyPCAssistantNode.  
 ### Example:
 Bash
 ```
 cleanslate run
-
 ```
 ## Implementation: 
-✔ Implemented as “Interactive multi turn CLI session.” 
-✔ Uses agent graph.
+✔ Implemented as “Interactive multi turn CLI session.”  
+✔ Uses agent graph. 
 
-## Status: PASS
+## Status: 🟢 PASS
 
 
 ### 3.2 cleanslate search "<query>"
