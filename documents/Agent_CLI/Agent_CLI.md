@@ -4,13 +4,14 @@
 ---
 ### The CleanSlate CLI is the primary interface for interacting with the agent locally. It provides:
 
-#### 🧭 User commands (search, cleanup, weekly automation)
+#### 🧭 User commands (search, cleanup, weekly automation)  
 #### 🛠️ Developer commands (graph visualization, debugging)
 #### 🔐 Safety controls (safe mode, dry run, rollback)
 #### ⚙️ Persistent configuration (atomic config + policy storage)
 
 This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI_SPEC_V2.md), with full integration into the ADK graph and WeeklyOrganizerNode for ambient running.
 
+---
 Image - 
 -----------------------------------------
 ## 🧭 Available Commands
