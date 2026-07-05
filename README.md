@@ -227,9 +227,9 @@ The Pillars define **why** security decisions are made, while the Layers define 
 
 #### This table shows them **side‑by‑side** for clarity.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|------------------------------------------------|----------------------------------------------------------|
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
+|🔒 **7-PILLARS - SECURITY** *(Design Philosophy)*  | 🧩 **7-LAYERS - AI AGENT SECURITY** *(Operational Controls)* |
+|------------------------------------------------|----------------------------------------------------------|
+| **1. Secure by Design** 🔒 <br>• Sensitive file isolation <br>• Authenticated Secure Vault <br>• PIN + security question <br>• Runtime safety gates | **1. Infrastructure & Networking** 🌐 <br>• Sandboxed execution <br>• MCP‑only file access <br>• Network isolation <br>• No uncontrolled paths |
 | **2. Secure by Default** ⚙️ <br>• Sensitive files never deleted <br>• Safety‑first dry‑run <br>• Rollback for all destructive actions | **2. Data Layer** 📊 <br>• Least‑privilege access <br>• Sensitive path redaction <br>• Partitioned storage |
 | **3. Secure in Deployment** 🚀 <br>• Sandbox‑safe <br>• Zero external network <br>• Logging safety enforcement <br>• Absolute path traversal defense | **3. Model Security** 💻 <br>• Prompts treated as source code <br>• Injection protection <br>• Semgrep model rules <br>• STRIDE model‑level threats |
 | **4. Zero Trust** 🔑 <br>• Explicit scoping <br>• Authentication required <br>• Input sanitization | **4. Application & Runtime** 🔌 <br>• LLM firewalls <br>• Pre/post tool‑call hooks <br>• Runtime gateways <br>• Semgrep runtime safety |
