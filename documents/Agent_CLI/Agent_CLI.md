@@ -1,5 +1,5 @@
-# 🚀 CleanSlate AI — Agent CLI
-**Your Personal PC Cleanup Assistant, Powered by ADK 2.0**
+# 💻 Agent CLI in CleanSlate AI — Your Digital Estate Manager 
+- **"AI Chief of Staff for Digital Organization and Storage Management."**
 
 ### The CleanSlate CLI is the primary interface for interacting with the agent locally. It provides:
 
