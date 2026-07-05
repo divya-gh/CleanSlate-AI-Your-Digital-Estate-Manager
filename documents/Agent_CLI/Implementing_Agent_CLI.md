@@ -1,6 +1,7 @@
-# Implement Agent CLI for CleanSlate AI -My PC Assistant according to the Agent CLI SPEC
+# # Implement Agent CLI in CleanSlate AI — Your Digital Estate Manager 
+in accordance with [Agent CLI SPEC](../SPECS/Agent_CLI_SPEC_V2.md)
 
-=========================================================================================
+-------
 
 ## Step 1: Building CLI in Antigravity
 
