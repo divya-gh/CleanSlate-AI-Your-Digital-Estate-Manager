@@ -1,10 +1,10 @@
 ## Implementing Antigravity UI Layout in CleanSlate AI — Your Digital Estate Manager
 
-### Your Personal PC Cleanup Assistant, Powered by ADK 2.0
+#### Your Personal PC Cleanup Assistant, Powered by ADK 2.0
 
 -----
 ## UI Features:
-## When the user opens CleanSlate AI agent Playground :
+### When the user opens CleanSlate AI agent Playground :
 
 #### 🎉 A centered `welcome message` appears at the top
 #### 🎉 The user is told exactly what to say - eg: You can say: `"Organize my computer"`
