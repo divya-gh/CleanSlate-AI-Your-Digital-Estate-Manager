@@ -298,7 +298,7 @@ Custom Web UI:
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
-### 🎬 CleanSlate AI Demo Video  &nbsp;&nbsp;&nbsp; <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/7bcbfde5-c8f0-4751-abe5-7251846d00cf"/> Playground Chat UI (GIF Demo)
+### 🎬 CleanSlate AI Demo Video  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/7bcbfde5-c8f0-4751-abe5-7251846d00cf"/> Playground Chat UI (GIF Demo)
 
 <div style="display: flex;  gap: 25px align-items: flex-start;">
   <a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
@@ -308,12 +308,6 @@ Upload the agent ➔ test interrupts ➔ validate UI.
     <img src="assets/cleanSateAI_Demo.gif" height="250" width= "300" alt="Playground Chat UI Demo" />
   </a>
 </div>
-
-🟦 12. Demo Tables (Side‑by‑Side)
-Kaggle Demo	GitHub Demo
-Kaggle Notebook URL	GitHub Repo URL
-Kaggle Writeup URL	README.md
-Kaggle Video	GitHub Video
 
 ### 🖥️ User Interface Screenshots
 
