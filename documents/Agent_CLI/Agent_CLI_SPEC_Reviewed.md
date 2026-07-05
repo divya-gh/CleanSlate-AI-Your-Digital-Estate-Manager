@@ -11,18 +11,18 @@
 ## 1. Purpose:
 **The Agent CLI provides a command-line interface for interacting with CleanSlate AI – My PC Assistant.**
 ### Exposing:
-•	User-facing commands for search and cleanup
-•	Developer commands for graph and tools debugging
-•	Safety commands for dry-runs and safe-mode
+•	User-facing commands for search and cleanup  
+•	Developer commands for graph and tools debugging  
+•	Safety commands for dry-runs and safe-mode  
 It is the primary way to run and test the agent locally.
 
 ## 2. CLI Overview
 #### Executable name: cleanslate
 #### Invocation pattern: cleanslate <command> [options]
-#### Commands are grouped into:
-•	User commands
-•	Developer commands
-•	Safety & control commands
+#### Commands are grouped into:  
+•	User commands   
+•	Developer commands  
+•	Safety & control commands  
 -----------------------------------------------------------------------------------------
 ## SPEC REVIEW
 #### Below is a structured checklist comparing:
