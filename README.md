@@ -7,15 +7,12 @@
 [![STRIDE](https://img.shields.io/badge/Security-STRIDE_Threat_Model-blue.svg)]()
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-cyan.svg)]()
 
----
 # 🧹 CleanSlate AI — Your Digital Estate Manager
 > **"AI Chief of Staff for Digital Organization and Storage Management."**
 
----
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="assets/cleanslate_corporate_banner.png" width="700" height= "500" alt="CleanSlate AI Corporate Banner">
 
----
 ## 🛎️ Track: `Concierge Agents`
 
 ---
