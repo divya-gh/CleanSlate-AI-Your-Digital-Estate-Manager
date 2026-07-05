@@ -298,8 +298,8 @@ Custom Web UI:
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
-## 🟦 11. Demo Video Placeholder
-(Insert your YouTube demo link here)
+## 🟦 11. CleanSlate AI Demo Video
+[![Watch the CleanSlate AI Demo](https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg)](https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV)
 
 🟦 12. Demo Tables (Side‑by‑Side)
 Kaggle Demo	GitHub Demo
