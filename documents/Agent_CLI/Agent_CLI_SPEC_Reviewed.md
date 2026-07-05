@@ -5,7 +5,7 @@
 
 ==================================================================================
 
-**Note:** Full Compliance Check — <img src="https://img.shields.io/badge/**Status-Complete**-brightgreen" />
+**Note:** Full Compliance Check — **<img src="https://img.shields.io/badge/Status-Complete-brightgreen" />**
 
 
 ## 1. Purpose:
