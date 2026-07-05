@@ -327,6 +327,6 @@ Released under Attribution 4.0 International (CC BY 4.0).
 
 ---
 ### 📚 Acknowledgments & Citations
-- **Project**: Kaggle AI Agents: Google Intensive Vibe Coding Capstone Project
+- **Project**: [Kaggle AI Agents: Google Intensive Vibe Coding Capstone Project](https://www.kaggle.com/competitions/vibecoding-agents-capstone-project/writeups/cleanslate-ai-your-digital-estate-manager)
 - **Code Assistance**: Built with the help of Google's Advanced Agentic Coding assistant (Antigravity) and the ADK 2.0 framework.
 - **Image Generation**: The graphical assets, diagrams, and banners in this project were conceptualized and generated using **Microsoft Copilot** and **Google Gemini**.
