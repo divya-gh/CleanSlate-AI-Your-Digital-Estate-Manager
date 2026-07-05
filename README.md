@@ -301,10 +301,10 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ## 🟦 11. CleanSlate AI Demo Video
 <div style="display: flex; gap: 20px; align-items: flex-start;">
   <a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
-    <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" width="400" alt="Watch the CleanSlate AI Demo" />
+    <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" height="250" alt="Watch the CleanSlate AI Demo" />
   </a>
-  <a href="INSERT_GIF_URL_HERE" target="_blank">
-    <img src="assets/cleanSateAI_Demo.gif" width="400" height= "400"  alt="Playground Chat UI Demo" />
+  <a href="assets/cleanSateAI_Demo.gif" target="_blank">
+    <img src="assets/cleanSateAI_Demo.gif" height="250" alt="Playground Chat UI Demo" />
   </a>
 </div>
 
