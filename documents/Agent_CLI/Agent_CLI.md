@@ -85,61 +85,59 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 •	policy.json → allowed/blocked folder scope  
 
 #### Features:
-•	Auto repair missing keys
-•	Atomic writes via temp file swap
-•	No absolute paths printed (Semgrep enforced)
-•	No hardcoded config paths (Semgrep enforced)
+•	Auto repair missing keys  
+•	Atomic writes via temp file swap  
+•	No absolute paths printed (Semgrep enforced)   
+•	No hardcoded config paths (Semgrep enforced)  
 
 #### 🧠 Graph Integration
-**The CLI injects configuration into the ADK graph:**
-•	weekly_automation_enabled
-•	safe_mode
-•	allow_deletes
-•	allow_compress
-•	allow_moves
-•	allow_archives
+**The CLI injects configuration into the ADK graph:**  
+•	weekly_automation_enabled  
+•	safe_mode  
+•	allow_deletes  
+•	allow_compress  
+•	allow_moves  
+•	allow_archives  
 The graph itself remains pure, with no file I/O.
 
 #### 🔐 Safety Guarantees
-**The CLI enforces:**
-•	Metadata only classification
-•	No file-content reads
-•	No sensitive file deletion
-•	HITL approval for destructive actions
-•	Rollback for all reversible actions
-•	Redacted audit logs
+**The CLI enforces:**  
+•	Metadata only classification  
+•	No file-content reads  
+•	No sensitive file deletion  
+•	HITL approval for destructive actions  
+•	Rollback for all reversible actions  
+•	Redacted audit logs  
 •	Semgrep static safety gates
 
 #### 🧪 Testing
-
 **All CLI features are covered in:**
 ```
 tests/test_cli.py
 ```
-
 ##### Includes:
-•	Weekly enable/disable
-•	Weekly-run respecting flag
-•	Search
-•	Cleanup dry-run
-•	Logs
-•	Config show/reset
-•	All 75 tests pass.
+•	Weekly enable/disable  
+•	Weekly-run respecting flag  
+•	Search  
+•	Cleanup dry-run  
+•	Logs  
+•	Config show/reset  
+•	All 75 tests pass.  
 
 ## 🟦 Why This Matters
-**This CLI transforms CleanSlate from a codebase into a real, usable product:**
-•	Safe
-•	Testable
-•	Configurable
-•	Extensible
+**This CLI transforms CleanSlate from a codebase into a real, usable product:**  
+•	Safe  
+•	Testable  
+•	Configurable  
+•	Extensible  
 •	Capstone ready
 
 **It demonstrates mastery of:**
-•	ADK 2.0
-•	Antigravity
-•	Semgrep
-•	Agent lifecycle
-•	Safety engineering
-•	CLI design
-•	Persistent configuration
-•	Weekly automation workflows
+•	ADK 2.0  
+•	Antigravity  
+•	Semgrep  
+•	Agent lifecycle  
+•	Safety engineering  
+•	CLI design  
+•	Persistent configuration  
+•	Weekly automation workflows  
