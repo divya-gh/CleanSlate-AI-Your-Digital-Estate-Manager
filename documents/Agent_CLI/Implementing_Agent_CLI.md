@@ -1,4 +1,4 @@
-# # Implement Agent CLI in CleanSlate AI — Your Digital Estate Manager 
+# Implement Agent CLI in CleanSlate AI — Your Digital Estate Manager 
 in accordance with [Agent CLI SPEC](../SPECS/Agent_CLI_SPEC_V2.md)
 
 -------
