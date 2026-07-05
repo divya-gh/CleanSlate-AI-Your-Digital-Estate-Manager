@@ -2,6 +2,34 @@
 
 CleanSlate AI features an ambient background capability, referred to as the **Weekly Organizer Node**. Instead of requiring the user to manually trigger a cleanup, this node allows the agent to organize files automatically on a scheduled cadence (e.g., weekly).
 
+```mermaid
+graph TD
+    classDef trigger fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000;
+    classDef node fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000;
+    classDef db fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
+    classDef alert fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000;
+
+    Cron((Weekly Cron Job)):::trigger -->|Pub/Sub Event| WeeklyOrg[WeeklyOrganizerNode]:::node
+    
+    WeeklyOrg -.->|Reads| Prefs[(User Preferences)]:::db
+    
+    WeeklyOrg -->|Route: run| Discovery[FileDiscoveryNode]:::node
+    
+    Discovery --> Classify[ClassificationNode]:::node
+    Classify --> Dedupe[DuplicateDetectionNode]:::node
+    Dedupe --> Sensitive[SensitiveDetectionNode]:::node
+    Sensitive --> Planner[OptimizationPlannerNode]:::node
+    
+    Planner -->|HITL Enabled| HITL[HITLApprovalNode]:::alert
+    Planner -->|Fully Autonomous| Exec[ExecutionNode]:::node
+    
+    HITL -->|Approved| Exec
+    HITL -->|Rejected| Summary[SummaryNode]:::node
+    Exec --> Summary
+    
+    Summary -->|Dispatches| Notification((User Notification)):::trigger
+```
+
 ## How it Works
 
 1. **Trigger Mechanism**
