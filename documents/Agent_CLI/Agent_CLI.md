@@ -1,5 +1,6 @@
 # 💻 Agent CLI in CleanSlate AI — Your Digital Estate Manager 
- **"AI Chief of Staff for Digital Organization and Storage Management."**	  
+ **"AI Chief of Staff for Digital Organization and Storage Management."**
+ 
 ---
 ### The CleanSlate CLI is the primary interface for interacting with the agent locally. It provides:  
 - 🧭 **User commands** (search, cleanup, weekly automation)
@@ -9,21 +10,21 @@
 
 This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI_SPEC_V2.md), with full integration into the **ADK graph** and **WeeklyOrganizerNode** for ambient running.
 
------------------------------------------
-## 🧭 Available Commands
------------------------------------------
+----------------------------
+### 🧭 Available Commands
+----------------------------
 
-## 1. User Commands
+#### 1. User Commands:
 
-#### ▶️ cleanslate run
+##### ▶️ cleanslate run
 •	Starts an interactive multi turn session with the agent.
 
-#### 🔍 cleanslate search "<query>"
+##### 🔍 cleanslate search "<query>"
 •	Searches files using metadata only discovery. Options:
 o	--json
 o	--path <folder>
 
-#### 🧹 cleanslate cleanup
+##### 🧹 cleanslate cleanup
 **Runs the full cleanup pipeline with:**
 •	FolderScopeNode
 •	Classification
@@ -37,7 +38,7 @@ o	--path <folder>
 	--dry-run (no actions executed)
 ```
 
-#### 📅 cleanslate weekly-run
+##### 📅 cleanslate weekly-run
 Runs the WeeklyOrganizerNode in safe mode, but only if enabled.
 •	If disabled, prints:
 ```
