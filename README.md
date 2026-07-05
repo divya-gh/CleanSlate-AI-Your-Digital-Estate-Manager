@@ -6,7 +6,7 @@
 [![Python 3.11](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Enabled-purple.svg)](https://modelcontextprotocol.io/)
 [![Google Gemini](https://img.shields.io/badge/Google-Gemini_AI-orange.svg)](https://deepmind.google/technologies/gemini/)
-[![Semgrep](https://img.shields.io/badge/Security-Semgrep-red.svg)](https://semgrep.dev/)
+[![Semgrep](https://img.shields.io/badge/Security-Semgrep-green.svg)](https://semgrep.dev/)
 [![STRIDE](https://img.shields.io/badge/Security-STRIDE_Threat_Model-blue.svg)]()
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-cyan.svg)]()
 
