@@ -39,20 +39,20 @@ CleanSlate AI was designed to demonstrate the transformative power of Agentic AI
 **Overall User Value:** By merging an intuitive conversational UX with ambient processing, CleanSlate AI delivers a premium, zero-anxiety digital cleanup experience.
 
 ---
-## ✨ 2. What CleanSlate AI Does (Features & Workflow)
-CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. it is a multi‑step, interrupt‑driven ambient PC assistant with:
+## ✨ 2. What CleanSlate AI Does (Features)
+CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. It operates as a multi‑step, interrupt‑driven ambient PC assistant equipped with the following core features:
 
-- **Mandatory Folder Scope Approval**: Asks for and strictly enforces allowed/blocked directories before taking any action:        
-- **Intelligent File Discovery**     : Scans local storage (Desktop, Downloads, Documents) and collects file metadata securely.
-- **AI-Powered Classification**      : Uses LLM reasoning to categorize files (Resume, Tax document, Medical record, Source code, Media, etc.).
-- **Duplicate & Sensitive Detection**: Identifies exact/near duplicates and detects sensitive information (SSNs, DL, Banking docs, Passport, Passwords,API Keys) to protect them from deletion. 
-- **Storage Optimization**           : Suggests archiving old content, compressing, moving, or deleting duplicates and safe items to recover storage space.
-- **Human-In-The-Loop (HITL) Review**: Provides explanations, confidence scores, and reasoning before requesting user approval for any destructive actions.
-- **Execution & Rollback**           : Executes approved actions with safety checks, rollback metadata, and logging.** Moves `sensitive files` safely **Authenticated Secure Folder**. Organizes files into structured categories and rovides rollback for all destructive actions.
-- **Summary & Logging                :** Produces a professional, color‑coded action log and cleanup summary and centralized logging capturing every proposed & executed action, failure & rollback, Sensitive file detections, Node transitions and pub/sub events for traceability.
-- **Weekly Auto-Organize (Ambient Agent)**: A background Pub/Sub job that automatically organizes your PC weekly based on your preferences.
-- **Conversational Assistant**       : Ask natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
-- **Sandbox Environments**           : Runs safely in the sandox environment (Kaggle, cloud VMs)
+- **Mandatory Folder Scope Approval:** Explicitly requests and strictly enforces allowed/blocked directories before initiating any actions.
+- **Intelligent File Discovery:** Scans local storage (e.g., Desktop, Downloads, Documents) to securely collect file metadata.
+- **AI-Powered Classification:** Leverages advanced LLM reasoning to categorize files (Resumes, Tax documents, Source code, Media, etc.) with high accuracy.
+- **Sensitive & Duplicate Detection:** Proactively identifies exact/near duplicates and detects highly sensitive information (SSNs, DLs, Banking docs, Passwords, API Keys) to shield them from accidental deletion.
+- **Storage Optimization:** Intelligently suggests archiving, compressing, moving, or safely deleting duplicates and unused items to reclaim storage space.
+- **Human-In-The-Loop (HITL) Review:** Provides transparent explanations, confidence scores, and clear AI reasoning before requesting user approval for any destructive actions.
+- **Execution & Rollback:** Safely executes approved actions, moves sensitive files into an authenticated Secure Folder, organizes remaining files into structured categories, and provides full rollback capabilities for all destructive actions.
+- **Traceability & Logging:** Produces a professional, color‑coded action log and cleanup summary. Centralized logging captures every proposed and executed action, failure, rollback, sensitive file detection, node transition, and pub/sub event.
+- **Weekly Auto-Organize (Ambient Agent):** Operates as a background Pub/Sub job that automatically organizes your PC weekly based on your distinct preferences.
+- **Conversational Assistant:** Allows users to execute natural language queries like *"Find the file 'ambient expense agent'"* or *"Organize my screenshots."*
+- **Sandbox Environments:** Safely containerized to run seamlessly in sandbox environments like Kaggle notebooks and cloud VMs.
   
 ---
 ## 🔄 The Agentic Routing
