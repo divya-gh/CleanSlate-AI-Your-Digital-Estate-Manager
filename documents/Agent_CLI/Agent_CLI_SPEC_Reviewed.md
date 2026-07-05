@@ -1,4 +1,4 @@
-# 📘 SPEC #6 — Agent CLI Spec SPEC 
+# 📘 SPEC #6 — [Agent CLI Spec SPEC](../specs/Agent_CLI_SPEC_V2.md) - Review
 
 ### CleanSlate AI – My PC Assistant
 #### AI Chief of Staff for Digital Organization and Storage Management.
