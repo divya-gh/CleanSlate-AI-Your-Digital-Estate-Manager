@@ -298,8 +298,8 @@ Custom Web UI:
 Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
-## 🟦 11. CleanSlate AI Demo Video & Playground Chat UI
-<div style="display: flex; gap: 20px; align-items: flex-start;">
+## 🟦 CleanSlate AI Demo Video & Playground Chat UI
+<div style="display: flex; gap: 40px; align-items: flex-start;">
   <a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
     <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" height="250" alt="Watch the CleanSlate AI Demo" />
   </a>
