@@ -22,11 +22,13 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 ##### 🔍 cleanslate search `"<query> "`
 •	Searches files using metadata only discovery. 
 - **Options:**
+  
 	o	--json
 	o	--path <folder>
 
 ##### 🧹 cleanslate cleanup
-•	Runs the full cleanup pipeline with:
+-	Runs the full cleanup pipeline with:
+
 	•	FolderScopeNode
 	•	Classification
 	•	Sensitive detection
