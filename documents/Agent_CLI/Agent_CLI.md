@@ -54,38 +54,30 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 ~/.cleanslate/config.json
 ```
 
-#### 🟢 cleanslate weekly enable
-•	Enables weekly automation.
+#### 🟢 cleanslate weekly enable: Enables weekly automation.
 
-#### 🔴 cleanslate weekly disable
-•	Disables weekly automation.
+#### 🔴 cleanslate weekly disable : Disables weekly automation.
 
-#### 📊 cleanslate weekly status
-•	Shows whether weekly automation is enabled or disabled.
+#### 📊 cleanslate weekly status: Shows whether weekly automation is enabled or disabled.
 
 ### 3. Configuration Commands
 
-#### ⚙️ cleanslate config show
-•	Displays current configuration (sanitized).
+#### ⚙️ cleanslate config show: Displays current configuration (sanitized).
 
-#### ♻️ cleanslate config reset
-•	Resets configuration to defaults.	
+#### ♻️ cleanslate config reset: Resets configuration to defaults.	
 
 ## 4. Safety & Control Commands
 
-#### 🧪 cleanslate dry-run
-•	Runs the cleanup pipeline without executing actions.
+#### 🧪 cleanslate dry-run: Runs the cleanup pipeline without executing actions.
 
-#### 🛡️ cleanslate safe-mode on/off
-•	Globally restricts destructive actions.
+#### 🛡️ cleanslate safe-mode on/off: Globally restricts destructive actions.
 
 #### 📜 cleanslate logs
-•	Views redacted audit logs. Options:  
+- Views redacted audit logs. Options:  
 	•	--limit N  
 	•	--json
 
-#### 🔄 cleanslate rollback
-•	Reverses the last cleanup batch using RollbackNode.
+#### 🔄 cleanslate rollback: Reverses the last cleanup batch using RollbackNode.
 
 #### 🗂️ Configuration & Policy System
 **CleanSlate uses atomic configuration writes to ensure safety:**  
