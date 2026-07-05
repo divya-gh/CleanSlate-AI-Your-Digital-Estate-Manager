@@ -11,7 +11,7 @@
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-black.svg)]()
 
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
-![CleanSlate AI](assets/cleanslate_corporate_banner.png)
+![CleanSlate AI](assets/cleanslate_corporate_banner.png)welcome_chat_ui
 ---
 ## 🛎️ Track: `Concierge Agents`
 
@@ -312,9 +312,8 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ### 🖥️ User Interface Screenshots
 
 | 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval |
-| :---: | :---: |
-| ![Welcome Chat](Images/welcome_chat_ui.png) | ![HITL Approval Table](Images/hitl_approval_table.png) |
-
+| :---: | :---: |  :---: |
+| ![Welcome Chat](<img src="assets/welcome_chat_ui.png" width="300" height="400">) | ![HITL Approval Table](<img src="assets/hitl_approval_table.png" width="300" height="400">) | ![Summary](<img src="assets/summary.png" width="300" height="400">) | 
 
 ### 🟦 17. License
 Released under Attribution 4.0 International (CC BY 4.0).
