@@ -16,6 +16,7 @@
 •	 Safety commands for dry-runs and safe-mode  
 It is the primary way to run and test the agent locally.
 
+---
 ## 2. CLI Overview
 #### Executable name: `**cleanslate**`
 #### Invocation pattern: `cleanslate <command> [options]`
@@ -24,14 +25,14 @@ It is the primary way to run and test the agent locally.
 •	 Developer commands  
 •	 Safety & control commands  
 
------------------------------------------------------------------------------------------
+--------------------------------------------------------
 ## SPEC REVIEW
 #### Below is a structured checklist comparing:
-•	Spec requirement
-•	Implementation
-•	Compliance status
+•	✔ Spec requirement
+•	✔ Implementation
+•	✔ Compliance status
 
------------------------------------------------------------------------------------------
+------------------------------------------------------
 ## 3. User Commands
 
 ### 3.1 cleanslate run
