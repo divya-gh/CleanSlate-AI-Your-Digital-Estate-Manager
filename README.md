@@ -7,15 +7,18 @@
 [![STRIDE](https://img.shields.io/badge/Security-STRIDE_Threat_Model-blue.svg)]()
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-cyan.svg)]()
 
+---
 # 🧹 CleanSlate AI — Your Digital Estate Manager
 > **"AI Chief of Staff for Digital Organization and Storage Management."**
 
+---
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src="assets/cleanslate_corporate_banner.png" width="700" height= "500" alt="CleanSlate AI Corporate Banner">
 
 ---
 ## 🛎️ Track: `Concierge Agents`
 
+---
 ## 📖 The Problem: Why CleanSlate AI?
 Modern users passively accumulate thousands of files across their devices—outdated resumes, scattered tax documents, unorganized photos, bloated downloads, and forgotten project folders. Over time, this uncontrolled digital sprawl leads to:
 
@@ -305,6 +308,7 @@ Upload the agent ➔ test interrupts ➔ validate UI.
   </a>
 </div>
 
+---
 ### 🖥️ User Interface Screenshots
 
 | 💬 Welcome Chat Interface | 📋 Human-in-the-Loop Approval | 📊 Summary Report |
@@ -321,6 +325,7 @@ All detailed specifications, architecture diagrams, and implementation plans are
 - 🧪 [Testing, Logging & Observability](documents/Testing_Logging_Observability/)
 - 📋 [Implementation Plan & Walkthrough](documents/ImplimentationPlan_And_Walkthrough/)
 
+---
 ### 🟦 17. License
 Released under Attribution 4.0 International (CC BY 4.0).
 
