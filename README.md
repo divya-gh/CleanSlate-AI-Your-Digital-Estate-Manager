@@ -299,7 +299,9 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ```
 ---
 ## 🟦 11. CleanSlate AI Demo Video
-[![Watch the CleanSlate AI Demo](https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg)](https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV)
+<a href="https://youtu.be/9HInUm5U1XY?si=n_XpTV8sgyXlEutV" target="_blank">
+  <img src="https://img.youtube.com/vi/9HInUm5U1XY/maxresdefault.jpg" width="400" alt="Watch the CleanSlate AI Demo" />
+</a>
 
 🟦 12. Demo Tables (Side‑by‑Side)
 Kaggle Demo	GitHub Demo
