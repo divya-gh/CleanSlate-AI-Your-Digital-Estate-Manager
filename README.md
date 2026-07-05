@@ -15,7 +15,6 @@
 
 ## 🛎️ Track: `Concierge Agents`
 
----
 ## 📖 The Problem: Why CleanSlate AI?
 Modern users passively accumulate thousands of files across their devices—outdated resumes, scattered tax documents, unorganized photos, bloated downloads, and forgotten project folders. Over time, this uncontrolled digital sprawl leads to:
 
