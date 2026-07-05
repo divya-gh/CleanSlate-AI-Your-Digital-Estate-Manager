@@ -5,7 +5,7 @@
 
 ==================================================================================
 
-**Note: Full Compliance Check - Complete**
+**Note:** Full Compliance Check — <span style="color: #00b300; font-weight: bold;">Complete</span>
 
 ## 1. Purpose:
 **The Agent CLI provides a command-line interface for interacting with CleanSlate AI – My PC Assistant.**
