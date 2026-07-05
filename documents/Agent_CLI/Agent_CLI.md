@@ -1,5 +1,5 @@
 # 💻 Agent CLI in CleanSlate AI — Your Digital Estate Manager 
-- **"AI Chief of Staff for Digital Organization and Storage Management."**
+—  **"AI Chief of Staff for Digital Organization and Storage Management."**
 
 ### The CleanSlate CLI is the primary interface for interacting with the agent locally. It provides:
 
