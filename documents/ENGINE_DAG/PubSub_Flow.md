@@ -1,4 +1,4 @@
-# Ambient Agent: Pub/Sub Flow
+# 🌊 Ambient Agent: Pub/Sub Flow
 
 CleanSlate AI features an ambient background capability, referred to as the **Weekly Organizer Node**. Instead of requiring the user to manually trigger a cleanup, this node allows the agent to organize files automatically on a scheduled cadence (e.g., weekly).
 
