@@ -12,6 +12,7 @@
 
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
 ![CleanSlate AI](<img src="assets/cleanslate_corporate_banner.png" height="400" alt="HITL Approval Table">)
+
 ---
 ## 🛎️ Track: `Concierge Agents`
 
