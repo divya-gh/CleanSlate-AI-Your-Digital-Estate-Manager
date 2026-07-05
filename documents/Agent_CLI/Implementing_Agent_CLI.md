@@ -5,7 +5,8 @@ in accordance with [Agent CLI SPEC](../SPECS/Agent_CLI_SPEC_V2.md)
 
 ## Step 1: Building CLI in Antigravity
 
-### In Antigravity cleanslate-pc-assistant project,
+- Open Antigravity
+- In Antigravity cleanslate-pc-assistant project,
 
 ### • Prompt: 
 ```
@@ -150,7 +151,9 @@ Body: "Add full CleanSlate CLI with weekly automation control, config persistenc
 
 ```
 •	Confirm:
-Images - Agent_cli_implimentation1 and Agent_cli_implimentation2
+| 📸 Agent CLI Implimentation 1 | 📸 2| 
+| :---: | :---: |
+| <img src="../Images/Agent_cli_implimentation1.png" width="300" height= "400" alt="Agent_cli_implimentation"> | <img src="../Images/Agent_cli_implimentation2.png" width="300" height= "400" alt="Agent_cli_implimentation"> |
 
 
 
