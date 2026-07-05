@@ -4,6 +4,11 @@
 ### CleanSlate AI is built using the **Agent Development Kit (ADK 2.0)** and operates as a Directed Acyclic Graph (DAG). The agent traverses different nodes depending on the user's initial intent and the outcomes of internal reasoning steps.
 
 ---
+| 📸 ADK DAG Architecture (Backend) | 📸 Playground Dev‑UI (DAG Frontend) |
+| :---: | :---: |
+| <img src="../../assets/System_Architecture.png" width="300" height= "400" alt="Agent_cli_implimentation"> | <img src="../../assets/DAG_ADK.png" width="300" height= "400" alt="Agent_cli_implimentation"> |
+
+---
 ## Core Node Execution Flow
 
 1. **MyPCAssistantNode (The Router)**
@@ -52,6 +57,4 @@
 ## Visual Flow
 `Assistant` -> `Scope` -> `Discovery` -> `Classify` -> `Dedupe` -> `Sensitive` -> `Planner` -> `HITL` -> `Execution` -> `Summary`
 
-| 📸 ADK DAG Architecture (Backend) | 📸 Playground Dev‑UI (DAG Frontend) |
-| :---: | :---: |
-| <img src="../../assets/System_Architecture.png" width="300" height= "400" alt="Agent_cli_implimentation"> | <img src="../../assets/DAG_ADK.png" width="300" height= "400" alt="Agent_cli_implimentation"> |
+
