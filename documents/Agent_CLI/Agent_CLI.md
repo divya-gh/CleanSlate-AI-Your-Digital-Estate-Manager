@@ -11,22 +11,22 @@
 This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI_SPEC_V2.md), with full integration into the **ADK graph** and **WeeklyOrganizerNode** for ambient running.
 
 ----------------------------
-### 🧭 Available Commands
+## 🧭 Available Commands
 ----------------------------
 
-#### 1. User Commands:
+### 1. User Commands:
 
-##### ▶️ cleanslate run
+#### ▶️ cleanslate run
 •	Starts an interactive multi turn session with the agent.
 
-##### 🔍 cleanslate search `"<query> "`
+#### 🔍 cleanslate search `"<query> "`
 •	Searches files using metadata only discovery. 
 - **Options:**
   
 	o	--json  
 	o	--path <folder>
 
-##### 🧹 cleanslate cleanup
+#### 🧹 cleanslate cleanup
 -	Runs the full cleanup pipeline with:
 
 	•	FolderScopeNode  
@@ -35,24 +35,23 @@ This CLI is built from scratch using the [**Agent CLI Spec**](../SPECS/Agent_CLI
 	•	HITL approval  
 	•	ExecutionNode
 
-##### SummaryNode
+#### SummaryNode
 •	Supports:
 ```
 	--dry-run (no actions executed)
 ```
 
-##### 📅 cleanslate weekly-run
-Runs the WeeklyOrganizerNode in safe mode, but only if enabled.
+#### 📅 cleanslate weekly-run
+- Runs the WeeklyOrganizerNode in safe mode, but only if enabled.
 •	If disabled, prints:
 ```
 	“Weekly automation disabled. Enable it with: cleanslate weekly enable”
 ```
 
-## 2. Weekly Automation Controls
+### 2. Weekly Automation Controls
 **These commands manage the persistent config flag stored in:**
 ```
 ~/.cleanslate/config.json
-
 ```
 
 #### 🟢 cleanslate weekly enable
@@ -61,10 +60,10 @@ Runs the WeeklyOrganizerNode in safe mode, but only if enabled.
 #### 🔴 cleanslate weekly disable
 •	Disables weekly automation.
 
-📊 cleanslate weekly status
+#### 📊 cleanslate weekly status
 •	Shows whether weekly automation is enabled or disabled.
 
-## 3. Configuration Commands
+### 3. Configuration Commands
 
 #### ⚙️ cleanslate config show
 •	Displays current configuration (sanitized).
@@ -72,28 +71,26 @@ Runs the WeeklyOrganizerNode in safe mode, but only if enabled.
 #### ♻️ cleanslate config reset
 •	Resets configuration to defaults.	
 
-
 ## 4. Safety & Control Commands
 
 #### 🧪 cleanslate dry-run
 •	Runs the cleanup pipeline without executing actions.
 
-
 #### 🛡️ cleanslate safe-mode on/off
 •	Globally restricts destructive actions.
 
 #### 📜 cleanslate logs
-•	Views redacted audit logs. Options:
-•	--limit N
-•	--json
+•	Views redacted audit logs. Options:  
+	•	--limit N  
+	•	--json
 
 #### 🔄 cleanslate rollback
 •	Reverses the last cleanup batch using RollbackNode.
 
 #### 🗂️ Configuration & Policy System
-**CleanSlate uses atomic configuration writes to ensure safety:**
-•	config.json → weekly automation, safe-mode defaults
-•	policy.json → allowed/blocked folder scope
+**CleanSlate uses atomic configuration writes to ensure safety:**  
+•	config.json → weekly automation, safe-mode defaults  
+•	policy.json → allowed/blocked folder scope  
 
 #### Features:
 •	Auto repair missing keys
