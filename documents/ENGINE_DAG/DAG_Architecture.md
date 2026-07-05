@@ -1,7 +1,9 @@
 # CleanSlate AI - DAG Architecture
 
-CleanSlate AI is built using the **Agent Development Kit (ADK 2.0)** and operates as a Directed Acyclic Graph (DAG). The agent traverses different nodes depending on the user's initial intent and the outcomes of internal reasoning steps.
+---
+### CleanSlate AI is built using the **Agent Development Kit (ADK 2.0)** and operates as a Directed Acyclic Graph (DAG). The agent traverses different nodes depending on the user's initial intent and the outcomes of internal reasoning steps.
 
+---
 ## Core Node Execution Flow
 
 1. **MyPCAssistantNode (The Router)**
