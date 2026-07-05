@@ -11,7 +11,7 @@
 [![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-black.svg)]()
 
 #### A secure, intelligent, multi‑step ADK 2.0 agent that organizes your PC, protects sensitive files, and restores digital clarity.
-<img src="assets/cleanslate_corporate_banner.png" width="600" alt="CleanSlate AI Corporate Banner">
+<img src="assets/cleanslate_corporate_banner.png" width="800" height= "500" alt="CleanSlate AI Corporate Banner">
 
 ---
 ## 🛎️ Track: `Concierge Agents`
