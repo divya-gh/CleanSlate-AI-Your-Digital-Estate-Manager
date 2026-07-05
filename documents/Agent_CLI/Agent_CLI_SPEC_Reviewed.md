@@ -4,9 +4,10 @@
 #### AI Chief of Staff for Digital Organization and Storage Management.
 
 ==================================================================================
-**Note: Full Compliance Check - complete**
 
-## 1. Purpose
+**Note: Full Compliance Check - Complete**
+
+## 1. Purpose:
 **The Agent CLI provides a command-line interface for interacting with CleanSlate AI – My PC Assistant.**
 ### Exposing:
 •	User-facing commands for search and cleanup
