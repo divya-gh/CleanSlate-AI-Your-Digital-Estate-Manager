@@ -83,16 +83,15 @@ Below are the tools our agent will use.
 •	Rejects blocked paths 
 •	No content read
 ### `Tests:`
-•	10 tests (scope, blocked, symlink, traversal, dirs)
+•	10 tests (scope, blocked, symlink, traversal, dirs)  
 •	All pass 🟢
 
 ### Spec coverage: `100%`
 
 ## TOOL 2 — read_file_metadata
-**Purpose:**  
+#### Purpose:
 Retrieve metadata without reading file contents.  
-
-**Used by:**
+#### Used by:
 •	FileDiscoveryNode  
 •	ClassificationNode  
 •	DuplicateDetectionNode
@@ -113,22 +112,21 @@ Retrieve metadata without reading file contents.
 }
 ```
 #### Errors
-•	FileNotFound
+•	FileNotFound  
 •	PermissionDenied
-####Safety
-•	Must not read file contents
+#### Safety
+•	Must not read file contents  
 •	Must not open sensitive files
  
-## `Implemented:`
-•	Sensitive rejection via SensitiveFileError
-•	Directory rejection
+## ✔ `Implemented:`
+•	Sensitive rejection via SensitiveFileError  
+•	Directory rejection  
 •	Metadata only
 ### `Tests:`
-•	9 tests (sensitive, dir, MIME, traversal)
-•	All pass
+•	9 tests (sensitive, dir, MIME, traversal)  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
-
 
 ## TOOL 3 — compute_hash
 #### Purpose
@@ -149,29 +147,29 @@ Retrieve metadata without reading file contents.
 }
 ```
 #### Errors
-•	FileTooLarge
+•	FileTooLarge  
 •	PermissionDenied
 #### Safety
-•	Must not upload file contents
+•	Must not upload file contents  
 •	Must not hash blocked paths
 
-## `Implemented:`
-•	Streaming loop with inline # nosemgrep
-•	2GB guard
-•	Sensitive rejection
+## ✔ `Implemented:`
+•	Streaming loop with inline # nosemgrep  
+•	2GB guard  
+•	Sensitive rejection  
 •	Folder scope enforced
 ### `Tests:`
-•	8 tests (correct hash, large file, sensitive, missing)
-•	All pass
+•	8 tests (correct hash, large file, sensitive, missing)  
+•	All pass 🟢
 
-### Spec coverage: `100
+### Spec coverage: `100%`
 
 ## TOOL 4 — move_file
 #### Purpose
 •	Move a file from one location to another.
 #### Used by
-•	ExecutionNode
-•	RollbackNode
+•	ExecutionNode  
+•	RollbackNode  
 #### Input Schema
 ```
 {
@@ -186,21 +184,21 @@ Retrieve metadata without reading file contents.
 }
 ```
 #### Errors
-•	FileNotFound
-•	DestinationInvalid
-•	PermissionDenied
+•	FileNotFound  
+•	DestinationInvalid  
+•	PermissionDenied  
 #### Safety
-•	Must not move sensitive files unless destination is authenticated folder
+•	Must not move sensitive files unless destination is authenticated folder  
 •	Must respect folder_scope_policy
 
-## `Implemented:`
-•	Sensitive enforcement
-•	Authenticated folder check
-•	Atomic replace fallback
+## ✔ `Implemented:`
+•	Sensitive enforcement  
+•	Authenticated folder check  
+•	Atomic replace fallback  
 •	Folder scope enforced
 ### `Tests:`
-•	9 tests (sensitive→auth OK, sensitive→unauth reject, blocked, traversal)
-•	All pass
+•	9 tests (sensitive→auth OK, sensitive→unauth reject, blocked, traversal)  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
@@ -222,20 +220,20 @@ Retrieve metadata without reading file contents.
 }
 ```
 #### Errors
-FileNotFound
+FileNotFound  
 PermissionDenied
 #### Safety
-•	Must never delete sensitive files
-•	Must require HITLApprovalNode
+•	Must never delete sensitive files  
+•	Must require HITLApprovalNode  
 •	Must respect folder_scope_policy
 
-## `Implemented:`
-•	HITL enforced
-•	Sensitive rejection
+## ✔ `Implemented:`
+•	HITL enforced   
+•	Sensitive rejection  
 •	Safe mode rejection
 ### `Tests:`
-•	8 tests (HITL, sensitive, safe_mode, MCP error structure)
-•	All pass
+•	8 tests (HITL, sensitive, safe_mode, MCP error structure)  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
@@ -243,7 +241,7 @@ PermissionDenied
 #### Purpose
 •	Create a folder for organizing files.
 #### Used by
-•	ExecutionNode
+•	ExecutionNode  
 #### Input Schema
 ```
 {
@@ -257,19 +255,19 @@ PermissionDenied
 }
 ```
 #### Errors
-•	AlreadyExists
+•	AlreadyExists  
 •	PermissionDenied
 
 #### Safety
 •	Must not create folders in blocked paths
 
-## `Implemented:`
-•	Scope enforcement
-•	Rejects blocked paths
-•	Rejects existing file
+## ✔ `Implemented:`
+•	Scope enforcement  
+•	Rejects blocked paths  
+•	Rejects existing file  
 ### `Tests:`
-•	6 tests
-•	All pass
+•	6 tests  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
@@ -277,7 +275,7 @@ PermissionDenied
 #### Purpose
 •	Create a ZIP archive of selected files.
 #### Used by
-•	ExecutionNode
+•	ExecutionNode  
 •	OptimizationPlannerNode (suggestions)
 #### Input Schema
 ```
@@ -295,19 +293,19 @@ PermissionDenied
 
 ```
 #### Errors
-•	FileNotFound
+•	FileNotFound  
 •	PermissionDenied
 
 #### Safety
 •	Must not compress sensitive files without approval
 
-## `Implemented:`
-•	Scope enforcement
-•	Rejects blocked paths
+## ✔ `Implemented:`
+•	Scope enforcement  
+•	Rejects blocked paths  
 •	Rejects existing file
 ### `Tests:`
-•	6 tests
-•	All pass
+•	6 tests  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
@@ -315,8 +313,8 @@ PermissionDenied
 #### Purpose
 •	Write an entry to the agent’s audit log.
 #### Used by
-•	ExecutionNode
-•	RollbackNode
+•	ExecutionNode  
+•	RollbackNode  
 •	WeeklyOrganizerNode
 #### Input Schema
 ```
@@ -333,17 +331,17 @@ PermissionDenied
 #### Errors
 •	PermissionDenied
 #### Safety
-•	Logs must never contain file contents
+•	Logs must never contain file contents  
 •	Logs must not contain sensitive data
 
-## `Implemented:`
-•	Redaction
-•	JSONL
-•	10MB rotation
+## ✔ `Implemented:`
+•	Redaction  
+•	JSONL  
+•	10MB rotation  
 •	No content read
 ### `Tests:`
-•	7 tests
-•	All pass
+•	7 tests  
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
@@ -371,13 +369,13 @@ PermissionDenied
 #### Safety
 •	Must redact sensitive paths
 
-## `Implemented:`
-•	Redaction
-•	Sanitization
-•	Limit enforcement
+## ✔ `Implemented:`
+•	Redaction  
+•	Sanitization  
+•	Limit enforcement  
 ## `Tests:`
-•	7 tests
-•	All pass
+•	7 tests    
+•	All pass 🟢
 
 ## Spec coverage: `100%`
 
@@ -385,7 +383,7 @@ PermissionDenied
 #### Purpose
 •	Move sensitive files to a secure, user approved folder.
 #### Used by
-•	ExecutionNode
+•	ExecutionNode  
 •	SensitiveDetectionNode (optional suggestion)
 #### Input Schema
 ```
@@ -401,84 +399,82 @@ PermissionDenied
 }
 ```
 #### Errors
-•	PermissionDenied
-•	FileNotFound
+•	PermissionDenied  
+•	FileNotFound  
 #### Safety
-•	Must only move files flagged as sensitive
+•	Must only move files flagged as sensitive  
 •	Must not expose file contents
 
-## `Implemented:`
-•	Sensitive enforcement
-•	Authenticated folder check
-•	Atomic fallback
+## ✔ `Implemented:`
+•	Sensitive enforcement  
+•	Authenticated folder check  
+•	Atomic fallback  
 ## `Tests:`
-•	6 tests
-•	All pass
+•	6 tests  
+•	All pass 🟢
 
 ## Spec coverage: `100%`
 
-
+---
 ## 4. Global Safety Rules for All Tools
-✔ Tools must enforce folder_scope_policy
-✔ Tools must reject blocked_paths
-✔ Tools must never read or upload file contents
-✔ Tools must never delete sensitive files
-✔ Tools must require HITL for destructive actions
-✔ Tools must log all actions
-✔ Tools must fail safely
+✔ Tools must enforce folder_scope_policy  
+✔ Tools must reject blocked_paths  
+✔ Tools must never read or upload file contents  
+✔ Tools must never delete sensitive files    
+✔ Tools must require HITL for destructive actions  
+✔ Tools must log all actions  
+✔ Tools must fail safely  
 
-### Status: COMPLETE
+### Status: COMPLETE 🟢
 
-## 5. Tool Usage by ADK Nodes
-Node	                                            Tools Used
-FileDiscoveryNode	                            list_files, read_file_metadata
-ClassificationNode	                            read_file_metadata
-DuplicateDetectionNode	                        compute_hash
-SensitiveDetectionNode	                        read_file_metadata
-OptimizationPlannerNode	                        none (LLM reasoning only)
-HITLApprovalNode	                            none
-ExecutionNode	                                move_file, 
-delete_file,                                    create_folder, compress_files, 
-                                                move_to_authenticated_folder, write_log
-RollbackNode	                                move_file, write_log
-SummaryNode	                                    read_log
-WeeklyOrganizerNode	                            list_files,read_file_metadata, 
-                                                move_file,compress_files, 
-                                                write_log
+---
+## 5. 🛠️ Tool Usage by ADK Nodes
+| **Node**                    | **Tools Used**                                                                 |
+|-----------------------------|-------------------------------------------------------------------------------|
+| FileDiscoveryNode           | list_files, read_file_metadata                                                |
+| ClassificationNode          | read_file_metadata                                                            |
+| DuplicateDetectionNode      | compute_hash                                                                   |
+| SensitiveDetectionNode      | read_file_metadata                                                            |
+| OptimizationPlannerNode     | none (LLM reasoning only)                                                     |
+| HITLApprovalNode            | none                                                                          |
+| ExecutionNode               | move_file, delete_file, create_folder, compress_files, move_to_authenticated_folder, write_log |
+| RollbackNode                | move_file, write_log                                                          |
+| SummaryNode                 | read_log                                                                      |
+| WeeklyOrganizerNode         | list_files, read_file_metadata, move_file, compress_files, write_log          |
 
 ### Spec coverage: 100%
 ### Status: COMPLETE
 
-
-## 5. MCP Registry & CLI — Fully Implemented
+---
+## 5. 📜 MCP Registry & CLI — Fully Implemented  ✔ 
 ### Spec requires:
-•	registry.list_tools
-•	registry.test_tool
+•	registry.list_tools  
+•	registry.test_tool  
 •	CLI developer commands
 
 ## `Implemented:`
-### ✔ cleanslate tools list
-•	normalized names
-•	metadata
-•	JSON mode
+### ✔ cleanslate tools list 
+•	normalized names  
+•	metadata  
+•	JSON mode  
 ### ✔ cleanslate tools test
-•	name normalization
-•	key=value parsing
-•	MCP error passthrough
-•	JSON mode
+•	name normalization  
+•	key=value parsing  
+•	MCP error passthrough  
+•	JSON mode  
 •	path sanitization
 ### `Tests:`
-•	24 tests
-•	All pass
+•	24 tests  
+•	All pass 🟢
 
 ### Spec coverage: 100%
-### Status: COMPLETE
+### Status: ✅ COMPLETE 
 
-## 6. Future Improvements (Cloud Tools)
-(Not included in this spec- Check SDD)
-•	Google Drive MCP
-•	OneDrive MCP
-•	Dropbox MCP
+## 6. 🚀 Future Improvements (Cloud Tools)
+(Not included in this spec- Check SDD)  
+•	Google Drive MCP  
+•	OneDrive MCP  
+•	Dropbox MCP  
 •	Cloud backup before cleanup
 
 
