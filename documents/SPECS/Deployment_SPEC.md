@@ -177,7 +177,7 @@ CLEANSLATE_WEEKLY_MODE=true
 ## Review:
 ✔ Supported in your implementation
 
-## 6. Weekly Organizer Deployment
+## 6. 🧩 Weekly Organizer Deployment
 •	Trigger  
 •	Pub/Sub scheduled event:  
 ```
@@ -216,7 +216,7 @@ weekly_automation_enabled = true/false
 ✔ Fully implemented  
 ✔ Fully tested
 
-## 7. Logging & Monitoring
+## 7. 📜 Logging & Monitoring
 **Local Logs**:  
 •	Stored in ~/CleanSlateLogs/  
 •	Rotated weekly  
@@ -248,7 +248,7 @@ o	Safety violations
 ## Review: Implemented
 ✔ All supported by Agents logging architecture 
 
-## 8. Security in Deployment
+## 8. 🛡️ Security in Deployment
 ### CleanSlate AI enforces:
 ✔ No file contents ever leave the machine  
 ✔ Sensitive files never uploaded  
@@ -260,7 +260,7 @@ o	Safety violations
 ✔ Semgrep safety rules enforced  
 ✔ STRIDE v2.0 threat model updated
 
-## 9. Rollback Strategy
+## 9. 🔀 Rollback Strategy
 
 ### Local Mode
 #### RollbackNode restores:
@@ -278,7 +278,7 @@ o	Safety violations
 ## Review: Implemented
 ✔ Matches implementation  
 
-## 10. Testing Requirements
+## 10. 🧪 Testing Requirements
 
 ### Before deployment:
 o	✔ Local MCP tool tests  
@@ -293,7 +293,7 @@ o	✔ Deployment metadata validation
 ✔ All implemented  
 ✔ All tested (218/218 tests passing)  
 
-## 11. Future Deployment Improvements
+## 11. 📝 Future Deployment Improvements
 (Not included in current release)  
 
 -	Cloud storage integration  
