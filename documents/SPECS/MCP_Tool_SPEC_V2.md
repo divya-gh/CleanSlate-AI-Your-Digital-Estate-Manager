@@ -1,39 +1,38 @@
-## 📘 SPEC #3 — MCP TOOL CONTRACT SPEC (LOCAL TOOLS ONLY)
+## 🔧📘 SPEC #3 — MCP TOOL CONTRACT SPEC (LOCAL TOOLS ONLY)
 
-### CleanSlate AI – My PC Assistant
-#### AI Chief of Staff for Digital Organization and Storage Management.
+### CleanSlate AI – Your Digital Estate Manager
+"AI Chief of Staff for Digital Organization and Storage Management."
 
-==================================================================================
-
+---
 #### This document defines all MCP tools used by CleanSlate AI, including:
-•	Tool names
-•	Purpose
-•	Input schema
-•	Output schema
-•	Error cases
-•	Safety constraints
-•	Which ADK nodes use each tool
+•	Tool names  
+•	Purpose  
+•	Input schema  
+•	Output schema  
+•	Error cases  
+•	Safety constraints  
+•	Which ADK nodes use each tool  
 This sets the **API contract** between our **agent and the local environment.**
 
 ## 1. Purpose of This Document
-#### This spec ensures:
-•	Tools are predictable
-•	Tools are safe
-•	Tools cannot exceed permissions
-•	ADK nodes know exactly what they can call
-•	Folder scope is enforced at the tool level
-•	Sensitive files are protected
-•	ExecutionNode cannot perform unsafe actions
+**This spec ensures:**
+•	Tools are predictable  
+•	Tools are safe  
+•	Tools cannot exceed permissions  
+•	ADK nodes know exactly what they can call  
+•	Folder scope is enforced at the tool level  
+•	Sensitive files are protected  
+•	ExecutionNode cannot perform unsafe actions  
 This sets the **foundation** of our agent’s **reliability and safety.**
 
 ## 2. Tool Categories
-#### CleanSlate AI uses the following local tool categories:
-✔ Filesystem Tools
-✔ Metadata Tools
-✔ Hashing Tools
-✔ Compression Tools
-✔ Logging Tools
-✔ Secure Folder Tools
+**CleanSlate AI uses the following local tool categories:**
+✔ Filesystem Tools  
+✔ Metadata Tools  
+✔ Hashing Tools  
+✔ Compression Tools  
+✔ Logging Tools  
+✔ Secure Folder Tools  
 No cloud tools are included (reserved for future improvements).
 
                 MCP Tools — Full Contract Coverage
