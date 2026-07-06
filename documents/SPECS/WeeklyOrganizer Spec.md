@@ -1,4 +1,4 @@
-# 📘 WeeklyOrganizer Spec — CleanSlate AI - Your Digital Estate Manager
+# 🌊 WeeklyOrganizer Spec — CleanSlate AI - Your Digital Estate Manager
 
 ---
 This document defines the behavior of the `WeeklyOrganizerNode` inside the CleanSlate PC Assistant.
