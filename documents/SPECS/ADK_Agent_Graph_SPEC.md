@@ -1,21 +1,20 @@
 # 📋 SPEC #2 — ADK AGENT GRAPH SPEC
 
 ## CleanSlate AI – Your Digital Estate Manager
-#### AI Chief of Staff for Digital Organization and Storage Management.
+**AI Chief of Staff for Digital Organization and Storage Management.**
 
 ---
-
 ## Goal – Provide Blueprint for implementing the agent.
 **This document defines the agent architecture, nodes, transitions, inputs/outputs, HITL points, and safety boundaries for the ADK graph.**
 
 ## 1. Purpose of This Document (Why This Spec Exists)
-### The ADK Agent Graph Spec defines:  
-•	The nodes that make up CleanSlate AI  
-•	What each node does  
-•	What inputs/outputs each node expects  
-•	How nodes transition between each other  
-•	Where HITL (human in the loop) is required  
-•	How safety rules are enforced in the graph  
+- The ADK Agent Graph Spec defines:  
+        •	The nodes that make up CleanSlate AI  
+        •	What each node does  
+        •	What inputs/outputs each node expects  
+        •	How nodes transition between each other  
+        •	Where HITL (human in the loop) is required  
+        •	How safety rules are enforced in the graph  
 
 ## 2. High Level Architecture Overview
 ### CleanSlate AI is a multi agent ADK graph composed of:
