@@ -144,7 +144,7 @@ passport_scan.png → [SENSITIVE_FILE]
 •	Safe-mode actions  
 •	Summary
 
-## 6. Observability Signals
+## 6. 👀 Observability Signals
 #### CleanSlate AI emits the following signals:
 
 ### 6.1 Node Transition Events
@@ -168,7 +168,7 @@ passport_scan.png → [SENSITIVE_FILE]
 •	weekly.complete  
 •	weekly.error
 
-## 7. Monitoring Dashboards (Cloud)
+## 7. 💻 Monitoring Dashboards (Cloud)
 ### Dashboard 1 — Agent Health
 •	Node transition counts  
 •	Execution success rate  
@@ -190,7 +190,7 @@ passport_scan.png → [SENSITIVE_FILE]
 •	Memory usage  
 •	CPU usage
 
-## 8. Alerting Rules (Cloud)
+## 8. 🔔 Alerting Rules (Cloud)
 
 ### 8.1 Execution Failures
 #### Trigger when:
@@ -214,7 +214,7 @@ passport_scan.png → [SENSITIVE_FILE]
 •	Folder scope violation detected  
 •	HITL bypass attempted
 
-## 9. Log Retention Policy
+## 9. 📋 Log Retention Policy
 ### Local Logs
 •	Retained for 30 days  
 •	Rotated weekly  
@@ -223,7 +223,7 @@ passport_scan.png → [SENSITIVE_FILE]
 •	Retained for 14 days  
 •	Rotated automatically
 
-## 10. Testing Requirements for Logging
+## 10. 🧪 Testing Requirements for Logging
 o	✔ Log redaction tests  
 o	✔ Log format validation  
 o	✔ Node transition logging tests  
@@ -232,7 +232,7 @@ o	✔ Weekly organizer logging tests
 o	✔ Error logging tests  
 o	✔ Rollback logging tests
 
-## 11. Future Observability Improvements
+## 11. 🔍 Future Observability Improvements
 -	Vision-based image quality metrics  
 -	Cloud storage sync logs  
 -	Real-time event streaming  
