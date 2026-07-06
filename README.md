@@ -197,7 +197,7 @@ CleanSlate AI utilizes specialized local agent skills to automate secure workflo
 •	Archive & Rollback skill
 •	Logging & Table rendering skill
 
-#### ✔ STRIDE Threat Model(Threat	Mitigation)
+#### ✔ [STRIDE Threat Model](documents/Security/STRIDE_Threat_Model.md)(Threat	Mitigation)
 Enforces SDD safety rule to reason about threats at design time:
 #### S — Spoofing  
 `Risk:` Unauthorized triggers to organize files.  
