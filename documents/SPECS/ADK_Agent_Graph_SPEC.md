@@ -27,18 +27,18 @@
 - 2.	Search / Explain Workflow Triggered when user asks to find a file or explain something.  
 - 3.	Automated Weekly Organizer Workflow Triggered by Pub/Sub, using pre approved folder scope.
 
-## 3. Modes of Operation:
+### 3. Modes of Operation:
 
-### The graph supports two modes:
-✔ Interactive Mode:  Triggered by user commands 
+#### The graph supports two modes:
+✔ Interactive Mode:  Triggered by user commands   
 ✔ Automated Mode -Ambient :  Triggered by Pub/Sub weekly event.
 
-## 3. Node List (What Nodes Exist)
+### 4. Node List (What Nodes Exist)
 Below is the complete node list with purpose summaries.
-        Node	                                      Purpose
-MyPCAssistantNode	                          Main UI, intent detection, routing
-FolderScopeNode	                                 Ask user which folders are allowed/blocked
-FileDiscoveryNode	                         Scan approved folders
+|        **Node**	                 |                     **Purpose**                   |
+|MyPCAssistantNode	                 |        Main UI, intent detection, routing         |
+|FolderScopeNode	                 |        Ask user which folders are allowed/blocked |
+|FileDiscoveryNode	                         Scan approved folders
 ClassificationNode	                         Classify files
 DuplicateDetectionNode	                         Detect duplicates
 SensitiveDetectionNode	                         Detect sensitive files
