@@ -275,28 +275,17 @@ def _parse_paths(input_val: Any) -> list[str]:
     return []
 
 def _get_default_safe_suggestions() -> str:
-    """Returns OS-appropriate safe folder suggestions, preferring the CleanSlateAI folder."""
-    if os.name == "nt":
-        return (
-            "  \u2705  **C:/Users/CleanSlateAI**\n"
-            "  \u2705  C:/Users/user_name/Desktop\n"
-            "  \u2705  C:/Users/user_name/Documents\n"
-            "  \u2705  C:/Users/user_name/Downloads\n"
-            "  \u2705  C:/Users/user_name/Pictures\n"
-            "  \u2705  C:/Users/user_name/Videos"
-        )
-    else:
-        import platform
-        is_mac = platform.system().lower() == "darwin"
-        home_base = "/Users" if is_mac else "/home"
-        return (
-            f"  \u2705  {home_base}/user_name/CleanSlateAI\n"
-            f"  \u2705  {home_base}/user_name/Desktop\n"
-            f"  \u2705  {home_base}/user_name/Documents\n"
-            f"  \u2705  {home_base}/user_name/Downloads\n"
-            f"  \u2705  {home_base}/user_name/Pictures\n"
-            f"  \u2705  {home_base}/user_name/Videos"
-        )
+    """Returns OS-appropriate safe folder suggestions dynamically using the actual home path."""
+    from pathlib import Path
+    home_dir = Path.home().as_posix()
+    return (
+        f"  \u2705  **{home_dir}/CleanSlateAI**\n"
+        f"  \u2705  {home_dir}/Desktop\n"
+        f"  \u2705  {home_dir}/Documents\n"
+        f"  \u2705  {home_dir}/Downloads\n"
+        f"  \u2705  {home_dir}/Pictures\n"
+        f"  \u2705  {home_dir}/Videos"
+    )
 
 
 def _hash_secret(value: str) -> str:
