@@ -151,7 +151,7 @@ Multi step workflows
 •	Node graph architecture
 •	Ambient agent state
 
-#### ✔ MCP Server
+#### ✔ [MCP Server](documents/MCP_Tools)
 Tool orchestration
 •	File operations
 •	Secure execution
