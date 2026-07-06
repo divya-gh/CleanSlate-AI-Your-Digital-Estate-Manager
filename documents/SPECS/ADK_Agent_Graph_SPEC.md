@@ -34,7 +34,7 @@
 ✔ Automated Mode -Ambient :  Triggered by Pub/Sub weekly event.
 
 ### 4. Node List (What Nodes Exist)
-Below is the complete node list with purpose summaries.
+Below is the complete node list with purpose summaries.  
 |        **Node**	                 |                     **Purpose**                   |
 |MyPCAssistantNode	                 |        Main UI, intent detection, routing         |
 |FolderScopeNode	                 |        Ask user which folders are allowed/blocked |
