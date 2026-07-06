@@ -258,7 +258,7 @@ o	✔ Always enforce Folder Scope Policy
 All other specs must follow this master spec.
 
 
-## 12. Future Improvements
+## 12. 👔 Future Improvements
 ### 1. Cloud Storage Integration
 •	Google Drive  
 •	OneDrive  
