@@ -145,7 +145,7 @@ CleanSlate AI is built entirely via **[Spec-Driven Development](documents/SPECS)
 ---
 ###  🛠️  4. Core Technologies & Tools Used
 
-#### ✔ ADK Agent 2.0
+#### ✔ [ADK Agent 2.0](documents/ENGINE_DAG)
 Multi step workflows
 •	Interrupt driven UI
 •	Node graph architecture
@@ -156,13 +156,13 @@ Tool orchestration
 •	File operations
 •	Secure execution
 
-#### ✔ Agent CLI
+#### ✔ [Agent CLI](documents/Agent_CLI)
 Rapid scaffolding
 •	Building, evaluating and deploying the agent
 •	Node debugging, Local testing
 •	Workflow validation
 
-#### ✔ Pub/Sub (Ambient Agent)
+#### ✔ [Pub/Sub](documents/PubSub_Flow.md) (Ambient Agent)
 Event driven communication
 •	State propagation
 •	Interrupt handling
@@ -174,7 +174,7 @@ Node graph editor
 •	Logging console
 •	SDD workflow
 
-#### ✔ Logging & Traceability
+#### ✔ [Logging & Traceability](documents/Testing_Logging_Observability)
 Full action logs
 •	Audibility & Rollback capability
 •	Sensitive file & error logs
