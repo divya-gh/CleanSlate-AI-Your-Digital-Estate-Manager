@@ -131,9 +131,9 @@ class ReverseProxyHandler(http.server.BaseHTTPRequestHandler):
 #  Entry point                                                         #
 # ------------------------------------------------------------------ #
 if __name__ == "__main__":
-    addr = ("127.0.0.1", LAUNCHER_PORT)
+    addr = ("0.0.0.0", LAUNCHER_PORT)
     with http.server.HTTPServer(addr, ReverseProxyHandler) as srv:
-        print(f"CleanSlate AI launcher  ->  http://127.0.0.1:{LAUNCHER_PORT}")
-        print(f"ADK backend             ->  http://127.0.0.1:{BACKEND_PORT}")
+        print(f"CleanSlate AI launcher  ->  http://0.0.0.0:{LAUNCHER_PORT} (or localhost:{LAUNCHER_PORT})")
+        print(f"ADK backend             ->  http://0.0.0.0:{BACKEND_PORT}")
         print("Press Ctrl+C to stop.")
         srv.serve_forever()
