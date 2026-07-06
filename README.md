@@ -39,7 +39,7 @@ CleanSlate AI was designed to demonstrate the transformative power of Agentic AI
 **Overall User Value:** By merging an intuitive conversational UX with ambient processing, CleanSlate AI delivers a premium, zero-anxiety digital cleanup experience.
 
 ---
-## ✨ 2. What CleanSlate AI Does (Features)
+## ✨ 2. What CleanSlate AI Does (Features & Workflow)
 CleanSlate AI acts autonomously but respects strict boundaries to ensure user safety and data privacy. It operates as a multi‑step, interrupt‑driven ambient PC assistant equipped with the following core features:
 
 - **Mandatory Folder Scope Approval:** Explicitly requests and strictly enforces allowed/blocked directories before initiating any actions.
