@@ -14,7 +14,7 @@
 •	Which ADK nodes use each tool  
 This sets the **API contract** between our **agent and the local environment.**
 
-## 1. Purpose of This Document
+## 1. 🎯 Purpose of This Document
 **This spec ensures:**
 •	Tools are predictable  
 •	Tools are safe  
@@ -25,7 +25,7 @@ This sets the **API contract** between our **agent and the local environment.**
 •	ExecutionNode cannot perform unsafe actions  
 This sets the **foundation** of our agent’s **reliability and safety.**
 
-## 2. Tool Categories
+## 2. 🛠️ Tool Categories
 **CleanSlate AI uses the following local tool categories:**
 ✔ Filesystem Tools  
 ✔ Metadata Tools  
@@ -36,9 +36,9 @@ This sets the **foundation** of our agent’s **reliability and safety.**
 No cloud tools are included (reserved for future improvements).
 
                 MCP Tools — Full Contract Coverage
-===================================================================
+===
 
-## 3. MCP Tool Definitions (Full Contract)
+## 3. 📥 MCP Tool Definitions (Full Contract)
 Below are the tools our agent will use.
  
 ### TOOL 1 — list_files
@@ -46,8 +46,8 @@ Below are the tools our agent will use.
 #### Purpose
 •	List files in a directory (within allowed folder scope).
 #### Used by
-•	FileDiscoveryNode
-•	MyPCAssistantNode (search mode)
+•	FileDiscoveryNode  
+•	MyPCAssistantNode (search mode)  
 #### Input Schema
 ```
 {
@@ -70,30 +70,31 @@ Below are the tools our agent will use.
 }
 ```
 #### Errors
-•	PathNotAllowed
-•	PathNotFound
-•	PermissionDenied
+•	PathNotAllowed  
+•	PathNotFound  
+•	PermissionDenied  
 #### Safety
-•	Must reject paths outside allowed_paths
+•	Must reject paths outside allowed_paths  
 •	Must reject blocked_paths
 
-## `Implementated:`
-•	Uses validate_path_safety()
-•	Returns normalized metadata
-•	Rejects blocked paths
+##  ✔ `Implementated:`
+•	Uses validate_path_safety()  
+•	Returns normalized metadata  
+•	Rejects blocked paths 
 •	No content read
 ### `Tests:`
 •	10 tests (scope, blocked, symlink, traversal, dirs)
-•	All pass
+•	All pass 🟢
 
 ### Spec coverage: `100%`
 
 ## TOOL 2 — read_file_metadata
-#### Purpose
-Retrieve metadata without reading file contents.
-#### Used by
-•	FileDiscoveryNode
-•	ClassificationNode
+**Purpose:**  
+Retrieve metadata without reading file contents.  
+
+**Used by:**
+•	FileDiscoveryNode  
+•	ClassificationNode  
 •	DuplicateDetectionNode
 #### Input Schema
 ```
