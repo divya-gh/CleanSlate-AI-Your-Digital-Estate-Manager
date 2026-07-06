@@ -1,48 +1,46 @@
 # 📘 SPEC #8 — LOGGING & OBSERVABILITY SPEC Implementation Review
 
-## CleanSlate AI – My PC Assistant
-#### AI Chief of Staff for Digital Organization and Storage Management.
+## CleanSlate AI – Your Digital Estate Manager
+"AI Chief of Staff for Digital Organization and Storage Management."
 
-========================================================================================
-
+---
 **Below is a section‑by‑section mapping from the spec → implementation → tests.**
 
 ## ✅ 1. Logging Philosophy — Fully Implemented
 ### Spec requires:
 
-•	Safety First → no sensitive data in logs
-•	Full Traceability → intent → plan → execution → summary
-•	Human + Machine readable → JSONL
-•	Zero leakage → logs stay local
+•	Safety First → no sensitive data in logs  
+•	Full Traceability → intent → plan → execution → summary  
+•	Human + Machine readable → JSONL  
+•	Zero leakage → logs stay local  
 
 ### `Implemented:`
-
-•	write_log() redacts sensitive paths
-•	read_log() sanitizes entries
-•	JSONL format
-•	No file contents logged
-•	No sensitive filenames logged
-•	No personal data logged
+•	write_log() redacts sensitive paths  
+•	read_log() sanitizes entries  
+•	JSONL format  
+•	No file contents logged  
+•	No sensitive filenames logged  
+•	No personal data logged  
 •	Logs stored only at $CLEANSLATE_LOG_PATH
 
 
 ## ✔ Fully implemented
 ## ✔ Fully tested (7 write_log tests, 7 read_log tests)
 
+---
 ## ✅ 2. Logging Architecture — Fully Implemented
-### Spec requires:
-
+**Spec requires:**
 ### Tier 1 — Local Logs
-•	actions.log
-•	errors.log
-•	weekly.log
+•	actions.log  
+•	errors.log  
+•	weekly.log  
 
 ### `Implemented:`
-•	All logs written to $CLEANSLATE_LOG_PATH
-•	Weekly organizer writes to weekly log
-•	ExecutionNode writes to actions log
-•	RollbackNode writes rollback entries
-•	Errors logged via MCP error objects
+•	All logs written to $CLEANSLATE_LOG_PATH  
+•	Weekly organizer writes to weekly log  
+•	ExecutionNode writes to actions log  
+•	RollbackNode writes rollback entries  
+•	Errors logged via MCP error objects  
 
 ### Tier 2 — Cloud Logs
 ### Spec says: only when running in Agent Runtime.
