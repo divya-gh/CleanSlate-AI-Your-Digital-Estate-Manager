@@ -33,24 +33,27 @@
 ✔ Interactive Mode:  Triggered by user commands   
 ✔ Automated Mode -Ambient :  Triggered by Pub/Sub weekly event.
 
-### 4. Node List (What Nodes Exist)
+### 4. 🧬 ADK Agent Graph — Node List (What Nodes Exist)
 Below is the complete node list with purpose summaries.  
-|        **Node**	                 |                     **Purpose**                   |
-|MyPCAssistantNode	                 |        Main UI, intent detection, routing         |
-|FolderScopeNode	                 |        Ask user which folders are allowed/blocked |
-|FileDiscoveryNode	                         Scan approved folders
-ClassificationNode	                         Classify files
-DuplicateDetectionNode	                         Detect duplicates
-SensitiveDetectionNode	                         Detect sensitive files
-OptimizationPlannerNode	                         Generate cleanup plan
-HITLApprovalNode	                         Present plan for approval
-ExecutionNode	                                 Execute approved actions
-RollbackNode	                                 Undo last batch
-SummaryNode	                                 Final report
-WeeklyOrganizerNode	                         Automated weekly cleanup
+
+| **Node**                | **Purpose**                                   |
+|-------------------------|-----------------------------------------------|
+| MyPCAssistantNode       | Main UI, intent detection, routing            |
+| FolderScopeNode         | Ask user which folders are allowed/blocked    |
+| FileDiscoveryNode       | Scan approved folders                         |
+| ClassificationNode      | Classify files                                |
+| DuplicateDetectionNode  | Detect duplicates                             |
+| SensitiveDetectionNode  | Detect sensitive files                        |
+| OptimizationPlannerNode | Generate cleanup plan                         |
+| HITLApprovalNode        | Present plan for approval                     |
+| ExecutionNode           | Execute approved actions                      |
+| RollbackNode            | Undo last batch                               |
+| SummaryNode             | Final report                                  |
+| WeeklyOrganizerNode     | Automated weekly cleanup                      |
+
  
 
-## 4. Node by Node Specification (What Each Node Does + How It Works)
+### 5. 📈 Node by Node Specification (What Each Node Does + How It Works)
 
 ### 1. MyPCAssistantNode (ENTRY POINT)
 #### Purpose
