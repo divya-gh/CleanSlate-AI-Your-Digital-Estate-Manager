@@ -33,3 +33,17 @@ These workflow skills empowered the iterative "Vibe Coding" process, allowing us
 ### 🛡️ 7. Threat Modeling (`stride-threat-model`)
 - **Purpose**: Systematic security evaluation.
 - **Application**: Used to assess the agent's security boundaries, mapping data flows to identify and mitigate Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege across all local filesystem operations.
+
+### 🐙 8. Automated VCS (`git-mini`)
+- **Purpose**: Secure source control management.
+- **Application**: A highly disciplined, automated git commit-and-push workflow that prevents accidental commits of secrets/PII (like `.env` or key files), strictly limits commit message lengths (concise and meaningful), and handles automatic upstream rebasing during the Vibe Coding flow.
+
+---
+
+## 💻 Local Agentic Capabilities (Domain Skills)
+Beyond the overarching workflow skills, the CleanSlate AI agent executes localized "Custom Skills" across its internal node graph:
+* **🔍 File Scanning**: High-speed, metadata-only recursive filesystem traversal.
+* **🕵️ Sensitive Classification**: LLM-driven and heuristic detection of PII (SSNs, API Keys, Passwords).
+* **👯 Duplicate Detection**: Exact hash (`SHA-256`) and near-duplicate semantic grouping.
+* **⏪ Archive & Rollback**: Safe compression capabilities coupled with verifiable inverse-action JSON payloads for undo operations.
+* **📊 Logging & Table Rendering**: Beautifully formatted console and UI dashboards to summarize execution paths and HITL recovery stats.
