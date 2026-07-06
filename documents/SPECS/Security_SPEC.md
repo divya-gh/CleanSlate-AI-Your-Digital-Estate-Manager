@@ -12,13 +12,13 @@
 ## 1. 📄 Security Philosophy: 
 **CleanSlate AI follows four core principles:**
 
-### 1. User Owned Data, User Controlled Actions
+#### 1. User Owned Data, User Controlled Actions
 The agent never acts without explicit user intent.
-### 2. Controlled Privilege
+#### 2. Controlled Privilege
 The agent only accesses folders the user approves.
-### 3. No Irreversible Actions Without HITL
+#### 3. No Irreversible Actions Without HITL
 All destructive actions require human approval.
-### 4. Privacy First Design
+#### 4. Privacy First Design
 Sensitive files are never deleted, uploaded, or exposed.
 
 ---
@@ -122,15 +122,15 @@ These paths are automatically blocked.
 
 ---
 ## 4. 🧱 LLM Safety Rules
-### Rule 1 — LLM Cannot Execute Actions Directly
+#### Rule 1 — LLM Cannot Execute Actions Directly
 LLM may only propose actions. ExecutionNode performs them.
-### Rule 2 — LLM Cannot Expand Folder Scope
+#### Rule 2 — LLM Cannot Expand Folder Scope
 LLM cannot add new allowed paths. Only user can.
-### Rule 3 — LLM Cannot Override Sensitive Flags
+#### Rule 3 — LLM Cannot Override Sensitive Flags
 If a file is flagged sensitive, LLM cannot unflag it.
-### Rule 4 — LLM Cannot Trigger Cleanup Automatically
+#### Rule 4 — LLM Cannot Trigger Cleanup Automatically
 Only user intent can.
-### Rule 5 — LLM Cannot Suggest Deleting Sensitive Files
+#### Rule 5 — LLM Cannot Suggest Deleting Sensitive Files
 Even if user asks, LLM must warn and require explicit override.
 
 ---
@@ -228,25 +228,23 @@ Ensure no deletes occur in safe mode.
 -	Multi device secure sync  
 -	Zero trust folder access tokens
 
-
-================================================================================
-
+---
 #                       SemGrep Implimentation
 
 ## What Semgrep rules to Implement
 
-### ✅ 1. Pre commit (local gate)
+### ✅ 1. Pre-commit (local gate)
 
 ### ✅ 2. Antigravity remediation loop
 
-## Status: FULLY IMPLEMENTED
+## Status: FULLY IMPLEMENTED 🟢
 
-### 1.	Hardcoded secrets
-### 2. Unsafe file operations
-### 3. Sensitive file mishandling
-### 4. Path traversal
-### 5. Subprocess execution
-### 6. Weekly organizer safety
-### 7. Rollback safety
+#### 1.	Hardcoded secrets
+#### 2. Unsafe file operations
+#### 3. Sensitive file mishandling
+#### 4. Path traversal
+#### 5. Subprocess execution
+#### 6. Weekly organizer safety
+#### 7. Rollback safety
 
 #### Note: More rules will be added as we build our agent
