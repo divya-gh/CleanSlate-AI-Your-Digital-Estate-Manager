@@ -314,6 +314,8 @@ Upload the agent ➔ test interrupts ➔ validate UI.
 ### 📂 Project Documentation & Specs
 All detailed specifications, architecture diagrams, and implementation plans are documented in the [`documents/`](documents/) directory.
 - 📄 [System Architecture & Master Specs](documents/SPECS/)
+- ⚙️ [Engine DAG & Pub/Sub Flow](documents/ENGINE_DAG/)
+- 🎨 [Playground UI & Chat Interface](documents/UI_Playground/)
 - 🔒 [Security & Threat Modeling](documents/Security/)
 - 🛠️ [Model Context Protocol (MCP) Tools](documents/MCP_Tools/)
 - 💻 [Agent CLI Implementation](documents/Agent_CLI/)
