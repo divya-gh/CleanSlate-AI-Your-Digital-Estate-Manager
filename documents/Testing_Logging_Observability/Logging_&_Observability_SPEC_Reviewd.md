@@ -46,7 +46,7 @@
 ### Spec says: only when running in Agent Runtime.
 
 ### `Implemented:`
-•	Cloud logging is stubbed (correct for local-only capstone)
+•	Cloud logging is stubbed (correct for local-only capstone) 
 •	No sensitive data ever leaves local machine
 
 ## ✔ Fully implemented 🟢
@@ -69,90 +69,89 @@ duration_ms
 
 ### `Implemented:`
 
-•	Every MCP tool call logs a JSON entry
-•	ExecutionNode logs: action, status, source, destination, hitl, sensitive
-•	RollbackNode logs: action reversed
-•	WeeklyOrganizerNode logs: safe-mode actions
+•	Every MCP tool call logs a JSON entry   
+•	ExecutionNode logs: action, status, source, destination, hitl, sensitive  
+•	RollbackNode logs: action reversed  
+•	WeeklyOrganizerNode logs: safe-mode actions  
 •	SummaryNode logs: final summary
 
-## ✔ Fully implemented
-## ✔ Fully tested 🟢
+## ✔ Fully implemented  
+## ✔ Fully tested 🟢  
 ## ✔ Semgrep-clean
 
 ---
 ## ✅ 4. Redaction Rules — Fully Implemented
 ### Spec requires:
-•	Sensitive paths → [REDACTED_SENSITIVE_PATH]
-•	Sensitive filenames → [SENSITIVE_FILE]
-•	No personal data
+•	Sensitive paths → [REDACTED_SENSITIVE_PATH]  
+•	Sensitive filenames → [SENSITIVE_FILE]  
+•	No personal data  
 •	No file contents
 
 ### `Implemented:`
-•	Sensitive paths redacted
-•	Sensitive filenames replaced
-•	No file contents logged
-•	No personal data logged
+•	Sensitive paths redacted  
+•	Sensitive filenames replaced  
+•	No file contents logged  
+•	No personal data logged  
 •	read_log() sanitizes entries
 
-## ✔ Fully implemented
+## ✔ Fully implemented  
 ## ✔ Fully tested 🟢
 
 ---
 ## ✅ 5. Node-Level Logging Requirements — Fully Implemented
-### Spec lists logging requirements for each node.
+### Spec lists logging requirements for each node. 
 
 ### `Implemented:`
+**MyPCAssistantNode**  
+✔ intent logged  
+✔ confidence logged
 
-### MyPCAssistantNode
-#### ✔ intent logged
-#### ✔ confidence logged
+**FolderScopeNode**  
+✔ allowed paths logged  
+✔ blocked paths logged
 
-### FolderScopeNode
-#### ✔ allowed paths logged
-#### ✔ blocked paths logged
+**FileDiscoveryNode**  
+✔ number of files scanned  
+✔ time taken
 
-### FileDiscoveryNode
-#### ✔ number of files scanned
-#### ✔ time taken
+**ClassificationNode**  
+✔ classification summary
 
-### ClassificationNode
-#### ✔ classification summary
+**DuplicateDetectionNode**  
+✔ duplicate groups logged
 
-### DuplicateDetectionNode
-#### ✔ duplicate groups logged
+**SensitiveDetectionNode**  
+✔ sensitive files flagged
 
-### SensitiveDetectionNode
-#### ✔ sensitive files flagged
+**OptimizationPlannerNode**  
+✔ proposed plan logged  
+✔ safety checks logged
 
-### OptimizationPlannerNode
-#### ✔ proposed plan logged
-#### ✔ safety checks logged
+**HITLApprovalNode**  
+✔ approval decision logged
 
-### HITLApprovalNode
-#### ✔ approval decision logged
-
-### ExecutionNode
-#### ✔ every action logged
-#### ✔ duration logged
-#### ✔ hitl_approved logged
-#### ✔ sensitive logged
+**ExecutionNode**  
+✔ every action logged  
+✔ duration logged  
+✔ hitl_approved logged  
+✔ sensitive logged
  
-### RollbackNode
-#### ✔ actions reversed logged
+**RollbackNode**  
+✔ actions reversed logged
 
-### SummaryNode
-#### ✔ final summary logged
+**SummaryNode**  
+✔ final summary logged
 
-### WeeklyOrganizerNode
-#### ✔ safe-mode actions logged
-#### ✔ summary logged
-#### ✔ NEW: enable/disable logged
+**WeeklyOrganizerNode**  
+✔ safe-mode actions logged  
+✔ summary logged  
+✔ NEW: enable/disable logged   
 
-## ✔ Fully implemented
-## ✔ Fully tested 🟢
+✔ Fully implemented
+✔ Fully tested 🟢
 
 ## NEW — Weekly Organizer Enable/Disable Logging
-### Added to spec:
+**Added to spec:**
 
 ### 5.13 WeeklyOrganizerNode — Enable/Disable Logging
 ```
@@ -164,26 +163,26 @@ weekly.error
 ```
 
 ### `Implemented:`
-•	If disabled → logs "Weekly Organizer disabled"
-•	If enabled → logs start + actions + summary
-•	Errors logged via MCP error structure
+•	If disabled → logs "Weekly Organizer disabled"  
+•	If enabled → logs start + actions + summary  
+•	Errors logged via MCP error structure  
 
 
-## ✔ Fully implemented
-## ✔ Fully tested 🟢
+✔ Fully implemented  
+✔ Fully tested 🟢
 
 ---
 ## ✅ 6. Observability Signals — Fully Implemented
-### Spec requires:
-•	node.enter / node.exit  
+**Spec requires:**  
+•	node.enter / node.exit   
 •	tool.call / tool.success / tool.failure  
 •	sensitive.detected  
 •	scope.violation  
 •	hitl.required / hitl.rejected  
 •	weekly.start / weekly.complete / weekly.error
 
-### `Implemented:`
-•	All signals emitted via write_log()  
+### `Implemented:`  
+•	All signals emitted via write_log()    
 •	All signals sanitized  
 •	All signals tested
 
