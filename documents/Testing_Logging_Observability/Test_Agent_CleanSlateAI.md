@@ -1,10 +1,11 @@
 #                   Running Agent in ADK Playground
 
-## CleanSlate AI – My PC Assistant
-#### AI Chief of Staff for Digital Organization and Storage Management.
+## CleanSlate AI – Your Digital Estate Manager
+"AI Chief of Staff for Digital Organization and Storage Management."
 
+---
 **Goal:** Test whether the agent is actually working end‑to‑end in `ADK Playground`.
-====================================================================================
+---
 
 ## How to Test if Your Agent Is Working 
 
@@ -70,21 +71,21 @@ CleanSlate_Test/
 ### ✅ Step 1 — Run the Agent Locally (Interactive Mode)
 
 #### This verifies:
-•	ADK graph loads
-•	MCP tools load
-•	Nodes execute
-•	HITL works
-•	Weekly organizer enable/disable works
+•	ADK graph loads  
+•	MCP tools load  
+•	Nodes execute  
+•	HITL works  
+•	Weekly organizer enable/disable works  
 
 ### Command:
 ```
 python app/agent_runtime_app.py
 ```
 ### Then test:
-- “Search for PDFs”
-- “Clean up my downloads folder”
-- “Find duplicates”
-- “Organize weekly”
+- “Search for PDFs”  
+- “Clean up my downloads folder”  
+- “Find duplicates”  
+- “Organize weekly”  
 If these work → local runtime is correct.
 
 ### Step 2 — Open the ADK Playground (The Real Test)
@@ -111,70 +112,69 @@ http://127.0.0.1:8000/chat
 # Testing http://127.0.0.1:8000/chat playgound
 
 ### Playground opens with a welcome Message:
+<img src="../Images/welcome_chat_ui.png" width="600" height= "500" alt="Agent_cli_implimentation">
 
-Image - chat_welcome
-
+---
 ### Follow along
 
 ### Step 1. Type : Organize my computer
-Image - chat_organize_mycomputer
-
-### Step 1. Type : Type the path
+<img src="../../assets/Folder_scope.png" width="600" height= "500" alt="Agent_cli_implimentation">
 
 
-
-What to test inside the Playground:
-✔ 1. Ask a simple question
+### Step 2. Type : Type the path
+**What to test inside the Playground:**  
+✔ 1. Ask a simple question  
+```
 “Search for images”
-→ Should route to FileDiscoveryNode.
+```
+→ Should route to FileDiscoveryNode.  
 
-✔ 2. Ask a cleanup question
-“Clean up my documents folder”
+✔ 2. Ask a cleanup question  
+```
+“Organize my computer”
+```
 → Should route through:
 
-MyPCAssistantNode
-FolderScopeNode
-FileDiscoveryNode
-ClassificationNode
-DuplicateDetectionNode
-SensitiveDetectionNode
-OptimizationPlannerNode
-HITLApprovalNode
-ExecutionNode
-SummaryNode
+MyPCAssistantNode  
+FolderScopeNode  
+FileDiscoveryNode  
+ClassificationNode  
+DuplicateDetectionNode  
+SensitiveDetectionNode  
+OptimizationPlannerNode  
+HITLApprovalNode  
+ExecutionNode  
+SummaryNode  
 
-
-✔ 3. Test HITL
-Ask:
-
-“Delete this file”
+✔ 3. Test HITL  
+Click:
+```
+Clean up
+```
 
 → Should pause at HITLApprovalNode.
 
 ✔ 4. Test Weekly Organizer
-Set:
-
-Code
-weekly_automation_enabled = true
+Set:  
+weekly_automation_enabled = true  
 Then ask:
-
+```
 “Run weekly organizer”
-
+```  
 → Should run safe-mode workflow.
 
-✔ 5. Test Weekly Organizer disabled
-Set:
-
-Code
-weekly_automation_enabled = false
-Ask:
-
+✔ 5. Test Weekly Organizer disabled  
+Set:   
+weekly_automation_enabled = false  
+Ask:  
+```
 “Run weekly organizer”
-
-→ Should return:
-
-Code
+```
+→ Should return:  
+```
 Weekly Organizer disabled
+```
+
 ✔ 6. Test sensitive file protection
 Ask:
 
