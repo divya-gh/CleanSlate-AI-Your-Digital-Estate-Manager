@@ -219,8 +219,8 @@ Enforces SDD safety rule to reason about threats at design time:
 `Mitigation:` ExecutionNode only processes actions validated by HITLApprovalNode, ensuring strict separation.
 
 ---
-## 🛡️ Security Architecture
-#### CleanSlate AI adheres strictly to both 7-Pillars of Security    &     7-Layers of AI Agent Security to deliver enterprise‑grade protection. 
+## 🛡️ [Security Architecture](documents/Security)
+#### CleanSlate AI adheres strictly to both [7-Pillars of Security    &     7-Layers of AI Agent Security](assets/Security_Architecture.png) to deliver enterprise‑grade protection. 
 
 The Pillars define **why** security decisions are made, while the Layers define **where** those decisions are enforced. Together, they ensure CleanSlate AI is safe, compliant, and production‑ready.
 
