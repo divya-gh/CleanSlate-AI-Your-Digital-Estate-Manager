@@ -248,49 +248,39 @@ The Pillars define **why** security decisions are made, while the Layers define 
 
  #### 1. Clone the Repository
 ```bash
-git clone https://github.com/divya-gh/CleanSlate-AI-PC-Assistant.git
-cd CleanSlate-AI-PC-Assistant
+git clone https://github.com/divya-gh/CleanSlate-AI-Your-Digital-Estate-Manager.git
+cd CleanSlate-AI-Your-Digital-Estate-Manager
 ```
  #### 2. Set up the Python Virtual Environment & Install Dependencies
-* **Using `uv` (Recommended)**:
+* **Using `uv` (Recommended for speed)**:
 ```bash
-  # This will automatically create the virtual environment and install all dependencies
-  uv sync
-  ```
+uv sync
+```
 * **OR using standard `pip`**:
-  ```bash
-  python -m venv .venv
-  
-  # source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-  pip install -r requirements.txt
-  ```
-#### 3. Configure Environment Variables
 ```bash
-Create a `.env` file and add your Gemini API Key:
-echo "GEMINI_API_KEY=your_api_key_here" > .env
+python -m venv .venv
+# Activate: source .venv/bin/activate (Linux/Mac) OR .venv\Scripts\activate (Windows)
+pip install -r requirements.txt
+```
+#### 3. Configure Environment Variables
+Create a `.env` file in the root directory (or use Kaggle Secrets) and add your Gemini API Key:
+```bash
+GEMINI_API_KEY="your_api_key_here"
 ```
 #### 4. Run the **ADK Backend Server**
+Start the main agent server (bound to `0.0.0.0` for full Sandbox/Kaggle compatibility):
 ```bash
+# If using uv: uv run run.py
 python run.py
-Open the project folder ➔ run the agent ➔ test nodes ➔ inspect logs.
 ```
-#### 5. Launching the **UIs**
+#### 5. Launch the **Custom Chat UI**
+Open a *new* terminal window, ensure your environment is activated, and start the chat UI:
 ```bash
-CleanSlate AI supports two interfaces. Open a new terminal to start your preferred UI:
-
-ADK Dev UI (Built-in):
-  Access via `http://127.0.0.1:8080/dev-ui/` automatically when running `run.py`.
-
-Custom Web UI:
-  Run the custom chat interface:
-  python launcher_server.py
-
-  Access via `http://localhost:8000`
+# If using uv: uv run launcher_server.py
+python launcher_server.py
 ```
-#### 6. Run in **Playground**
-```
-Upload the agent ➔ test interrupts ➔ validate UI.
-```
+- **Access the UI**: Navigate to `http://localhost:8000` (or your Sandbox's exposed port 8000) in your browser.
+- **Access the ADK Dev UI**: Navigate to `http://localhost:8080/dev-ui/`.
 ---
 ### 🎬 CleanSlate AI Demo Video  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/7bcbfde5-c8f0-4751-abe5-7251846d00cf"/> Playground Chat UI (GIF Demo)
 

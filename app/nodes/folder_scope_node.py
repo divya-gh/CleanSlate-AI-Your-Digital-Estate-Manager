@@ -275,16 +275,16 @@ def _parse_paths(input_val: Any) -> list[str]:
     return []
 
 def _get_default_safe_suggestions() -> str:
-    """Returns OS-appropriate safe folder suggestions dynamically using the actual home path."""
-    from pathlib import Path
-    home_dir = Path.home().as_posix()
+    """Returns OS-appropriate safe folder suggestions using an anonymized name."""
+    import platform
+    base = "C:/Users/cleanslateai" if platform.system() == "Windows" else "/home/cleanslateai"
     return (
-        f"  \u2705  **{home_dir}/CleanSlateAI**\n"
-        f"  \u2705  {home_dir}/Desktop\n"
-        f"  \u2705  {home_dir}/Documents\n"
-        f"  \u2705  {home_dir}/Downloads\n"
-        f"  \u2705  {home_dir}/Pictures\n"
-        f"  \u2705  {home_dir}/Videos"
+        f"  ✅  **{base}/CleanSlateAI**\n"
+        f"  ✅  {base}/Desktop\n"
+        f"  ✅  {base}/Documents\n"
+        f"  ✅  {base}/Downloads\n"
+        f"  ✅  {base}/Pictures\n"
+        f"  ✅  {base}/Videos"
     )
 
 
