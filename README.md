@@ -187,15 +187,14 @@ Detect unsafe file operations
 •	Enforce ADK node safety patterns
 •	Safe CI/CD and commit pipeline.
 
-#### ✔ Custom Agent Skills (Skills.md)
-CleanSlate AI utilizes specialized local agent skills to automate secure workflows:
-* **`git-mini`**: A secure, automated git commit-and-push workflow that prevents accidental commits of secrets/PII (such as `.env` or key files), validates that commit messages are meaningful and concise (≤10 characters), and automatically rebases upstream changes.
-* **`stride-threat-model`**: A systematic threat modeling assessment tool mapping security boundaries, entry points, and data flows to identify and mitigate Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege (STRIDE) risks across all agent nodes.
-* Other Skills: File scanning
-•	Sensitive classification
-•	Duplicate detection
-•	Archive & Rollback skill
-•	Logging & Table rendering skill
+#### ✔ [Agent Workflow Skills](documents/Agent_Workflow_Skills.md)
+CleanSlate AI was built rapidly using specialized **Antigravity AI Agent Skills**:
+* 🏗️ **`google-agents-cli-scaffold`**: Initialized the core ADK 2.0 structure.
+* 🧠 **`google-agents-cli-adk-code`**: Guided the complex DAG event routing and node logic.
+* 🔄 **`google-agents-cli-workflow`**: Managed the rapid iterative "Vibe Coding" lifecycle.
+* 📊 **`google-agents-cli-observability`**: Instrumented full node traceability and logging.
+* 🛡️ **`semgrep` & `stride-threat-model`**: Enforced zero-trust security and static analysis.
+* 🛠️ **`workflow-skill-creator`**: Distilled repetitive prompts into reusable agent patterns.
 
 #### ✔ [STRIDE Threat Model](documents/Security/STRIDE_Threat_Model.md)(Threat	Mitigation)
 Enforces SDD safety rule to reason about threats at design time:
