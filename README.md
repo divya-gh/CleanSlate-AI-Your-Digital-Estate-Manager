@@ -71,7 +71,7 @@ CleanSlate AI executes as a multi-node Directed Acyclic Graph (DAG) built with t
     
 ---
 ## 🏗️ 3. System Architecture Overview
-CleanSlate AI is built entirely via **Spec-Driven Development (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
+CleanSlate AI is built entirely via [**Spec-Driven Development](documents/SPECS) (SDD)**, meaning every feature traces directly back to a unified Master Specification while following a modular, enterprise‑grade architecture.
 - **Requirements → Spec → Architecture → Nodes → UI → Testing → Docs**
 
 **CleanSlate AI uses ADK Agent 2.0, MCP, Agent CLI, Pub/Sub, ADK SKILLS, Semgrep Rules, STRIDE Threat MODEL and Antigravity.**
