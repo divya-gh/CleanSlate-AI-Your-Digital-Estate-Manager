@@ -180,7 +180,7 @@ Full action logs
 •	Sensitive file & error logs
 •	Node transitions and pub/sub events
 
-#### ✔ Semgrep Security Hooks(static analysis)
+#### ✔ [Semgrep Security Hooks](documents/Security/Semgrep_Rules.md)(static analysis)
 Detect unsafe file operations
 •	Prevent path traversal & accidental PII exposure
 •	Prevent insecure regex patternsc& logging 
