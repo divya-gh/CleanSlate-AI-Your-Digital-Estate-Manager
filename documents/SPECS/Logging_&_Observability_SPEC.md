@@ -1,15 +1,14 @@
-# 📘 SPEC #8 — LOGGING & OBSERVABILITY SPEC
+# 📋 SPEC #8 — LOGGING & OBSERVABILITY SPEC
 
-## CleanSlate AI – My PC Assistant
-#### AI Chief of Staff for Digital Organization and Storage Management.
+## CleanSlate AI – Your Digital Estate Manager
+"AI Chief of Staff for Digital Organization and Storage Management."
 
-========================================================================================
-
+---
 **This document defines the logging architecture, observability signals, monitoring dashboards, alerting rules, and redaction policies for CleanSlate AI.**
 
 **It ensures the agent is traceable, safe, and debuggable across both local and cloud environments.**
 
-## 1. Logging Philosophy
+## 1. 📝 Logging Philosophy
 CleanSlate AI follows four logging principles:
 ### 1. Safety First
              Logs must never contain sensitive data or file contents.
@@ -20,12 +19,11 @@ CleanSlate AI follows four logging principles:
 ### 4. Zero Leakage
                 Logs must never leave the local machine unless running in Agent Runtime.
 
-## 2. Logging Architecture
-
+## 2. 🏛️ Logging Architecture
 ### CleanSlate AI uses a two tier logging system:
      
 ## Tier 1 — Local Logs (User Machine)
-### Stored at:
+**Stored at:**
 ```
 $CLEANSLATE_LOG_PATH/
     actions.log
