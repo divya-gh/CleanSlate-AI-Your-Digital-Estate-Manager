@@ -279,7 +279,7 @@ summary_report
 → END
 
 
-## 12. WeeklyOrganizerNode – AUTOMATED
+## 12. 🌊 WeeklyOrganizerNode – AUTOMATED
 Runs only If user enabled in MyPCAssistantNode
 **Purpose**:  
 ✔Automated weekly cleanup.  
@@ -315,7 +315,7 @@ Weekly summary
 #### Transitions
 → FileDiscoveryNode (safe mode) → Classification → Planner → Execution → Summary
 
-## 5. Graph Flow (How Nodes Connect)
+## 5. 🔀 Graph Flow (How Nodes Connect)
 #### Edges:
 ```
 MyPCAssistantNode
@@ -347,14 +347,14 @@ MyPCAssistantNode → FileDiscoveryNode (search mode) → MyPCAssistantNode
 ```
 WeeklyOrganizerNode → FileDiscoveryNode (safe mode) → Classification → Planner → Execution → Summary
 ```
-## 6. HITL Points (Where Human Approval Is Required)
+## 6. 🤝 HITL Points (Where Human Approval Is Required)
 Mandatory HITL:
 •	FolderScopeNode  
 •	HITLApprovalNode  
 Optional HITL:
 •	MyPCAssistantNode (when user asks for confirmation)  
 
-## 7. Safety Enforcement in the Graph
+## 7. 🛡️ Safety Enforcement in the Graph
 #### ✔ Cleanup Intent Enforcement  
 •	Cleanup workflows may only begin after MyPCAssistantNode detects explicit cleanup intent.  
 •	FolderScopeNode must never run automatically.  
@@ -376,13 +376,13 @@ Runs only If user enabled in MyPCAssistantNode
 •	Moves/archives only  
 •	Uses pre approved folder scope  
 
-### Other safety Features to Note  
+### 🛡️ Other safety Features to Note  
 •	✔ No scanning outside allowed paths  
 •	✔ No touching blocked paths  
 •	✔ No deletion without approval  
 •	✔ Sensitive files are never deleted 
 
-## 8. Error Handling
+## 8. 🧩 Error Handling
 •	If user intent unclear → return to MyPCAssistantNode  
 •	If folder scope invalid → return to FolderScopeNode  
 •	If MCP tool fails → retry or fallback   
@@ -393,7 +393,7 @@ This prevents accidental cleanup
 
 ## Why Eror Handling?
 ### These are essential for:
-•	Reliability
-•	Predictability
-•	User trust
+•	Reliability  
+•	Predictability  
+•	User trust  
 
