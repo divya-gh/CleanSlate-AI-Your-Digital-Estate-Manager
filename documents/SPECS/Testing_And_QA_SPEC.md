@@ -1,30 +1,28 @@
-# 📘 SPEC #7 — TESTING & QA SPEC (Updated v2.1)
+# 🔬 SPEC #7 — TESTING & QA SPEC (Updated v2.1)
 
-### CleanSlate AI – My PC Assistant  
-#### AI Chief of Staff for Digital Organization and Storage Management.
+### CleanSlate AI – Your Digital Estate Manager
+"AI Chief of Staff for Digital Organization and Storage Management."
 
-=====================================================================================
-
+---
 **This document defines the `testing strategy, test cases, mock environments, QA workflows, and validation requirements` for CleanSlate AI.**
 
 **It ensures the agent behaves `safely, predictably, and consistently` across all environments.**
 
-## 1. Testing Philosophy
+---
+## 1. 🧪 Testing Philosophy
 
 ### CleanSlate AI follows four testing principles:
 
-### Safety First  
-- Prevent data loss, unauthorized access, unsafe automation.
+### 1. Safety First  
+Prevent data loss, unauthorized access, unsafe automation.
+### 2. Deterministic Behavior  
+Same inputs → same outputs.
+### 3. Reproducibility  
+All tests run in sandbox environments.
+### 4. Full Coverage  
+Every node, tool, and workflow must be tested.
 
-### Deterministic Behavior  
-- Same inputs → same outputs.
-
-### Reproducibility  
-- All tests run in sandbox environments.
-
-### Full Coverage  
-- Every node, tool, and workflow must be tested.
-
+---
 ## 2. Test Environment Setup
 
 ### 2.1 Mock Filesystem Structure
@@ -62,64 +60,54 @@ CLEANSLATE_LOG_PATH=/testdata/logs
 ```
 
 ### 2.4 Test Tools
-•	Mock MCP tools
-•	Mock ADK graph runner
+•	Mock MCP tools  
+•	Mock ADK graph runner  
 •	Mock HITL responses
 
+---
 ## 3. Unit Tests
 
 ### 3.1 MCP Tool Tests
-Tool	Required Tests
-Image - 
+Tool	Required Tests  
 
-
+---
 ##  4. Node-Level Tests
 
 ### 4.1 MyPCAssistantNode
-- Intent detection, ambiguity rejection.
-
+Intent detection, ambiguity rejection.
 ### 4.2 FolderScopeNode
-- Valid scope acceptance, blocked/system path rejection.
-
+Valid scope acceptance, blocked/system path rejection. 
 ### 4.3 FileDiscoveryNode
-- Allowed-only scanning, correct metadata.
-
+Allowed-only scanning, correct metadata.
 ### 4.4 ClassificationNode
-- Extension + metadata classification.
-
+Extension + metadata classification.
 ### 4.5 DuplicateDetectionNode
-- Exact duplicate detection, no false positives.
-
+Exact duplicate detection, no false positives.
 ### 4.6 SensitiveDetectionNode
-- Flags sensitive files, never unflags.
-
+Flags sensitive files, never unflags.
 ### 4.7 OptimizationPlannerNode
-- Safe plan generation, no sensitive deletes, no scope expansion.
-
+Safe plan generation, no sensitive deletes, no scope expansion.
 ### 4.8 HITLApprovalNode
-- Approval required for destructive actions.
-
+Approval required for destructive actions
 ### 4.9 ExecutionNode
-- Executes only approved actions, logs everything, rejects unsafe actions.
-
+Executes only approved actions, logs everything, rejects unsafe actions.
 ### 4.10 RollbackNode
-- Restores moved files, restores deleted files if recoverable.
-
-### .11 SummaryNode
-- Readable summary, sensitive redaction.
-
+Restores moved files, restores deleted files if recoverable.
+### 4.11 SummaryNode
+Readable summary, sensitive redaction.
 ### 4.12 WeeklyOrganizerNode
-•	Runs in safe mode
-•	Never deletes files
+•	Runs in safe mode 
+•	Never deletes files 
 •	Logs all actions
 
 #### NEW: Respects 
-**weekly_automation_enabled flag**
-•	If disabled → returns "Weekly Organizer disabled"
-•	If enabled → runs safe-mode cleanup workflow
-•	No MCP tools invoked when disabled
-•	Fully deterministic behavior
+**weekly_automation_enabled flag** 
+•	If disabled → returns "Weekly Organizer disabled"  
+•	If enabled → runs safe-mode cleanup workflow  
+•	No MCP tools invoked when disabled  
+•	Fully deterministic behavior 
 
+---
 ## 5. Integration Tests
 
 ### 5.1 Full Cleanup Workflow
@@ -136,12 +124,11 @@ MyPCAssistantNode
 → SummaryNode
 ```
 ### Validations:
-•	Folder scope enforced
-•	Sensitive files protected
-•	HITL required
-•	Logs generated
+•	Folder scope enforced  
+•	Sensitive files protected  
+•	HITL required  
+•	Logs generated  
 •	No system paths accessed
-
 
 ### 5.2 Search Workflow
 ```
@@ -149,7 +136,7 @@ MyPCAssistantNode → FileDiscoveryNode (search mode)
 ```
 
 ### Validations:
-•	Returns correct matches
+•	Returns correct matches  
 •	No cleanup nodes triggered
 
 ### 5.3 Weekly Organizer Workflow
@@ -163,79 +150,74 @@ WeeklyOrganizerNode
 ```
 
 ### Validations:
-•	No deletes
-•	No sensitive file modifications
-•	No folder scope changes
+•	No deletes  
+•	No sensitive file modifications  
+•	No folder scope changes  
 •	Enable/Disable respected
 
-
+---
 ## 6. Safety Tests
 
 ### 6.1 Folder Scope Enforcement
 
-Blocked/system paths → FAIL
+Blocked/system paths → FAIL  
 Scope expansion → FAIL
 
 ### 6.2 Sensitive File Protection
 
-Sensitive delete → FAIL
-Sensitive compress → FAIL
+Sensitive delete → FAIL  
+Sensitive compress → FAIL  
 Sensitive move to non-secure → FAIL
 
 ### 6.3 HITL Enforcement
 
-Destructive action without HITL → FAIL
+Destructive action without HITL → FAIL  
 Bulk delete without HITL → FAIL
 
 ### 6.4 No File Content Access
 
-Attempt to read contents → FAIL
+Attempt to read contents → FAIL  
 Attempt to upload contents → FAIL
 
+---
 ## 7. Rollback Tests
 
 ### 7.1 Move Rollback
 
-Move → rollback → original location restored.
+Move → rollback → original location restored.  
 
 ### 7.2 Delete Rollback
 
-Delete → rollback → restored from backup.
+Delete → rollback → restored from backup.  
 
 ### 7.3 MultiAction Rollback
 
-Move + compress + delete → rollback restores all.
+Move + compress + delete → rollback restores all.  
 
+---
 ## 8. Error Handling Tests
-•	Invalid folder scope → FolderScopeNode
-•	MCP tool failure → retry or fallback
-•	User rejects plan → SummaryNode
+•	Invalid folder scope → FolderScopeNode   
+•	MCP tool failure → retry or fallback  
+•	User rejects plan → SummaryNode  
 •	Execution failure → RollbackNode
 •	Weekly organizer failure → skip + log
 
-## 9. End-to-End Scenarios
+---
+## 9. 🎛️ End-to-End Scenarios
 
 ### Scenario 1 — Light Cleanup
-
 Few files, no duplicates, no sensitive.
-
 ### Scenario 2 — Heavy Cleanup
-
 Many files, duplicates, mixed types.
-
 ### Scenario 3 — Sensitive Files Present
-
 Sensitive detected → no deletes allowed.
-
 ### Scenario 4 — User Rejects Plan
-
 HITL rejects → safe exit.
-
 ### Scenario 5 — Execution Failure
-
 Simulated failure → rollback restores state.
 
-## 10. Reproducibility Requirements
+---
+## 10. 📋 Reproducibility Requirements
 ### All tests must run with:
 
 ```
@@ -243,36 +225,37 @@ pytest tests/
 ```
 
 ### Must use:
-•	mock HITL
-•	sandbox environment
-•	deterministic MCP tools
+•	mock HITL  
+•	sandbox environment  
+•	deterministic MCP tools  
 •	weekly organizer enable/disable flag
 
-## 11. Future Testing Improvements
--	Vision-based photo tests
--	Cloud storage integration tests
--	Multi-device sync tests
--	Real-time monitoring tests
+---
+## 11. 🚀 Future Testing Improvements
+-	Vision-based photo tests  
+-	Cloud storage integration tests  
+-	Multi-device sync tests  
+-	Real-time monitoring tests  
 
 
-## Review: Did We Cover all Tests?
+## 🏹 Review: Did We Cover all Tests?
 With Regards to implementation, tests, Semgrep safety, ADK graph wiring, and MCP tool behavior:
 
-✔ All MCP tools implemented
-✔ All MCP tools tested (100 tests)
-✔ All nodes tested (62 tests)
-✔ All integration tests pass
-✔ Weekly organizer enable/disable implemented
-✔ Weekly organizer enable/disable tested
-✔ Semgrep: 0 violations
-✔ Full cleanup workflow tested
-✔ Search workflow tested
-✔ Weekly organizer workflow tested
-✔ Rollback tested
-✔ HITL tested
-✔ Sensitive protection tested
-✔ Folder scope tested
-✔ Error handling tested
-✔ End-to-end scenarios tested
+✔ All MCP tools implemented  
+✔ All MCP tools tested (100 tests)  
+✔ All nodes tested (62 tests)   
+✔ All integration tests pass  
+✔ Weekly organizer enable/disable implemented  
+✔ Weekly organizer enable/disable tested  
+✔ Semgrep: 0 violations  
+✔ Full cleanup workflow tested  
+✔ Search workflow tested  
+✔ Weekly organizer workflow tested  
+✔ Rollback tested  
+✔ HITL tested  
+✔ Sensitive protection tested  
+✔ Folder scope tested  
+✔ Error handling tested  
+✔ End-to-end scenarios tested  
 
-Everything in the Testing & QA Spec is fully implemented.
+ **Everything in the Testing & QA Spec is fully implemented.** ✅
